@@ -1,37 +1,21 @@
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
-import { SiteSection } from "@/components/site/site-page";
-import { Button } from "@/components/ui/button";
+import type { Metadata } from "next";
+import { Hero } from "@/components/site/hero";
+import { About, Faq, HowItWorks, Insurers } from "@/components/site/home-sections";
 import { site } from "@/lib/copy";
 
-// Stage 3 placeholder content inside the SitePage template.
-// The real hero and sections arrive in Stage 5.
-export default function HomePage() {
-  const copy = site.placeholder;
+export const metadata: Metadata = {
+  title: { absolute: site.meta.title },
+  description: site.meta.description,
+};
 
+export default function HomePage() {
   return (
     <>
-      <SiteSection>
-        <div className="flex flex-col gap-4 py-8">
-          <h1 className="text-3xl">{copy.heroHeading}</h1>
-          <p className="max-w-prose text-lg text-ink-quiet">{copy.heroBody}</p>
-          <Button asChild className="self-start">
-            <Link href="/start/phone">
-              {copy.heroAction}
-              <ArrowRight aria-hidden />
-            </Link>
-          </Button>
-        </div>
-      </SiteSection>
-      {copy.sections.map((section, index) => (
-        <SiteSection
-          key={section.id}
-          id={section.id}
-          title={section.heading}
-          intro={section.body}
-          tone={index % 2 === 0 ? "alt" : "default"}
-        />
-      ))}
+      <Hero />
+      <HowItWorks />
+      <About />
+      <Insurers />
+      <Faq />
     </>
   );
 }

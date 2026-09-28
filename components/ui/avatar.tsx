@@ -18,9 +18,10 @@ const avatarVariants = cva(
   },
 );
 
-/** "Wanjiku Kamau" -> "WK" */
+/** "Wanjiku Kamau" -> "WK". Ignores punctuation, so "[Name]" -> "N". */
 function initials(name: string) {
   return name
+    .replace(/[^\p{L}\s]/gu, "")
     .trim()
     .split(/\s+/)
     .slice(0, 2)

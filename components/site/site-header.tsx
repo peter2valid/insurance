@@ -39,7 +39,7 @@ export function SiteHeader() {
       <div className="mx-auto flex w-full max-w-page items-center gap-2 px-4 py-2">
         <Logo />
 
-        <nav aria-label={copy.menuLabel} className="ml-6 hidden md:block">
+        <nav aria-label={copy.menuLabel} className="ml-6 hidden lg:block">
           <ul className="flex items-center gap-1">
             {copy.nav.map((item) => (
               <li key={item.href}>
@@ -60,7 +60,7 @@ export function SiteHeader() {
           <Button
             variant="ghost"
             size="icon"
-            className="text-ink md:hidden"
+            className="text-ink lg:hidden"
             aria-expanded={open}
             aria-controls={menuId}
             aria-label={open ? copy.closeMenu : copy.openMenu}
@@ -75,7 +75,7 @@ export function SiteHeader() {
         <nav
           id={menuId}
           aria-label={copy.menuLabel}
-          className="border-t border-border bg-surface shadow-overlay md:hidden"
+          className="border-t border-border bg-surface shadow-overlay lg:hidden"
         >
           <ul className="mx-auto flex max-w-page flex-col px-4 py-2">
             {copy.nav.map((item) => (
