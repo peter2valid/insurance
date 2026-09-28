@@ -16,10 +16,13 @@ export function LiveRefresh({
   refValue,
   watch,
   announce,
+  intervalMs,
 }: {
   refValue?: string;
   watch?: string;
   announce?: string;
+  /** Also refresh on a timer — for time-based changes like stalled drafts. */
+  intervalMs?: number;
 }) {
   const router = useRouter();
 
@@ -34,11 +37,14 @@ export function LiveRefresh({
       timer = setTimeout(() => router.refresh(), 250);
     };
 
+    const interval = intervalMs ? setInterval(() => router.refresh(), intervalMs) : undefined;
+
     return () => {
       clearTimeout(timer);
+      clearInterval(interval);
       source.close();
     };
-  }, [refValue, router]);
+  }, [refValue, router, intervalMs]);
 
   // Announce changes to the watched value (e.g. the application status).
   const last = React.useRef(watch);

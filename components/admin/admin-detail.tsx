@@ -20,7 +20,9 @@ type AdminDetailProps = {
   /** Status badge(s) for the application. */
   badges?: React.ReactNode;
   /** One primary action plus secondary ones, e.g. Mark verified / Ask for re-upload. */
-  actions: React.ReactNode;
+  actions?: React.ReactNode;
+  /** What the broker should do next, above the two columns. */
+  nextStep?: React.ReactNode;
   documents: React.ReactNode;
   answers: React.ReactNode;
 };
@@ -31,6 +33,7 @@ export function AdminDetail({
   reference,
   badges,
   actions,
+  nextStep,
   documents,
   answers,
 }: AdminDetailProps) {
@@ -57,8 +60,10 @@ export function AdminDetail({
             </div>
           </div>
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap md:justify-end">{actions}</div>
+        {actions && <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap md:justify-end">{actions}</div>}
       </div>
+
+      {nextStep}
 
       <Tabs defaultValue="documents" className="lg:grid lg:grid-cols-2 lg:gap-6">
         <TabsList className="lg:hidden">

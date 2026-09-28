@@ -38,3 +38,12 @@ export function formatAgo(iso: string, now: number = Date.now()): string {
   if (abs < 86400) return relative.format(Math.round(seconds / 3600), "hour");
   return relative.format(Math.round(seconds / 86400), "day");
 }
+
+/**
+ * The request's "now" for Server Components (which render once per request,
+ * so reading the clock is safe there). Pass it down so every "ago" on a page
+ * agrees.
+ */
+export function requestTime(): number {
+  return Date.now();
+}
