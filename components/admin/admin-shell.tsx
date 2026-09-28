@@ -20,14 +20,16 @@ export async function AdminShell({ children }: { children: React.ReactNode }) {
     <>
       <LiveRefresh watch={latestForAdmin?.id} announce={latestForAdmin?.body} intervalMs={30_000} />
       <header className="border-b border-border bg-surface">
-        <div className="mx-auto flex w-full max-w-page flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2">
+        <div className="mx-auto flex w-full max-w-page items-center gap-3 px-4 py-2">
           <Logo href="/admin" />
-          <span className="rounded-full bg-surface-alt px-3 py-1 text-sm font-medium text-ink-quiet">{admin.title}</span>
-          <nav aria-label={admin.title} className="ml-auto flex items-center gap-1">
-            <Button asChild variant="ghost" className="text-ink">
+          <span className="hidden rounded-full bg-surface-alt px-3 py-1 text-sm font-medium text-ink-quiet sm:inline">
+            {admin.title}
+          </span>
+          <nav aria-label={admin.title} className="ml-auto flex items-center">
+            <Button asChild variant="ghost" className="px-3 text-ink">
               <Link href="/admin">{admin.nav.board}</Link>
             </Button>
-            <Button asChild variant="ghost" className="text-ink">
+            <Button asChild variant="ghost" className="px-3 text-ink">
               <Link href="/admin/outbox">
                 {admin.nav.outbox}
                 <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-surface-alt px-2 text-sm text-ink-quiet">

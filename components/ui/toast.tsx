@@ -28,9 +28,17 @@ let nextId = 1;
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((listener) => listener());
 
+let lastShownAt = 0;
+
 function toast(input: ToastInput) {
+  lastShownAt = Date.now();
   items = [...items, { tone: "success", ...input, id: nextId++, open: true }];
   emit();
+}
+
+/** Milliseconds since the last toast — lets pages avoid stacking two messages about one change. */
+function msSinceLastToast(): number {
+  return Date.now() - lastShownAt;
 }
 
 function dismiss(id: number) {
@@ -125,5 +133,5 @@ function Toaster() {
   );
 }
 
-export { Toaster, ToastCard, toast };
+export { Toaster, ToastCard, toast, msSinceLastToast };
 export type { ToastInput, ToastTone };

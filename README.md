@@ -11,6 +11,31 @@ pnpm dev          # http://localhost:3000  ·  /styles shows the design tokens
 pnpm check        # typecheck + lint + build — must pass before a stage is done
 ```
 
+## Running the demo
+
+Use the production build: it is faster and steadier than dev mode.
+
+```bash
+pnpm build && pnpm start      # http://localhost:3000
+```
+
+Open two windows side by side: the admin board at `/admin` and a phone-sized
+window at `/`. Everything below is **simulated**: no texts or WhatsApp
+messages are sent; they appear in the admin Outbox.
+
+- **Sign-in code** is always `123456`.
+- **Seeded clients** sign in with `0700000100` (Wanjiku, BC-4821) up to
+  `0700000112`, in the order listed in `lib/data/seed.ts`. For example
+  `0700000107` is Amina Hassan (BC-4810), who still owes her KRA PIN.
+- **Error path**: a logbook photo under 20 KB is "unreadable", to show the
+  error screen.
+- **Demo data** resets when the server restarts.
+
+Suggested path: a new client applies from the hero → it appears in
+"Needs me now" with a toast → open it, ask for a re-upload → the client's
+page updates → verify documents → add quotes → mark quotes ready → the
+client chooses → mark covered → show the Outbox.
+
 ## Where things live
 
 - `lib/tokens/tokens.css` — every colour, size, radius and shadow (light + dark)

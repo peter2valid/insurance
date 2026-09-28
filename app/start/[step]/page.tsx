@@ -13,7 +13,25 @@ import { formatKes } from "@/lib/format/money";
 import { formatKenyanPhone } from "@/lib/format/phone";
 import { getPendingCode } from "@/lib/session";
 
-export const metadata: Metadata = { title: flow.phone.title, robots: { index: false } };
+const screenTitles: Record<string, string> = {
+  phone: flow.phone.title,
+  code: flow.code.title,
+  vehicle: flow.vehicle.title,
+  logbook: flow.logbook.title,
+  confirm: flow.confirm.titleExtracted,
+  cover: flow.cover.title,
+  value: flow.value.title,
+  name: flow.name.title,
+  id: flow.id.title,
+  review: flow.review.title,
+  done: flow.done.title,
+};
+
+/** Each step gets its own tab title, so the browser history makes sense. */
+export async function generateMetadata(props: PageProps<"/start/[step]">): Promise<Metadata> {
+  const { step } = await props.params;
+  return { title: screenTitles[step] ?? flow.phone.title, robots: { index: false } };
+}
 
 /**
  * Every screen of the client flow lives at /start/<screen>?ref=<ref>.

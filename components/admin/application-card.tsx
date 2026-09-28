@@ -27,11 +27,15 @@ export function ApplicationCard({
   action,
 }: ApplicationCardProps) {
   return (
-    <Card className="gap-3 p-4 sm:p-4">
+    <Card className="relative gap-3 p-4 sm:p-4 hover:border-brand">
       <div className="flex items-start gap-3">
         <Avatar name={name} />
         <div className="flex min-w-0 flex-1 flex-col">
-          <TextLink href={href} className="self-start text-base text-ink no-underline hover:underline">
+          {/* The link's hit area covers the whole card (after:inset-0). */}
+          <TextLink
+            href={href}
+            className="self-start text-base text-ink no-underline after:absolute after:inset-0 after:rounded-card hover:underline"
+          >
             {name}
           </TextLink>
           <p className="text-sm text-ink-quiet">
@@ -44,7 +48,7 @@ export function ApplicationCard({
         <Clock className="size-4 shrink-0" aria-hidden />
         {note}
       </p>
-      {action && <div className="[&>*]:w-full">{action}</div>}
+      {action && <div className="relative z-10 [&>*]:w-full">{action}</div>}
     </Card>
   );
 }

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "@/components/ui/toast";
+import { msSinceLastToast, toast } from "@/components/ui/toast";
 
 /**
  * Keeps a page in sync: listens to /api/events and re-renders the page's
@@ -51,7 +51,8 @@ export function LiveRefresh({
   React.useEffect(() => {
     if (watch !== last.current) {
       last.current = watch;
-      if (announce) toast({ title: announce, tone: "info" });
+      // Skip if the page just confirmed the user's own action (e.g. "Cover chosen").
+      if (announce && msSinceLastToast() > 4000) toast({ title: announce, tone: "info" });
     }
   }, [watch, announce]);
 

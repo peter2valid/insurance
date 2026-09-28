@@ -181,7 +181,7 @@ function Documents({ app }: { app: Application }) {
                 </TextLink>
               )
             ) : (
-              <div className="flex aspect-video items-center justify-center gap-2 rounded-control border border-dashed border-border bg-surface-alt p-4 text-center text-sm text-ink-quiet">
+              <div className="flex min-h-touch items-center gap-2 rounded-control border border-dashed border-border bg-surface-alt px-3 py-2 text-sm text-ink-quiet">
                 <FileText className="size-5 shrink-0" aria-hidden />
                 {admin.detail.sampleFile}
               </div>
