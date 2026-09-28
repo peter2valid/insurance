@@ -1,18 +1,23 @@
+import { flow } from "@/lib/copy";
 import { getRepo } from "@/lib/data/repo";
-import type { DocumentType } from "@/lib/data/types";
+import type { Application, Client, DocumentType } from "@/lib/data/types";
 import { ExtractionError, extractLogbook, MAX_LOGBOOK_BYTES } from "@/lib/extract";
 import { getFlowContext, saveAndAdvance } from "@/lib/flow/context";
 import { screenHref } from "@/lib/flow/screens";
+import { getNotifier } from "@/lib/notify";
 
 /**
- * Document upload for the client flow. A route handler (not a server
- * action) so the browser can report real upload progress.
+ * Document upload for the client flow and the status page. A route handler
+ * (not a server action) so the browser can report real upload progress.
+ * During the flow: logbook (read + confirm) and ID. After sending: any
+ * document the broker still needs, including re-uploads.
  *
  * Responses: { ok: true, next } or { ok: false, code } where `code` maps to
  * a plain-language message in lib/copy/flow.
  */
 
-const ALLOWED_KINDS: DocumentType[] = ["logbook", "national_id"];
+const FLOW_KINDS: DocumentType[] = ["logbook", "national_id"];
+const ALL_KINDS: DocumentType[] = ["logbook", "national_id", "kra_pin", "driving_licence"];
 
 function isAllowedType(type: string) {
   return type.startsWith("image/") || type === "application/pdf";
@@ -31,14 +36,15 @@ export async function POST(request: Request) {
   const file = form.get("file");
   const kind = form.get("kind");
   const ref = form.get("ref");
-  if (!(file instanceof File) || typeof kind !== "string" || !ALLOWED_KINDS.includes(kind as DocumentType)) {
+  if (!(file instanceof File) || typeof kind !== "string" || !ALL_KINDS.includes(kind as DocumentType)) {
     return fail("upload");
   }
   if (!isAllowedType(file.type)) return fail("unsupported_file");
   if (file.size > MAX_LOGBOOK_BYTES) return fail("too_large");
 
   const ctx = await getFlowContext(typeof ref === "string" ? ref : null);
-  if (ctx.kind !== "active") return fail("not_allowed", 403);
+  if (ctx.kind === "submitted") return uploadAfterSending(ctx.app, ctx.client, kind as DocumentType, file);
+  if (ctx.kind !== "active" || !FLOW_KINDS.includes(kind as DocumentType)) return fail("not_allowed", 403);
 
   const repo = getRepo();
   const details: Record<string, string> = {};
@@ -82,4 +88,35 @@ export async function POST(request: Request) {
   });
   const { next } = await saveAndAdvance(app, ctx.client, details);
   return Response.json({ ok: true, next: screenHref(next, app.ref) });
+}
+
+/** Status-page upload: store it, mark it received, and tell the broker. */
+async function uploadAfterSending(app: Application, client: Client, kind: DocumentType, file: File) {
+  const repo = getRepo();
+  const doc = app.documents.find((item) => item.type === kind);
+  if (!doc) return fail("upload");
+
+  const stored = await repo.saveFile({
+    name: file.name,
+    type: file.type,
+    bytes: new Uint8Array(await file.arrayBuffer()),
+  });
+  await repo.updateDocument(app.ref, doc.id, {
+    status: "uploaded",
+    fileName: file.name,
+    fileUrl: stored.url,
+    uploadedAt: new Date().toISOString(),
+  });
+
+  // Instant visibility for the broker (CLAUDE.md §1) — simulated.
+  await getNotifier().send({
+    channel: "whatsapp",
+    to: "admin",
+    audience: "admin",
+    template: "document_uploaded",
+    data: { ref: app.ref, clientName: client.name, document: flow.documents[kind] },
+    applicationRef: app.ref,
+  });
+
+  return Response.json({ ok: true, next: `/my/${app.ref}` });
 }

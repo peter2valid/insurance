@@ -227,6 +227,13 @@ export const flow = {
     kra_pin: "KRA PIN certificate",
     driving_licence: "Driving licence",
   },
+  // For use mid-sentence ("Upload your KRA PIN certificate").
+  documentsInline: {
+    logbook: "logbook",
+    national_id: "national ID",
+    kra_pin: "KRA PIN certificate",
+    driving_licence: "driving licence",
+  },
 
   // Names of steps for the "Need help?" WhatsApp message.
   stepNames: {

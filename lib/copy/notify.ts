@@ -20,6 +20,12 @@ export const notifyTemplates = {
   document_requested: (d: { firstName: string; ref: string; document: string; reason: string; link: string }) =>
     `Hi ${d.firstName}, we need a new ${d.document} for ${d.ref}. ${d.reason} Upload it here: ${d.link}`,
 
+  document_uploaded: (d: { ref: string; clientName: string; document: string }) =>
+    `${d.clientName} uploaded their ${d.document} for ${d.ref}. It's ready to check.`,
+
+  cover_chosen: (d: { ref: string; clientName: string; insurer: string; premium: string }) =>
+    `${d.clientName} chose ${d.insurer} (${d.premium} a year) on ${d.ref}. Ready to finalise.`,
+
   nudge: (d: { firstName: string; link: string }) =>
     `Hi ${d.firstName}, you're nearly done with your motor insurance application. Pick up where you left off: ${d.link}`,
 } as const;

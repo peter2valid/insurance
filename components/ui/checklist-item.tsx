@@ -6,6 +6,7 @@ import {
   type LucideIcon,
   Upload,
 } from "lucide-react";
+import type * as React from "react";
 import { kit } from "@/lib/copy";
 import type { DocumentStatus } from "@/lib/data/types";
 import { cn } from "@/lib/utils";
@@ -23,6 +24,8 @@ type ChecklistItemProps = {
   actionLoading?: boolean;
   /** "primary" when this is the main thing to do on the page. */
   actionVariant?: "primary" | "secondary";
+  /** Custom action (e.g. a button that opens an upload dialog). Replaces the default button. */
+  action?: React.ReactNode;
   className?: string;
 };
 
@@ -43,6 +46,7 @@ function ChecklistItem({
   onAction,
   actionLoading,
   actionVariant = "secondary",
+  action,
   className,
 }: ChecklistItemProps) {
   const { icon: Icon, iconClass } = statusStyle[status];
@@ -67,7 +71,8 @@ function ChecklistItem({
           {status === "rejected" && reason && <p className="text-sm text-danger">{reason}</p>}
         </div>
       </div>
-      {needsAction && actionLabel && onAction && (
+      {needsAction && action}
+      {needsAction && !action && actionLabel && onAction && (
         <Button
           variant={actionVariant}
           onClick={onAction}

@@ -5,12 +5,13 @@ import { useRouter } from "next/navigation";
 import { LoaderCircle } from "lucide-react";
 import { FileUpload, type FileUploadState } from "@/components/ui/file-upload";
 import { toast } from "@/components/ui/toast";
+import type { DocumentType } from "@/lib/data/types";
 import { compressImage } from "@/lib/images/compress";
 
 type Messages = Record<string, string> & { upload: string };
 
 type DocumentUploadProps = {
-  kind: "logbook" | "national_id";
+  kind: DocumentType;
   refValue: string;
   label: string;
   hint?: string;
@@ -23,6 +24,8 @@ type DocumentUploadProps = {
   successToast: string;
   /** Tells the screen an upload is in progress, so it can disable skip buttons. */
   onBusyChange?: (busy: boolean) => void;
+  /** Called on success instead of navigating (e.g. the status page refreshes in place). */
+  onDone?: () => void;
 };
 
 type Phase =
@@ -47,6 +50,7 @@ export function DocumentUpload({
   errorMessages,
   successToast,
   onBusyChange,
+  onDone,
 }: DocumentUploadProps) {
   const router = useRouter();
   const [phase, setPhase] = React.useState<Phase>({ name: "idle" });
@@ -85,7 +89,8 @@ export function DocumentUpload({
       const body = xhr.response as { ok: boolean; next?: string; code?: string } | null;
       if (body?.ok && body.next) {
         toast({ title: successToast });
-        router.push(body.next);
+        if (onDone) onDone();
+        else router.push(body.next);
         return;
       }
       setPhase({ name: "error", message: errorMessages[body?.code ?? "upload"] ?? errorMessages.upload });
