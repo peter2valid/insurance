@@ -1,0 +1,180 @@
+/*
+ * Design tokens — the ONLY source of visual values (CLAUDE.md §4.1).
+ *
+ * 1. Raw tokens live on :root as CSS variables, with a dark override.
+ * 2. `@theme` below exposes them to Tailwind. Tailwind's default colours,
+ *    font sizes, radii, shadows and containers are reset first, so a class
+ *    like `bg-red-500` or `text-5xl` simply does not exist.
+ * 3. lib/tokens/index.ts lists the token names for TypeScript and /styles.
+ *
+ * Changing or adding a token: ask first (CLAUDE.md §10.5).
+ *
+ * Dark theme: follows the OS by default. Force a theme with
+ * <html data-theme="light"> or <html data-theme="dark">.
+ */
+
+:root {
+  /* Colour — light (placeholder brand palette from CLAUDE.md §4.1) */
+  --bg: #f5f6f3;
+  --surface: #ffffff;
+  --surface-alt: #edf1ee;
+  --ink: #16241f;
+  --ink-quiet: #52645c;
+  --brand: #175c54;
+  --brand-dark: #0f423c;
+  --on-brand: #ffffff; /* text/icons on brand, success, warn, danger fills */
+  --accent: #b9822a; /* markers only — 3.1:1, never body text */
+  --border: #dce3dd;
+  --success: #3e7a5b;
+  --warn: #b15a26;
+  --danger: #b3372f;
+
+  /* Type */
+  --typeface-heading: var(--font-plex-serif), Georgia, serif;
+  --typeface-body: var(--font-plex-sans), system-ui, sans-serif;
+
+  /* Radius */
+  --corner-control: 8px;
+  --corner-card: 14px;
+
+  /* Shadow — two levels only; prefer borders */
+  --elevation-raised: 0 1px 2px rgb(22 36 31 / 0.06), 0 1px 3px rgb(22 36 31 / 0.08);
+  --elevation-overlay: 0 8px 24px rgb(22 36 31 / 0.12), 0 2px 6px rgb(22 36 31 / 0.08);
+
+  color-scheme: light;
+}
+
+/* Dark values are proposed (not in CLAUDE.md) and checked for WCAG AA. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1714;
+    --surface: #16211d;
+    --surface-alt: #1d2b26;
+    --ink: #e7eeea;
+    --ink-quiet: #a3b4ac;
+    --brand: #5dbbad;
+    --brand-dark: #7fcdc1;
+    --on-brand: #0b1f1c;
+    --accent: #d9a548;
+    --border: #2c3d36;
+    --success: #72c295;
+    --warn: #e8935f;
+    --danger: #f08178;
+    --elevation-raised: 0 1px 2px rgb(0 0 0 / 0.3), 0 1px 3px rgb(0 0 0 / 0.35);
+    --elevation-overlay: 0 8px 24px rgb(0 0 0 / 0.45), 0 2px 6px rgb(0 0 0 / 0.35);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0e1714;
+  --surface: #16211d;
+  --surface-alt: #1d2b26;
+  --ink: #e7eeea;
+  --ink-quiet: #a3b4ac;
+  --brand: #5dbbad;
+  --brand-dark: #7fcdc1;
+  --on-brand: #0b1f1c;
+  --accent: #d9a548;
+  --border: #2c3d36;
+  --success: #72c295;
+  --warn: #e8935f;
+  --danger: #f08178;
+  --elevation-raised: 0 1px 2px rgb(0 0 0 / 0.3), 0 1px 3px rgb(0 0 0 / 0.35);
+  --elevation-overlay: 0 8px 24px rgb(0 0 0 / 0.45), 0 2px 6px rgb(0 0 0 / 0.35);
+  color-scheme: dark;
+}
+
+@theme inline {
+  /* Reset Tailwind defaults so only tokens exist */
+  --color-*: initial;
+  --text-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+  --container-*: initial;
+  --font-*: initial;
+
+  /* Colour: bg-brand, text-ink-quiet, border-border ... */
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-alt: var(--surface-alt);
+  --color-ink: var(--ink);
+  --color-ink-quiet: var(--ink-quiet);
+  --color-brand: var(--brand);
+  --color-brand-dark: var(--brand-dark);
+  --color-on-brand: var(--on-brand);
+  --color-accent: var(--accent);
+  --color-border: var(--border);
+  --color-success: var(--success);
+  --color-warn: var(--warn);
+  --color-danger: var(--danger);
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  /*
+   * shadcn/ui aliases — ONLY for primitives in components/ui.
+   * Feature code uses the names above. Note `accent` means our gold
+   * highlight, not shadcn's grey hover; restyle primitives accordingly.
+   */
+  --color-background: var(--bg);
+  --color-foreground: var(--ink);
+  --color-card: var(--surface);
+  --color-card-foreground: var(--ink);
+  --color-popover: var(--surface);
+  --color-popover-foreground: var(--ink);
+  --color-primary: var(--brand);
+  --color-primary-foreground: var(--on-brand);
+  --color-secondary: var(--surface-alt);
+  --color-secondary-foreground: var(--ink);
+  --color-muted: var(--surface-alt);
+  --color-muted-foreground: var(--ink-quiet);
+  --color-destructive: var(--danger);
+  --color-input: var(--border);
+  --color-ring: var(--brand);
+
+  /* Type: IBM Plex Serif for headings, IBM Plex Sans for body/UI */
+  --font-heading: var(--typeface-heading);
+  --font-sans: var(--typeface-body);
+
+  /* Type scale 12 / 14 / 16 / 18 / 22 / 28 / 36 */
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.625rem;
+  --text-xl: 1.375rem;
+  --text-xl--line-height: 1.875rem;
+  --text-2xl: 1.75rem;
+  --text-2xl--line-height: 2.25rem;
+  --text-3xl: 2.25rem;
+  --text-3xl--line-height: 2.75rem;
+
+  /*
+   * Spacing: Tailwind's 4px multiplier. Use only the steps on our scale:
+   * 1 (4) · 2 (8) · 3 (12) · 4 (16) · 6 (24) · 8 (32) · 12 (48) · 16 (64)
+   */
+  --spacing: 0.25rem;
+  --spacing-touch: 2.75rem; /* 44px minimum touch target: h-touch, size-touch */
+
+  /* Radius: rounded-control, rounded-card, rounded-full */
+  --radius-control: var(--corner-control);
+  --radius-card: var(--corner-card);
+  --radius-full: 9999px;
+  /* shadcn primitive aliases */
+  --radius-sm: var(--corner-control);
+  --radius-md: var(--corner-control);
+  --radius-lg: var(--corner-control);
+  --radius-xl: var(--corner-card);
+
+  /* Shadow: shadow-raised, shadow-overlay */
+  --shadow-raised: var(--elevation-raised);
+  --shadow-overlay: var(--elevation-overlay);
+
+  /* Content widths: max-w-flow, max-w-page, max-w-prose */
+  --container-flow: 45rem; /* 720px — client flow screens */
+  --container-page: 68.75rem; /* 1100px — site and admin */
+  --container-prose: 70ch; /* keeps line length under 75 characters */
+}

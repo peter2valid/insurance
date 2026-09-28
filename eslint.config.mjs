@@ -2,9 +2,40 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 
+// CLAUDE.md §4.1: no raw hex codes or arbitrary Tailwind values
+// (e.g. `w-[437px]`) in feature code. Values come from lib/tokens.
+const noRawValues = [
+  {
+    selector: "Literal[value=/#[0-9a-fA-F]{3,8}\\b/]",
+    message: "Raw hex colour. Use a colour token from lib/tokens.",
+  },
+  {
+    selector: "TemplateElement[value.raw=/#[0-9a-fA-F]{3,8}\\b/]",
+    message: "Raw hex colour. Use a colour token from lib/tokens.",
+  },
+  {
+    selector: "Literal[value=/(^|\\s)[a-z:-]+-\\[[^\\]]+\\]/]",
+    message: "Arbitrary Tailwind value. Add a token first (ask), then use it.",
+  },
+  {
+    selector: "TemplateElement[value.raw=/(^|\\s)[a-z:-]+-\\[[^\\]]+\\]/]",
+    message: "Arbitrary Tailwind value. Add a token first (ask), then use it.",
+  },
+  {
+    selector: "JSXAttribute[name.name='style']",
+    message: "No inline styles in feature code. Use token classes.",
+  },
+];
+
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  {
+    files: ["app/**/*.{ts,tsx}", "components/{flow,status,admin,site}/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-syntax": ["error", ...noRawValues],
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
