@@ -7,6 +7,7 @@ export { admin } from "./admin";
 export { common } from "./common";
 export { flow } from "./flow";
 export { kit } from "./kit";
+export { notifyLabels, notifyTemplates } from "./notify";
 export { site } from "./site";
 export { statusLabels, statusPage } from "./status";
 export { styles } from "./styles";

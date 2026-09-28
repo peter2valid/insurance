@@ -51,6 +51,24 @@ const eslintConfig = defineConfig([
       "no-restricted-syntax": ["error", ...noRawValues],
     },
   },
+  // CLAUDE.md §6: screens go through interfaces, never the mock/simulated
+  // implementations directly.
+  {
+    files: ["app/**/*.{ts,tsx}", "components/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@/lib/data/mock", "@/lib/data/seed", "@/lib/*/simulated"],
+              message: "Use the interface (getRepo, getNotifier, extractLogbook), not the simulated implementation.",
+            },
+          ],
+        },
+      ],
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

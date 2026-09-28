@@ -1,0 +1,39 @@
+import { notifyTemplates } from "@/lib/copy";
+import type { Channel } from "@/lib/data/types";
+
+export type TemplateName = keyof typeof notifyTemplates;
+export type TemplateData<T extends TemplateName> = Parameters<(typeof notifyTemplates)[T]>[0];
+
+export type NotificationInput<T extends TemplateName = TemplateName> = {
+  channel: Channel;
+  /** Phone (E.164) or email. "admin" addresses the broker. */
+  to: string;
+  audience: "client" | "admin";
+  template: T;
+  data: TemplateData<T>;
+  applicationRef?: string;
+};
+
+export interface OutboxItem {
+  id: string;
+  channel: Channel;
+  to: string;
+  audience: "client" | "admin";
+  template: TemplateName;
+  body: string;
+  applicationRef?: string;
+  createdAt: string;
+  /** Always true until a real provider is wired in. Shown in the UI. */
+  simulated: true;
+}
+
+export interface Notifier {
+  send<T extends TemplateName>(input: NotificationInput<T>): Promise<OutboxItem>;
+  listOutbox(): Promise<OutboxItem[]>;
+}
+
+export function renderTemplate<T extends TemplateName>(template: T, data: TemplateData<T>): string {
+  const render = notifyTemplates[template] as (d: TemplateData<T>) => string;
+  return render(data);
+}
+

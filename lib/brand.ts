@@ -10,6 +10,9 @@ export const brand = {
   refPrefix: "BC", // application references look like "BC-4821"
   tagline: "[Tagline]",
 
+  // Used in links inside messages. Set SITE_URL in the environment for a real domain.
+  siteUrl: process.env.SITE_URL ?? "http://localhost:3000",
+
   licence: {
     number: "[Licence no.]",
     regulator: "[Regulator name]",
