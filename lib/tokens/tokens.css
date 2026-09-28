@@ -173,8 +173,9 @@
   --shadow-raised: var(--elevation-raised);
   --shadow-overlay: var(--elevation-overlay);
 
-  /* Content widths: max-w-flow, max-w-page, max-w-prose */
+  /* Content widths: max-w-flow, max-w-page, max-w-prose, max-w-dialog */
   --container-flow: 45rem; /* 720px — client flow screens */
   --container-page: 68.75rem; /* 1100px — site and admin */
   --container-prose: 70ch; /* keeps line length under 75 characters */
+  --container-dialog: 28rem; /* 448px — dialogs and toasts on larger screens */
 }

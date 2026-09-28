@@ -4,5 +4,7 @@
  * Keeping strings in one place makes the Swahili toggle cheap later.
  */
 export { common } from "./common";
+export { kit } from "./kit";
 export { site } from "./site";
+export { statusLabels } from "./status";
 export { styles } from "./styles";

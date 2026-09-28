@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Sans, IBM_Plex_Serif } from "next/font/google";
+import { Toaster } from "@/components/ui/toast";
 import { brand } from "@/lib/brand";
 import { common } from "@/lib/copy";
 import "./globals.css";
@@ -34,7 +35,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang={brand.locale.language}
       className={`${plexSans.variable} ${plexSerif.variable} h-full`}
     >
-      <body className="flex min-h-full flex-col">{children}</body>
+      <body className="flex min-h-full flex-col">
+        {children}
+        <Toaster />
+      </body>
     </html>
   );
 }

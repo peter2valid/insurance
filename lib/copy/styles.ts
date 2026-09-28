@@ -1,9 +1,23 @@
 /** Strings for the internal /styles kitchen-sink page. */
 export const styles = {
   meta: { title: "Styles" },
-  heading: "Design tokens",
+  heading: "Design system",
   intro:
-    "Every visual value in the app comes from these tokens. Toggle your system theme to check dark mode.",
+    "Every token and every kit component, in every state. Hover and focus are shown forced so they can be compared at a glance.",
+  back: "Back to home",
+
+  theme: {
+    label: "Theme",
+    system: "System",
+    light: "Light",
+    dark: "Dark",
+  },
+
+  groups: {
+    tokens: "Tokens",
+    components: "Components",
+  },
+
   sections: {
     colour: "Colour",
     type: "Type scale",
@@ -17,5 +31,141 @@ export const styles = {
     body: "IBM Plex Sans — body and interface",
   },
   sample: "Upload your logbook",
-  back: "Back to home",
+
+  states: {
+    default: "Default",
+    hover: "Hover",
+    focus: "Focus",
+    disabled: "Disabled",
+    loading: "Loading",
+    error: "Error",
+    filled: "Filled",
+    empty: "Empty",
+    partial: "Partly entered",
+    complete: "Complete",
+    uploading: "Uploading",
+    uploaded: "Uploaded",
+    primary: "As main action",
+    live: "Try it",
+    withBack: "With back",
+    first: "First step",
+    alt: "Subtle",
+    interactive: "Clickable",
+    statuses: "Application statuses",
+    tones: "Other tones",
+    sizes: "Sizes",
+    withImage: "Fallback initials",
+  },
+
+  // Example content used to show components with realistic data.
+  demo: {
+    button: {
+      primary: "Send code",
+      secondary: "Snap the logbook instead",
+      ghost: "Change number",
+      danger: "Ask for re-upload",
+      icon: "Close",
+      block: "Confirm details",
+    },
+    input: {
+      label: "Number plate",
+      filled: "KDA 123A",
+      partial: "KDA",
+      hint: "As it appears on the vehicle, for example KDA 123A",
+      error: "That doesn't look like a Kenyan plate. Check it matches KAA 123A.",
+      optionalLabel: "Chassis number",
+    },
+    phone: {
+      label: "Your phone number",
+      hint: "We'll text you a code. For example 712 345 678.",
+      filled: "712 345 678",
+      partial: "712 34",
+      error: "That number is too short. Kenyan mobile numbers have 9 digits after +254.",
+    },
+    otp: {
+      label: "Enter the code we sent",
+      error: "That code has expired. Send a new one.",
+      partial: "123",
+      complete: "123456",
+      wrong: "654321",
+    },
+    select: {
+      label: "Type of cover",
+      options: [
+        { value: "comprehensive", label: "Comprehensive" },
+        { value: "third_party_fire_theft", label: "Third party, fire and theft" },
+        { value: "third_party", label: "Third party only" },
+      ],
+      error: "Choose a type of cover to continue.",
+    },
+    upload: {
+      label: "Photo of your logbook",
+      hint: "Only our team sees this. It is stored securely and used only for your application.",
+      fileName: "logbook-KDA123A.pdf",
+      error: "That file is larger than 10 MB. Take a photo instead, or choose a smaller file.",
+      idLabel: "Your national ID",
+    },
+    card: {
+      title: "Motor insurance",
+      body: "Private cars, from third party to comprehensive.",
+      altTitle: "What happens next",
+      altBody: "We check your documents and send you quotes, usually the same day.",
+    },
+    badges: {
+      new: "New",
+      stalled: "Stalled",
+      waiting: "Waiting on client",
+      rejected: "Rejected",
+      neutral: "Draft",
+    },
+    timeline: {
+      receivedMeta: "28 Sep, 10:40",
+      checkedMeta: "28 Sep, 11:15",
+      currentDescription: "We're comparing prices from several insurers. You don't need to do anything.",
+    },
+    checklist: {
+      logbook: "Logbook",
+      id: "National ID",
+      kraPin: "KRA PIN certificate",
+      licence: "Driving licence",
+      rejectedReason: "The photo is blurry. Take it again in good light.",
+      upload: "Upload",
+      uploadAgain: "Upload again",
+      description: "Front side",
+    },
+    toast: {
+      success: "Details confirmed",
+      successBody: "We'll check your documents next.",
+      error: "Upload didn't finish",
+      errorBody: "Check your connection and try again.",
+      info: "Code sent",
+      infoBody: "It can take up to a minute to arrive.",
+      trigger: "Show a toast",
+    },
+    empty: {
+      title: "Nothing needs you right now",
+      body: "New applications and client replies will appear here the moment they arrive.",
+      action: "Open outbox",
+    },
+    dialog: {
+      trigger: "Ask for re-upload",
+      title: "Ask for a new logbook photo?",
+      description: "We'll message the client on WhatsApp with the reason below.",
+      confirm: "Send request",
+      cancel: "Cancel",
+      reasonLabel: "Reason",
+      reasonValue: "The photo is blurry.",
+    },
+    tabs: {
+      details: "Details",
+      documents: "Documents",
+      messages: "Messages",
+      detailsBody: "Form answers appear here.",
+      documentsBody: "Uploaded documents appear here.",
+      messagesBody: "Messages to and from the client appear here.",
+    },
+    avatar: {
+      names: ["Wanjiku Kamau", "Otieno Odhiambo", "Amina Hassan"],
+    },
+  },
 } as const;

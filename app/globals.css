@@ -15,6 +15,39 @@
   }
 }
 
+/*
+ * `hover:` and `focus-visible:` also match data-force="hover" / "focus",
+ * so /styles can show those states statically. Harmless elsewhere.
+ */
+@custom-variant hover {
+  @media (hover: hover) {
+    &:hover {
+      @slot;
+    }
+  }
+  &[data-force~="hover"] {
+    @slot;
+  }
+}
+
+@custom-variant focus-visible {
+  &:focus-visible {
+    @slot;
+  }
+  &[data-force~="focus"] {
+    @slot;
+  }
+}
+
+@custom-variant focus-within {
+  &:focus-within {
+    @slot;
+  }
+  &[data-force~="focus"] {
+    @slot;
+  }
+}
+
 @layer base {
   * {
     @apply border-border;
@@ -37,7 +70,8 @@
     text-wrap: balance;
   }
 
-  :focus-visible {
+  :focus-visible,
+  [data-force~="focus"] {
     @apply outline-2 outline-offset-2 outline-brand;
   }
 
