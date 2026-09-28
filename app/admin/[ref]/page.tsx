@@ -18,7 +18,6 @@ import { getQuoteProvider } from "@/lib/data/quote-provider";
 import { formatDateTime } from "@/lib/format/date";
 import { formatKes } from "@/lib/format/money";
 import { formatKenyanPhone } from "@/lib/format/phone";
-import { whatsappUrlTo } from "@/lib/whatsapp";
 
 const docTone: Record<DocumentItem["status"], BadgeTone> = {
   needed: "neutral",
@@ -75,7 +74,7 @@ export default async function AdminApplicationPage(props: PageProps<"/admin/[ref
         <div className="flex flex-col gap-6">
           <AnswerList items={answers(app, client?.name, client?.phone)} />
           <QuotesSummary quotes={quotes} />
-          <Messages messages={messages} phone={client?.phone} />
+          <Messages messages={messages} />
         </div>
       }
     />
@@ -255,17 +254,10 @@ function QuotesSummary({ quotes }: { quotes: Quote[] }) {
   );
 }
 
-function Messages({ messages, phone }: { messages: Message[]; phone?: string }) {
+function Messages({ messages }: { messages: Message[] }) {
   return (
     <section className="flex flex-col gap-2">
-      <div className="flex items-center justify-between gap-3">
-        <h3 className="font-sans text-base font-semibold">{admin.detail.messages}</h3>
-        {phone && (
-          <TextLink href={whatsappUrlTo(phone)} external standalone className="text-sm">
-            {admin.detail.replyOnWhatsApp}
-          </TextLink>
-        )}
-      </div>
+      <h3 className="font-sans text-base font-semibold">{admin.detail.messages}</h3>
       {messages.length === 0 ? (
         <p className="text-sm text-ink-quiet">{admin.detail.noMessages}</p>
       ) : (

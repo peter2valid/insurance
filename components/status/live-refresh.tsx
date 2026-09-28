@@ -16,11 +16,16 @@ export function LiveRefresh({
   refValue,
   watch,
   announce,
+  announceHref,
+  announceLinkLabel,
   intervalMs,
 }: {
   refValue?: string;
   watch?: string;
   announce?: string;
+  /** Optional link in the announcement toast (e.g. open the application). */
+  announceHref?: string;
+  announceLinkLabel?: string;
   /** Also refresh on a timer — for time-based changes like stalled drafts. */
   intervalMs?: number;
 }) {
@@ -52,9 +57,12 @@ export function LiveRefresh({
     if (watch !== last.current) {
       last.current = watch;
       // Skip if the page just confirmed the user's own action (e.g. "Cover chosen").
-      if (announce && msSinceLastToast() > 4000) toast({ title: announce, tone: "info" });
+      if (announce && msSinceLastToast() > 4000) {
+        const action = announceHref && announceLinkLabel ? { href: announceHref, label: announceLinkLabel } : undefined;
+        toast({ title: announce, tone: "info", action });
+      }
     }
-  }, [watch, announce]);
+  }, [watch, announce, announceHref, announceLinkLabel]);
 
   return null;
 }

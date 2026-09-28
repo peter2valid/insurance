@@ -22,7 +22,8 @@ export const brand = {
     phoneDisplay: "[Phone number]",
     whatsappDisplay: "[WhatsApp number]",
     // PLACEHOLDER: international format, digits only, used for wa.me links.
-    whatsappE164: "254700000000",
+    // Deliberately not a real Kenyan number, so demo taps can't reach a stranger.
+    whatsappE164: "254000000000",
     email: "[Email address]",
     address: "[Office address]",
     hours: "[Opening hours]",

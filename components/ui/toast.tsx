@@ -5,6 +5,7 @@ import { CircleAlert, CircleCheck, Info, type LucideIcon, X } from "lucide-react
 import { Toast as ToastPrimitive } from "radix-ui";
 import { kit } from "@/lib/copy";
 import { cn } from "@/lib/utils";
+import { TextLink } from "./text-link";
 
 /*
  * Visible confirmation of every action (CLAUDE.md §4.3).
@@ -18,6 +19,8 @@ type ToastInput = {
   title: string;
   description?: string;
   tone?: ToastTone;
+  /** Optional link, e.g. "Open" the application a notification is about. */
+  action?: { label: string; href: string };
 };
 
 type ToastItem = ToastInput & { id: number; open: boolean };
@@ -70,6 +73,7 @@ function ToastCard({
   title,
   description,
   tone = "success",
+  action,
   closeButton,
   className,
 }: ToastInput & { closeButton?: React.ReactNode; className?: string }) {
@@ -87,6 +91,11 @@ function ToastCard({
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <p className="text-base font-medium text-ink">{title}</p>
         {description && <p className="text-sm text-ink-quiet">{description}</p>}
+        {action && (
+          <TextLink href={action.href} className="self-start text-sm">
+            {action.label}
+          </TextLink>
+        )}
       </div>
       {closeButton}
     </div>
@@ -110,6 +119,7 @@ function Toaster() {
             tone={item.tone}
             title={item.title}
             description={item.description}
+            action={item.action}
             closeButton={
               <ToastPrimitive.Close
                 aria-label={kit.close}

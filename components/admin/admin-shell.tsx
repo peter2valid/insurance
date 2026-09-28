@@ -18,7 +18,13 @@ export async function AdminShell({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      <LiveRefresh watch={latestForAdmin?.id} announce={latestForAdmin?.body} intervalMs={30_000} />
+      <LiveRefresh
+        watch={latestForAdmin?.id}
+        announce={latestForAdmin?.body}
+        announceHref={latestForAdmin?.applicationRef ? `/admin/${latestForAdmin.applicationRef}` : undefined}
+        announceLinkLabel={admin.openApplication}
+        intervalMs={30_000}
+      />
       <header className="border-b border-border bg-surface">
         <div className="mx-auto flex w-full max-w-page items-center gap-3 px-4 py-2">
           <Logo href="/admin" />

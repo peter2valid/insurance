@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import * as workflow from "@/lib/admin/workflow";
+import { getRepo } from "@/lib/data/repo";
 import { admin } from "@/lib/copy";
 import { coverTypes } from "@/lib/data/products";
 import type { ActionResult } from "@/lib/flow/action-result";
@@ -104,4 +105,10 @@ export async function coveredAction(_prev: ActionResult, formData: FormData): Pr
     await workflow.markCovered(ref);
     return admin.toasts.covered;
   });
+}
+
+/** Demo only (Stage 10): restore the sample applications and clear the outbox. */
+export async function resetDemoAction(): Promise<ActionResult> {
+  await getRepo().reset();
+  return { ok: true, next: "/admin", toast: admin.demo.toast };
 }

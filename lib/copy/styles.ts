@@ -53,6 +53,7 @@ export const styles = {
     interactive: "Clickable",
     statuses: "Application statuses",
     tones: "Other tones",
+    withLink: "With a link",
     sizes: "Sizes",
     withImage: "Fallback initials",
     inline: "Inside a sentence",
@@ -155,6 +156,8 @@ export const styles = {
       info: "Code sent",
       infoBody: "It can take up to a minute to arrive.",
       trigger: "Show a toast",
+      withAction: "New motor application BC-4824 from Njoroge Kamau.",
+      actionLabel: "Open",
     },
     textLink: {
       before: "Not sure which cover you need?",

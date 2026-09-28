@@ -502,6 +502,9 @@ function ToastSection() {
         <State label="info">
           <ToastCard tone="info" title={t.info} description={t.infoBody} />
         </State>
+        <State label={s.withLink}>
+          <ToastCard tone="info" title={t.withAction} action={{ label: t.actionLabel, href: "#toast" }} />
+        </State>
       </StateGrid>
       <State label={s.live}>
         <div>

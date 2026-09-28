@@ -92,7 +92,6 @@ export const admin = {
     sampleFile: "Sample data — no file attached in the demo.",
     openFile: "Open file",
     waitingForClient: "Waiting for the client to upload this.",
-    replyOnWhatsApp: "Reply on WhatsApp",
     chosen: "Chosen by the client",
     notFound: {
       title: "We can't find that application",
@@ -196,6 +195,18 @@ export const admin = {
       coverType: "Choose the type of cover.",
     },
   },
+
+  demo: {
+    heading: "Demo tools",
+    body: "Start the demo again from the sample applications. Only visible to you.",
+    reset: "Reset demo data",
+    confirmTitle: "Reset demo data?",
+    confirmBody:
+      "This removes every application, upload and message created during the demo, and brings back the sample applications. It can't be undone.",
+    cancel: "Cancel",
+    toast: "Demo data reset",
+  },
+  openApplication: "Open",
 
   outbox: {
     heading: "Outbox",

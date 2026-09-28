@@ -1,6 +1,7 @@
 import { Inbox } from "lucide-react";
 import { AdminBoard } from "@/components/admin/admin-board";
 import { BoardCard } from "@/components/admin/board-card";
+import { ResetDemo } from "@/components/admin/reset-demo";
 import { EmptyState } from "@/components/ui/empty-state";
 import { admin } from "@/lib/copy";
 import { requestTime } from "@/lib/format/date";
@@ -17,21 +18,24 @@ export default async function AdminBoardPage() {
     board[bucket].map((item) => <BoardCard key={item.application.ref} item={item} now={now} />);
 
   return (
-    <AdminBoard
-      heading={admin.boardHeading}
-      intro={admin.boardIntro}
-      buckets={[
-        {
-          id: "needs-me",
-          title: admin.buckets.needsMe,
-          urgent: true,
-          items: cards("needs_me"),
-          empty: <EmptyState icon={Inbox} title={admin.empty.needsMe.title} body={admin.empty.needsMe.body} />,
-        },
-        { id: "waiting", title: admin.buckets.waiting, items: cards("waiting"), empty: quietEmpty },
-        { id: "quotes-out", title: admin.buckets.quotesOut, items: cards("quotes_out"), empty: quietEmpty },
-        { id: "done", title: admin.buckets.done, items: cards("done"), empty: quietEmpty },
-      ]}
-    />
+    <>
+      <AdminBoard
+        heading={admin.boardHeading}
+        intro={admin.boardIntro}
+        buckets={[
+          {
+            id: "needs-me",
+            title: admin.buckets.needsMe,
+            urgent: true,
+            items: cards("needs_me"),
+            empty: <EmptyState icon={Inbox} title={admin.empty.needsMe.title} body={admin.empty.needsMe.body} />,
+          },
+          { id: "waiting", title: admin.buckets.waiting, items: cards("waiting"), empty: quietEmpty },
+          { id: "quotes-out", title: admin.buckets.quotesOut, items: cards("quotes_out"), empty: quietEmpty },
+          { id: "done", title: admin.buckets.done, items: cards("done"), empty: quietEmpty },
+        ]}
+      />
+      <ResetDemo />
+    </>
   );
 }
