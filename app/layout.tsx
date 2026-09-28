@@ -36,6 +36,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${plexSans.variable} ${plexSerif.variable} h-full`}
     >
       <body className="flex min-h-full flex-col">
+        <a
+          href="#main"
+          className="sr-only rounded-control bg-brand px-4 py-3 font-medium text-on-brand focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50"
+        >
+          {common.skipToContent}
+        </a>
         {children}
         <Toaster />
       </body>

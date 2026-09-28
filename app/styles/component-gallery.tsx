@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ArrowRight, Inbox, Sparkles, X } from "lucide-react";
+import { ArrowRight, CircleAlert, Inbox, Sparkles, X } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
@@ -24,6 +24,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { StatusTimeline } from "@/components/ui/status-timeline";
 import { StepHeader } from "@/components/ui/step-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TextLink } from "@/components/ui/text-link";
 import { ToastCard, toast } from "@/components/ui/toast";
 import { statusLabels, styles as copy } from "@/lib/copy";
 import { applicationStatuses } from "@/lib/data/types";
@@ -37,6 +38,7 @@ export function ComponentGallery() {
   return (
     <>
       <ButtonSection />
+      <TextLinkSection />
       <InputSection />
       <PhoneSection />
       <OtpSection />
@@ -108,6 +110,41 @@ function ButtonSection() {
             {d.button.block}
             <ArrowRight aria-hidden />
           </Button>
+        </State>
+      </StateGrid>
+    </Section>
+  );
+}
+
+function TextLinkSection() {
+  const t = d.textLink;
+  return (
+    <Section id="text-link" title="TextLink">
+      <StateGrid>
+        <State label={s.inline}>
+          <p className="text-base text-ink">
+            {t.before} <TextLink href="#text-link">{t.link}</TextLink> {t.after}
+          </p>
+        </State>
+        <State label={s.standalone}>
+          <TextLink href="#text-link" standalone>
+            {t.standalone}
+          </TextLink>
+        </State>
+        <State label={s.quiet}>
+          <TextLink href="#text-link" standalone quiet>
+            {t.quiet}
+          </TextLink>
+        </State>
+        <State label={s.hover}>
+          <TextLink href="#text-link" standalone data-force="hover">
+            {t.standalone}
+          </TextLink>
+        </State>
+        <State label={s.focus}>
+          <TextLink href="#text-link" standalone data-force="focus">
+            {t.standalone}
+          </TextLink>
         </State>
       </StateGrid>
     </Section>
@@ -452,13 +489,33 @@ function ToastSection() {
 function EmptySection() {
   return (
     <Section id="empty-state" title="EmptyState">
-      <EmptyState
-        icon={Inbox}
-        title={d.empty.title}
-        body={d.empty.body}
-        action={<Button variant="secondary">{d.empty.action}</Button>}
-        className="max-w-flow"
-      />
+      <StateGrid columns={2}>
+        <State label={s.default}>
+          <EmptyState
+            icon={Inbox}
+            title={d.empty.title}
+            body={d.empty.body}
+            action={<Button variant="secondary">{d.empty.action}</Button>}
+          />
+        </State>
+        <State label={s.compact}>
+          <EmptyState
+            size="compact"
+            icon={Inbox}
+            title={d.emptyCompact.title}
+            body={d.emptyCompact.body}
+          />
+        </State>
+        <State label={s.error}>
+          <EmptyState
+            tone="error"
+            icon={CircleAlert}
+            title={d.emptyError.title}
+            body={d.emptyError.body}
+            action={<Button variant="secondary">{d.emptyError.action}</Button>}
+          />
+        </State>
+      </StateGrid>
     </Section>
   );
 }

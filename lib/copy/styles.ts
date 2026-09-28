@@ -55,6 +55,10 @@ export const styles = {
     tones: "Other tones",
     sizes: "Sizes",
     withImage: "Fallback initials",
+    inline: "Inside a sentence",
+    standalone: "On its own",
+    quiet: "Quiet",
+    compact: "Compact",
   },
 
   // Example content used to show components with realistic data.
@@ -141,6 +145,22 @@ export const styles = {
       info: "Code sent",
       infoBody: "It can take up to a minute to arrive.",
       trigger: "Show a toast",
+    },
+    textLink: {
+      before: "Not sure which cover you need?",
+      link: "Read our questions",
+      after: "or message us.",
+      standalone: "See how we protect your documents",
+      quiet: "Privacy",
+    },
+    emptyCompact: {
+      title: "Nothing here yet",
+      body: "Applications move here on their own as they progress.",
+    },
+    emptyError: {
+      title: "We couldn't load your application",
+      body: "Check your internet connection, then try again. Nothing you've sent is lost.",
+      action: "Try again",
     },
     empty: {
       title: "Nothing needs you right now",
