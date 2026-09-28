@@ -1,0 +1,62 @@
+import { getRepo } from "@/lib/data/repo";
+import type { Application, Client } from "@/lib/data/types";
+import { getSessionClientId } from "@/lib/session";
+import { completedStep, nextScreen, type Screen } from "./screens";
+
+/**
+ * Server-side: who is signed in, and which application they're working on.
+ * Used by flow pages, actions and the upload route so the same rules apply
+ * everywhere.
+ */
+
+export type FlowContext =
+  | { kind: "signed_out" }
+  | { kind: "not_yours" }
+  | { kind: "submitted"; client: Client; app: Application }
+  | { kind: "active"; client: Client; app: Application; resume: Screen };
+
+export async function getFlowContext(ref?: string | null): Promise<FlowContext> {
+  const repo = getRepo();
+  const clientId = await getSessionClientId();
+  if (!clientId) return { kind: "signed_out" };
+
+  const client = await repo.getClient(clientId);
+  if (!client) return { kind: "signed_out" };
+
+  let app: Application | null = null;
+  if (ref) {
+    app = await repo.getApplication(ref);
+    if (!app || app.clientId !== client.id) return { kind: "not_yours" };
+  } else {
+    app = await findOrCreateDraft(client.id);
+  }
+
+  if (app.submittedAt) return { kind: "submitted", client, app };
+  return { kind: "active", client, app, resume: nextScreen(app, client) };
+}
+
+/** A returning client carries on with their unfinished application. */
+export async function findOrCreateDraft(clientId: string): Promise<Application> {
+  const repo = getRepo();
+  const apps = await repo.listApplicationsForClient(clientId);
+  const draft = apps
+    .filter((app) => !app.submittedAt)
+    .sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt))[0];
+  return draft ?? repo.createApplication({ clientId, product: "motor" });
+}
+
+/**
+ * Save answers, then work out where the client goes next. Also records the
+ * last completed step, which drives stall detection on the admin board.
+ */
+export async function saveAndAdvance(
+  app: Application,
+  client: Client,
+  details: Record<string, string>,
+): Promise<{ app: Application; next: Screen }> {
+  const repo = getRepo();
+  const merged = { ...app, details: { ...app.details, ...details } };
+  const next = nextScreen(merged, client);
+  const saved = await repo.saveProgress(app.ref, { step: completedStep(next), details });
+  return { app: saved, next };
+}

@@ -96,7 +96,7 @@ function Toaster() {
           open={item.open}
           onOpenChange={(open) => !open && dismiss(item.id)}
           type={item.tone === "error" ? "foreground" : "background"}
-          className="data-open:animate-in data-open:fade-in-0 data-open:slide-in-from-bottom-4 data-closed:animate-out data-closed:fade-out-0"
+          className="data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0"
         >
           <ToastCard
             tone={item.tone}
@@ -120,7 +120,7 @@ function Toaster() {
           )}
         </ToastPrimitive.Root>
       ))}
-      <ToastPrimitive.Viewport className="fixed inset-x-0 bottom-0 z-50 flex flex-col gap-2 p-4 outline-none sm:right-0 sm:left-auto sm:w-full sm:max-w-dialog" />
+      <ToastPrimitive.Viewport className="fixed inset-x-0 top-0 z-50 flex flex-col gap-2 p-4 outline-none sm:top-auto sm:right-0 sm:bottom-0 sm:left-auto sm:w-full sm:max-w-dialog" />
     </ToastPrimitive.Provider>
   );
 }

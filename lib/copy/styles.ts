@@ -93,6 +93,16 @@ export const styles = {
       complete: "123456",
       wrong: "654321",
     },
+    prefix: {
+      label: "Value of your car",
+      prefix: "KES",
+      hint: "For example 1,200,000",
+      filled: "1,450,000",
+    },
+    choice: {
+      label: "What cover do you want?",
+      error: "Choose a type of cover to continue.",
+    },
     select: {
       label: "Type of cover",
       options: [

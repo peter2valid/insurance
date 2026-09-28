@@ -55,6 +55,7 @@ function Button({
   loading = false,
   disabled,
   children,
+  type,
   ...props
 }: ButtonProps) {
   const Comp = asChild ? Slot.Root : "button";
@@ -64,6 +65,8 @@ function Button({
       data-slot="button"
       className={cn(buttonVariants({ variant, size, block }), className)}
       disabled={asChild ? undefined : disabled}
+      // Default to "button" so kit buttons never submit a form by accident.
+      type={asChild ? undefined : (type ?? "button")}
       aria-busy={loading || undefined}
       {...props}
     >

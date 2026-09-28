@@ -2,6 +2,7 @@ import * as React from "react";
 import { CircleAlert, ShieldCheck } from "lucide-react";
 import { MinimalHeader } from "@/components/site/minimal-header";
 import { EmptyState } from "@/components/ui/empty-state";
+import { FieldError } from "@/components/ui/field";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StepHeader } from "@/components/ui/step-header";
 import { flow } from "@/lib/copy";
@@ -31,14 +32,17 @@ type FlowStepOwnProps = {
   description?: string;
   /** Fields for the question. */
   children: React.ReactNode;
-  /** Exactly one primary Button. Full width on phones. */
-  primaryAction: React.ReactNode;
+  /** Exactly one primary Button. Full width on phones. Omit when a kit
+   *  component in the body owns the primary action (e.g. FileUpload). */
+  primaryAction?: React.ReactNode;
   /** Optional quieter alternative: a TextLink or ghost Button. */
   secondaryAction?: React.ReactNode;
   /** Reassurance shown where people hesitate (privacy, who sees it). */
   reassurance?: string;
   /** Plain name of the step, used in the "Need help?" WhatsApp message. */
   helpStep?: string;
+  /** Shown above the fields: a form-level error (role="alert"). */
+  formError?: string;
 };
 
 type FlowStepProps = FlowStepOwnProps &
@@ -57,6 +61,7 @@ export function FlowStep({
   secondaryAction,
   reassurance,
   helpStep,
+  formError,
   as = "div",
   ...rest
 }: FlowStepProps) {
@@ -71,6 +76,8 @@ export function FlowStep({
           {description && <p className="max-w-prose text-lg text-ink-quiet">{description}</p>}
         </div>
 
+        {formError && <FieldError>{formError}</FieldError>}
+
         <div className="flex flex-col gap-4">{children}</div>
 
         {reassurance && (
@@ -82,10 +89,12 @@ export function FlowStep({
           </p>
         )}
 
-        <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:gap-6 [&>button]:w-full sm:[&>button]:w-auto">
-          {primaryAction}
-          {secondaryAction}
-        </div>
+        {(primaryAction || secondaryAction) && (
+          <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:gap-6 [&>button]:w-full sm:[&>button]:w-auto">
+            {primaryAction}
+            {secondaryAction}
+          </div>
+        )}
       </Comp>
     </FlowShell>
   );

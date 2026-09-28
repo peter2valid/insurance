@@ -15,7 +15,10 @@ import type { Application, Client, Message, Quote } from "./types";
  * mutate the store by accident.
  */
 
+type StoredBytes = { id: string; name: string; type: string; bytes: Uint8Array };
+
 type Store = {
+  files: Map<string, StoredBytes>;
   clients: Map<string, Client>;
   applications: Map<string, Application>;
   quotes: Quote[];
@@ -28,6 +31,7 @@ function freshStore(): Store {
   const seed = createSeed();
   const highest = Math.max(...seed.applications.map((app) => Number(app.ref.split("-")[1])));
   return {
+    files: new Map(),
     clients: new Map(seed.clients.map((client) => [client.id, client])),
     applications: new Map(seed.applications.map((app) => [app.ref, app])),
     quotes: seed.quotes,
@@ -225,6 +229,19 @@ export function createMockRepo(): Repo {
         }
       }
       if (changed) publish({ type: "application.updated", ref });
+    },
+
+    // Files — SIMULATED storage, served by app/files/[id]/route.ts.
+    async saveFile({ name, type, bytes }) {
+      const id = newId("file");
+      store().files.set(id, { id, name, type, bytes });
+      return { id, name, type, size: bytes.byteLength, url: `/files/${id}` };
+    },
+
+    async getFile(id) {
+      const file = store().files.get(id);
+      if (!file) return null;
+      return { id, name: file.name, type: file.type, size: file.bytes.byteLength, url: `/files/${id}`, bytes: file.bytes };
     },
 
     async reset() {

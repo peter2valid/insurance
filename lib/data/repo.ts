@@ -56,9 +56,15 @@ export interface Repo {
   }): Promise<Message>;
   markMessagesRead(ref: string): Promise<void>;
 
+  // Files (logbook, ID photos). Mock: in memory. Later: Supabase Storage.
+  saveFile(input: { name: string; type: string; bytes: Uint8Array }): Promise<StoredFile>;
+  getFile(id: string): Promise<(StoredFile & { bytes: Uint8Array }) | null>;
+
   /** Demo only (Stage 10): restore seed data. */
   reset(): Promise<void>;
 }
+
+export type StoredFile = { id: string; name: string; type: string; size: number; url: string };
 
 export { NotFoundError } from "./errors";
 

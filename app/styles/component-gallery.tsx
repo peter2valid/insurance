@@ -3,6 +3,7 @@
 import * as React from "react";
 import { ArrowRight, CircleAlert, Inbox, Sparkles, X } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
+import { ChoiceCards } from "@/components/ui/choice-cards";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { ChecklistItem } from "@/components/ui/checklist-item";
@@ -26,13 +27,14 @@ import { StepHeader } from "@/components/ui/step-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TextLink } from "@/components/ui/text-link";
 import { ToastCard, toast } from "@/components/ui/toast";
-import { statusLabels, styles as copy } from "@/lib/copy";
+import { flow, statusLabels, styles as copy } from "@/lib/copy";
 import { applicationStatuses } from "@/lib/data/types";
 import { Section, State, StateGrid } from "./showcase";
 
 const s = copy.states;
 const d = copy.demo;
 const noop = () => {};
+const flowCoverOptions = flow.cover.options;
 
 export function ComponentGallery() {
   return (
@@ -43,6 +45,7 @@ export function ComponentGallery() {
       <PhoneSection />
       <OtpSection />
       <SelectSection />
+      <ChoiceSection />
       <UploadSection />
       <StepHeaderSection />
       <CardSection />
@@ -176,6 +179,34 @@ function InputSection() {
         </State>
         <State label="optional">
           <Input label={d.input.optionalLabel} optional />
+        </State>
+        <State label="prefix">
+          <Input label={d.prefix.label} prefix={d.prefix.prefix} hint={d.prefix.hint} defaultValue={d.prefix.filled} />
+        </State>
+        <State label={`prefix · ${s.focus}`}>
+          <Input label={d.prefix.label} prefix={d.prefix.prefix} hint={d.prefix.hint} data-force="focus" />
+        </State>
+      </StateGrid>
+    </Section>
+  );
+}
+
+function ChoiceSection() {
+  const base = { name: "demo-cover", label: d.choice.label, options: flowCoverOptions };
+  return (
+    <Section id="choice-cards" title="ChoiceCards">
+      <StateGrid columns={2}>
+        <State label={s.default}>
+          <ChoiceCards {...base} name="demo-cover-1" />
+        </State>
+        <State label={s.filled}>
+          <ChoiceCards {...base} name="demo-cover-2" defaultValue="comprehensive" />
+        </State>
+        <State label={s.error}>
+          <ChoiceCards {...base} name="demo-cover-3" error={d.choice.error} />
+        </State>
+        <State label={s.disabled}>
+          <ChoiceCards {...base} name="demo-cover-4" defaultValue="third_party" disabled />
         </State>
       </StateGrid>
     </Section>
