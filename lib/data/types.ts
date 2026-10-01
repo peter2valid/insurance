@@ -22,9 +22,22 @@ export const applicationStatuses: readonly ApplicationStatus[] = [
   "covered",
 ];
 
-export type Product = "motor"; // more later (CLAUDE.md §12)
+export type Product = "motor" | "health" | "travel" | "business";
 
-export type DocumentType = "logbook" | "national_id" | "kra_pin" | "driving_licence";
+export const products: readonly Product[] = ["motor", "health", "travel", "business"];
+
+export function isProduct(value: unknown): value is Product {
+  return typeof value === "string" && (products as readonly string[]).includes(value);
+}
+
+export type DocumentType =
+  | "logbook"
+  | "national_id"
+  | "kra_pin"
+  | "driving_licence"
+  | "passport"
+  | "business_registration"
+  | "dependants_ids";
 
 export type DocumentStatus = "needed" | "uploaded" | "verified" | "rejected";
 

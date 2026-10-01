@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { isProduct, type Product } from "@/lib/data/types";
 
 /**
  * SIMULATED phone sign-in (CLAUDE.md §8.1 step 2). The code is always
@@ -33,10 +34,10 @@ export async function endSession(): Promise<void> {
   (await cookies()).delete(SESSION_COOKIE);
 }
 
-type PendingCode = { phone: string; sentAt: number };
+type PendingCode = { phone: string; sentAt: number; product?: Product };
 
-export async function setPendingCode(phone: string): Promise<void> {
-  const value: PendingCode = { phone, sentAt: Date.now() };
+export async function setPendingCode(phone: string, product?: Product): Promise<void> {
+  const value: PendingCode = { phone, sentAt: Date.now(), product };
   (await cookies()).set(OTP_COOKIE, JSON.stringify(value), { ...cookieOptions, maxAge: 60 * 30 });
 }
 
@@ -45,7 +46,8 @@ export async function getPendingCode(): Promise<PendingCode | null> {
   if (!raw) return null;
   try {
     const parsed = JSON.parse(raw) as PendingCode;
-    return typeof parsed.phone === "string" && typeof parsed.sentAt === "number" ? parsed : null;
+    if (typeof parsed.phone !== "string" || typeof parsed.sentAt !== "number") return null;
+    return { phone: parsed.phone, sentAt: parsed.sentAt, product: isProduct(parsed.product) ? parsed.product : undefined };
   } catch {
     return null;
   }

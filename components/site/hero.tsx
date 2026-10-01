@@ -1,20 +1,21 @@
 import Link from "next/link";
 import { ArrowRight, Briefcase, Car, Check, HeartPulse, type LucideIcon, Plane } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { StatusBadge } from "@/components/ui/status-badge";
-import { site } from "@/lib/copy";
+import { productBlurbs, productCta, productNames, site } from "@/lib/copy";
+import { products, type Product } from "@/lib/data/types";
 
 const copy = site.hero;
 
-const otherIcons: Record<(typeof copy.others)[number]["id"], LucideIcon> = {
+const productIcons: Record<Product, LucideIcon> = {
+  motor: Car,
   health: HeartPulse,
   travel: Plane,
   business: Briefcase,
 };
 
 /**
- * The hero IS step one of the application (CLAUDE.md §1, §8.1): picking
- * Motor goes straight into the flow. This is the one place the design is
+ * The hero IS step one of the application (CLAUDE.md §1, §8.1): picking a
+ * product goes straight into its flow. This is the one place the design is
  * allowed to be bold (§4.2).
  */
 export function Hero() {
@@ -64,46 +65,29 @@ function NeedsList() {
 
 function ProductPicker() {
   return (
-    <div className="flex flex-col gap-4 rounded-card bg-surface p-4 text-ink shadow-overlay sm:p-6">
+    <div className="flex flex-col gap-3 rounded-card bg-surface p-4 text-ink shadow-overlay sm:p-6">
       <h2 className="text-xl">{copy.question}</h2>
-
-      <Card
-        asChild
-        interactive
-        className="group flex-row items-center gap-4 border-2 border-brand p-4 sm:p-4"
-      >
-        <Link href="/start/phone">
-          <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-brand text-on-brand">
-            <Car className="size-6" aria-hidden />
-          </span>
-          <span className="flex min-w-0 flex-1 flex-col gap-1">
-            <span className="font-heading text-lg font-semibold text-ink">{copy.motor.title}</span>
-            <span className="text-sm text-ink-quiet">{copy.motor.body}</span>
-            <span className="inline-flex items-center gap-1 pt-1 text-base font-medium text-brand group-hover:underline">
-              {copy.motor.action}
-              <ArrowRight className="size-4" aria-hidden />
-            </span>
-          </span>
-        </Link>
-      </Card>
-
-      <div className="flex flex-col gap-2">
-        <ul className="flex flex-col divide-y divide-border rounded-card border border-border">
-          {copy.others.map((product) => {
-            const Icon = otherIcons[product.id];
-            return (
-              <li
-                key={product.id}
-                className="flex min-h-touch items-center gap-3 px-4 py-2 text-ink-quiet"
-              >
-                <Icon className="size-5 shrink-0" aria-hidden />
-                <span className="flex-1 text-base">{product.title}</span>
-                <StatusBadge tone="neutral" label={copy.comingNext} />
-              </li>
-            );
-          })}
-        </ul>
-      </div>
+      <ul className="flex flex-col gap-3">
+        {products.map((product) => {
+          const Icon = productIcons[product];
+          return (
+            <li key={product}>
+              <Card asChild interactive className="group flex-row items-center gap-4 p-4 sm:p-4">
+                <Link href={`/start/phone?product=${product}`} aria-label={productCta[product]}>
+                  <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-brand text-on-brand">
+                    <Icon className="size-6" aria-hidden />
+                  </span>
+                  <span className="flex min-w-0 flex-1 flex-col gap-1">
+                    <span className="font-heading text-lg font-semibold text-ink">{productNames[product]}</span>
+                    <span className="text-sm text-ink-quiet">{productBlurbs[product]}</span>
+                  </span>
+                  <ArrowRight className="size-5 shrink-0 text-brand transition-transform group-hover:translate-x-1" aria-hidden />
+                </Link>
+              </Card>
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }

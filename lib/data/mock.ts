@@ -1,7 +1,7 @@
 import { brand } from "@/lib/brand";
 import { publish } from "@/lib/events";
 import { NotFoundError } from "./errors";
-import { motorDocuments } from "./products";
+import { productDocuments } from "./products";
 import type { Repo } from "./repo";
 import { createSeed } from "./seed";
 import type { Application, Client, Message, Quote } from "./types";
@@ -116,7 +116,7 @@ export function createMockRepo(): Repo {
         status: "received",
         step: 1, // phone verified
         details: {},
-        documents: motorDocuments.map((doc) => ({
+        documents: productDocuments[product].map((doc) => ({
           id: `${ref}-${doc.type}`,
           type: doc.type,
           required: doc.required,

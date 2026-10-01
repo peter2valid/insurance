@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { FieldError } from "@/components/ui/field";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { flow, statusPage } from "@/lib/copy";
+import { coverLabels, statusPage } from "@/lib/copy";
 import type { Quote } from "@/lib/data/types";
 import { formatKes } from "@/lib/format/money";
 
@@ -15,11 +15,22 @@ import { formatKes } from "@/lib/format/money";
  * The client's quotes, cheapest first. When choosing is open, each has a
  * "Choose this cover" button; afterwards the chosen one is marked.
  */
-export function QuoteList({ refValue, quotes, canChoose }: { refValue: string; quotes: Quote[]; canChoose: boolean }) {
+export function QuoteList({
+  refValue,
+  quotes,
+  canChoose,
+  perTrip = false,
+}: {
+  refValue: string;
+  quotes: Quote[];
+  canChoose: boolean;
+  /** Travel quotes are for one trip, not a year. */
+  perTrip?: boolean;
+}) {
   const { formAction, pending, errors } = useFlowAction(chooseCover);
   const copy = statusPage.quotes;
   const sorted = [...quotes].sort((a, b) => a.premiumKes - b.premiumKes);
-  const coverLabel = (value: string) => flow.cover.options.find((option) => option.value === value)?.label ?? value;
+  const coverLabel = (value: string) => coverLabels[value] ?? value;
 
   return (
     <div className="flex flex-col gap-3">
@@ -38,7 +49,7 @@ export function QuoteList({ refValue, quotes, canChoose }: { refValue: string; q
               <div className="flex flex-col">
                 <p className="text-2xl font-semibold text-ink">{formatKes(quote.premiumKes)}</p>
                 <p className="text-sm text-ink-quiet">
-                  {copy.premium}
+                  {perTrip ? copy.premiumForTrip : copy.premium}
                   {quote.excessKes ? ` · ${copy.excess(formatKes(quote.excessKes))}` : ""}
                 </p>
               </div>

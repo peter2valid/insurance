@@ -1,5 +1,5 @@
 import { getRepo } from "@/lib/data/repo";
-import type { Application, Client } from "@/lib/data/types";
+import type { Application, Client, Product } from "@/lib/data/types";
 import { getSessionClientId } from "@/lib/session";
 import { completedStep, nextScreen, type Screen } from "./screens";
 
@@ -15,7 +15,7 @@ export type FlowContext =
   | { kind: "submitted"; client: Client; app: Application }
   | { kind: "active"; client: Client; app: Application; resume: Screen };
 
-export async function getFlowContext(ref?: string | null): Promise<FlowContext> {
+export async function getFlowContext(ref?: string | null, product?: Product): Promise<FlowContext> {
   const repo = getRepo();
   const clientId = await getSessionClientId();
   if (!clientId) return { kind: "signed_out" };
@@ -28,21 +28,24 @@ export async function getFlowContext(ref?: string | null): Promise<FlowContext> 
     app = await repo.getApplication(ref);
     if (!app || app.clientId !== client.id) return { kind: "not_yours" };
   } else {
-    app = await findOrCreateDraft(client.id);
+    app = await findOrCreateDraft(client.id, product);
   }
 
   if (app.submittedAt) return { kind: "submitted", client, app };
   return { kind: "active", client, app, resume: nextScreen(app, client) };
 }
 
-/** A returning client carries on with their unfinished application. */
-export async function findOrCreateDraft(clientId: string): Promise<Application> {
+/**
+ * A returning client carries on with their unfinished application — for the
+ * product they picked, if they picked one; otherwise their latest draft.
+ */
+export async function findOrCreateDraft(clientId: string, product?: Product): Promise<Application> {
   const repo = getRepo();
   const apps = await repo.listApplicationsForClient(clientId);
   const draft = apps
-    .filter((app) => !app.submittedAt)
+    .filter((app) => !app.submittedAt && (!product || app.product === product))
     .sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt))[0];
-  return draft ?? repo.createApplication({ clientId, product: "motor" });
+  return draft ?? repo.createApplication({ clientId, product: product ?? "motor" });
 }
 
 /**

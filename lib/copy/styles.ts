@@ -60,6 +60,7 @@ export const styles = {
     standalone: "On its own",
     quiet: "Quiet",
     compact: "Compact",
+    multiple: "Pick several",
   },
 
   // Example content used to show components with realistic data.
@@ -99,6 +100,15 @@ export const styles = {
       prefix: "KES",
       hint: "For example 1,200,000",
       filled: "1,450,000",
+    },
+    multi: {
+      label: "What do you want to cover?",
+      options: [
+        { value: "stock_contents", label: "Stock and contents", description: "Goods, furniture and equipment" },
+        { value: "liability", label: "Public liability", description: "If a customer is hurt or their property damaged" },
+        { value: "employees", label: "Staff injuries (WIBA)", description: "Required by law if you employ people" },
+      ],
+      error: "Choose at least one thing to cover.",
     },
     choice: {
       label: "What cover do you want?",

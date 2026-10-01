@@ -8,8 +8,8 @@ export const notifyTemplates = {
   login_code: (d: { code: string }) =>
     `Your ${brand.name} code is ${d.code}. It expires in 10 minutes. Don't share it with anyone.`,
 
-  application_submitted: (d: { ref: string; clientName: string; vehicle: string }) =>
-    `New motor application ${d.ref} from ${d.clientName} (${d.vehicle}). Documents are ready to check.`,
+  application_submitted: (d: { ref: string; clientName: string; product: string; summary: string }) =>
+    `New ${d.product} application ${d.ref} from ${d.clientName} (${d.summary}). Ready to check.`,
 
   application_stalled: (d: { ref: string; clientName: string; step: number; total: number }) =>
     `${d.clientName} stopped at step ${d.step} of ${d.total} on ${d.ref}. You can nudge them on WhatsApp.`,

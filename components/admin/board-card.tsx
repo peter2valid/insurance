@@ -6,6 +6,7 @@ import type { BoardItem } from "@/lib/data/queries";
 import { TOTAL_STEPS } from "@/lib/flow/screens";
 import { formatAgo, formatDate } from "@/lib/format/date";
 import { maskPhone } from "@/lib/format/mask";
+import { summarizeWithProduct } from "@/lib/products/summary";
 import { ActionButton } from "./action-button";
 import { AdminStatusBadge } from "./admin-status-badge";
 import { ApplicationCard } from "./application-card";
@@ -47,7 +48,7 @@ function noteFor(item: BoardItem, now: number): string {
 
 export function BoardCard({ item, now }: { item: BoardItem; now: number }) {
   const { application: app, client, reason } = item;
-  const vehicle = [app.details.make, app.details.model, app.details.plate].filter(Boolean).join(" ") || admin.noVehicle;
+  const summary = summarizeWithProduct(app);
 
   // Stalled drafts and clients who owe a document get the nudge.
   const canNudge =
@@ -58,7 +59,7 @@ export function BoardCard({ item, now }: { item: BoardItem; now: number }) {
       href={`/admin/${app.ref}`}
       name={client?.name || admin.noName}
       reference={app.ref}
-      vehicle={client?.name ? vehicle : `${maskPhone(client?.phone ?? "")} · ${vehicle}`}
+      vehicle={client?.name ? summary : `${maskPhone(client?.phone ?? "")} · ${summary}`}
       note={noteFor(item, now)}
       badge={
         reason ? (

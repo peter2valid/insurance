@@ -6,9 +6,9 @@ import { brand } from "@/lib/brand";
  */
 export const site = {
   meta: {
-    title: `${brand.name} — motor insurance from your phone`,
+    title: `${brand.name} — insurance from your phone`,
     description:
-      "Apply for motor insurance from your phone. Snap your logbook, we compare insurers, you choose your cover.",
+      "Apply for motor, health, travel or business insurance from your phone. We compare insurers, you choose your cover.",
   },
 
   header: {
@@ -28,22 +28,15 @@ export const site = {
   },
 
   hero: {
-    heading: "Insure your car from your phone",
-    body: "Snap your logbook, and we'll compare insurers and send you quotes. No forms to print, no chasing.",
+    heading: "Insurance you can sort out from your phone",
+    body: "Car, health, travel or business. Answer a few questions, send your documents, and we compare insurers and send you quotes. No forms to print, no chasing.",
     question: "What do you want to cover?",
-    motor: {
-      title: "Motor",
-      body: "Private cars — third party or comprehensive",
-      action: "Start with motor",
-    },
-    comingNext: "Coming next",
-    others: [
-      { id: "health", title: "Health" },
-      { id: "travel", title: "Travel" },
-      { id: "business", title: "Business" },
-    ],
     needsHeading: "Have these ready",
-    needs: ["Your logbook, or just the number plate", "Your national ID", "Your KRA PIN certificate"],
+    needs: [
+      "Your national ID (or passport for travel)",
+      "Your logbook, if it's for a car",
+      "Your business registration, if it's for a business",
+    ],
     duration: "About 5 minutes. You can stop and come back.",
   },
 
@@ -52,8 +45,8 @@ export const site = {
     intro: "You do the first part from your phone. We do the chasing.",
     steps: [
       {
-        title: "Snap your logbook",
-        body: "Take a photo. We read the details for you, and you check them.",
+        title: "Answer a few questions",
+        body: "Pick your cover and tell us the basics. For a car, just snap your logbook.",
       },
       {
         title: "We compare insurers",
@@ -96,7 +89,7 @@ export const site = {
     items: [
       {
         q: "What do I need to apply?",
-        a: "Your logbook (or just the number plate), your national ID and your KRA PIN certificate. A clear photo from your phone is fine.",
+        a: "For a car: your logbook (or just the plate), national ID and KRA PIN. For health: your national ID. For travel: your passport. For a business: the registration certificate, KRA PIN and the owner's ID. A clear photo from your phone is fine.",
       },
       {
         q: "How long does it take?",

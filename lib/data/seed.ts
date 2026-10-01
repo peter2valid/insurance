@@ -1,6 +1,6 @@
 import { brand } from "@/lib/brand";
-import { motorDocuments } from "./products";
-import type { Application, Client, DocumentItem, DocumentStatus, Message, Quote } from "./types";
+import { motorDocuments, productDocuments } from "./products";
+import type { Application, Client, DocumentItem, DocumentStatus, Message, Product, Quote } from "./types";
 
 /**
  * MOCK seed data: a realistic mix across all four admin buckets.
@@ -125,6 +125,69 @@ const apps: AppSeed[] = [
   },
 ];
 
+/** Health, travel and business applications (details as the flow saves them). */
+type OtherSeed = {
+  num: number;
+  name: string;
+  idNumber: string;
+  product: Exclude<Product, "motor">;
+  details: (days: (n: number) => string) => Record<string, string>;
+  step: number;
+  status?: Application["status"];
+  updatedAgo: number;
+  createdAgo: number;
+  submitted?: boolean;
+  docs?: Partial<Record<DocumentItem["type"], DocumentStatus>>;
+  /** Premiums for the three placeholder insurers, when quotes exist. */
+  quotes?: { coverType: string; premiums: [number, number, number]; benefits?: string[] };
+};
+
+const otherApps: OtherSeed[] = [
+  // Needs me now: a new family health application
+  {
+    num: 4822, name: "Njeri Wambugu", idNumber: "31847265", product: "health",
+    details: () => ({ who: "family", principalAge: "34", partnerAge: "36", childrenCount: "2", plan: "inpatient_outpatient", limit: "1000000", conditions: "no", conditionsNote: "" }),
+    step: 4, status: "received", updatedAgo: 7, createdAgo: 16, submitted: true,
+    docs: { national_id: "uploaded" },
+  },
+  // Needs me now: travel documents checked, ready for quotes
+  {
+    num: 4819, name: "Fatuma Ali", idNumber: "29571836", product: "travel",
+    details: (days) => ({ region: "schengen", departDate: days(20), returnDate: days(34), travellers: "2", oldestAge: "41", purpose: "holiday" }),
+    step: 4, status: "documents_checked", updatedAgo: 55, createdAgo: 4 * 60, submitted: true,
+    docs: { passport: "verified" },
+  },
+  // Needs me now: stalled travel draft (stopped after choosing a destination)
+  {
+    num: 4816, name: "James Mwangi", idNumber: "33018472", product: "travel",
+    details: () => ({ region: "uk" }),
+    step: 1, updatedAgo: 25, createdAgo: 28,
+  },
+  // Waiting on client: business owes its KRA PIN
+  {
+    num: 4811, name: "Grace Akinyi", idNumber: "27493018", product: "business",
+    details: () => ({ businessName: "Akinyi Fresh Mart", businessType: "retail", town: "Kondele, Kisumu", covers: "stock_contents,liability,employees", staffCount: "4", contentsValueKes: "1200000" }),
+    step: 4, status: "needs_info", updatedAgo: 3 * 60, createdAgo: 26 * 60, submitted: true,
+    docs: { business_registration: "verified", national_id: "verified", kra_pin: "needed" },
+  },
+  // Quotes out: health quotes waiting for the client to choose
+  {
+    num: 4814, name: "Samuel Kiptoo", idNumber: "24018375", product: "health",
+    details: () => ({ who: "me", principalAge: "52", plan: "inpatient", limit: "2000000", conditions: "yes", conditionsNote: "High blood pressure, on treatment" }),
+    step: 4, status: "quotes_ready", updatedAgo: 5 * 60, createdAgo: 2 * DAY / MIN, submitted: true,
+    docs: { national_id: "verified" },
+    quotes: { coverType: "inpatient", premiums: [65_300, 68_600, 61_400], benefits: ["Chronic condition cover after 12 months", "Day-care procedures"] },
+  },
+  // Done: covered business
+  {
+    num: 4795, name: "Ali Hassan", idNumber: "22847193", product: "business",
+    details: () => ({ businessName: "Hassan Hardware", businessType: "retail", town: "Majengo, Mombasa", covers: "stock_contents,money", staffCount: "2", contentsValueKes: "2500000" }),
+    step: 4, status: "covered", updatedAgo: 3 * DAY / MIN, createdAgo: 6 * DAY / MIN, submitted: true,
+    docs: { business_registration: "verified", kra_pin: "verified", national_id: "verified" },
+    quotes: { coverType: "package", premiums: [18_000, 18_900, 16_900], benefits: ["Burglary and fire", "Cash in safe up to KES 50,000"] },
+  },
+];
+
 const PLACEHOLDER_INSURERS = ["[Insurer A]", "[Insurer B]", "[Insurer C]"];
 
 /** Rough premium fixtures (KES). Illustrative only — not real rates. */
@@ -215,6 +278,61 @@ export function createSeed(now: number = Date.now()): Seed {
       const quotes = quoteFixtures(ref, a.vehicle.valueKes, iso(a.updatedAgo + 30));
       if (a.status !== "quotes_ready") quotes[0].chosen = true;
       seed.quotes.push(...quotes);
+    }
+  });
+
+  otherApps.forEach((a, i) => {
+    const index = apps.length + i;
+    const clientId = `client-${a.num}`;
+    const ref = `${brand.refPrefix}-${a.num}`;
+    // Dates relative to today, e.g. trip dates in the future.
+    const days = (n: number) => new Date(now + n * DAY).toISOString().slice(0, 10);
+    seed.clients.push({
+      id: clientId,
+      name: a.name,
+      phone: `+2547000001${String(index).padStart(2, "0")}`, // fake range
+      idNumber: a.idNumber,
+      createdAt: iso(a.createdAgo),
+    });
+    const documents: DocumentItem[] = productDocuments[a.product].map((doc) => {
+      const status = a.docs?.[doc.type] ?? "needed";
+      return {
+        id: `${ref}-${doc.type}`,
+        type: doc.type,
+        required: doc.required,
+        status,
+        ...(status !== "needed" && {
+          fileName: `${doc.type.replace("_", "-")}-${a.num}.jpg`,
+          uploadedAt: iso(a.updatedAgo + 1),
+        }),
+      };
+    });
+    seed.applications.push({
+      ref,
+      clientId,
+      product: a.product,
+      status: a.status ?? "received",
+      step: a.step,
+      details: a.details(days),
+      documents,
+      ...(a.submitted && { submittedAt: iso(a.status === "received" ? a.updatedAgo : a.createdAgo - 10) }),
+      updatedAt: iso(a.updatedAgo),
+      createdAt: iso(a.createdAgo),
+    });
+    if (a.quotes) {
+      const { coverType, premiums, benefits = [] } = a.quotes;
+      PLACEHOLDER_INSURERS.forEach((insurer, q) => {
+        seed.quotes.push({
+          id: `${ref}-q${q + 1}`,
+          applicationRef: ref,
+          insurer,
+          coverType,
+          premiumKes: premiums[q],
+          benefits,
+          chosen: a.status !== "quotes_ready" && q === 0,
+          createdAt: iso(a.updatedAgo + 30),
+        });
+      });
     }
   });
 

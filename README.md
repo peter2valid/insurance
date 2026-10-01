@@ -25,8 +25,11 @@ messages are sent; they appear in the admin Outbox.
 
 - **Sign-in code** is always `123456`.
 - **Seeded clients** sign in with `0700000100` (Wanjiku, BC-4821) up to
-  `0700000112`, in the order listed in `lib/data/seed.ts`. For example
-  `0700000107` is Amina Hassan (BC-4810), who still owes her KRA PIN.
+  `0700000118`, in the order listed in `lib/data/seed.ts`: 13 motor, then
+  health, travel and business. For example `0700000107` is Amina Hassan
+  (BC-4810, motor, owes her KRA PIN), `0700000117` is Samuel Kiptoo (BC-4814,
+  health quotes to choose) and `0700000116` is Grace Akinyi (BC-4811,
+  business, owes her KRA PIN).
 - **Error path**: a logbook photo under 20 KB is "unreadable", to show the
   error screen.
 - **Demo data** resets when the server restarts, or with **Reset demo data**

@@ -10,16 +10,19 @@ type ChoiceCardsProps = {
   label: string;
   hideLabel?: boolean;
   options: readonly ChoiceOption[];
-  defaultValue?: string;
+  /** One value, or several (comma-separated or an array) when `multiple`. */
+  defaultValue?: string | readonly string[];
+  /** Pick several (checkboxes) instead of one (radios). */
+  multiple?: boolean;
   error?: string;
   disabled?: boolean;
   className?: string;
 };
 
 /**
- * Pick one of a few options, each explained in a sentence. Native radio
- * inputs (keyboard arrows, screen readers and forms all just work); the
- * whole card is the touch target.
+ * Pick one (or several, with `multiple`) of a few options, each explained in
+ * a sentence. Native radio/checkbox inputs, so keyboard, screen readers and
+ * forms all just work; the whole card is the touch target.
  */
 function ChoiceCards({
   name,
@@ -27,11 +30,17 @@ function ChoiceCards({
   hideLabel,
   options,
   defaultValue,
+  multiple,
   error,
   disabled,
   className,
 }: ChoiceCardsProps) {
   const errorId = React.useId();
+  const selected = Array.isArray(defaultValue)
+    ? defaultValue
+    : typeof defaultValue === "string"
+      ? defaultValue.split(",").filter(Boolean)
+      : [];
 
   return (
     <fieldset
@@ -51,10 +60,10 @@ function ChoiceCards({
         >
           <span className="flex h-6 shrink-0 items-center">
             <input
-              type="radio"
+              type={multiple ? "checkbox" : "radio"}
               name={name}
               value={option.value}
-              defaultChecked={defaultValue === option.value}
+              defaultChecked={selected.includes(option.value)}
               className="size-5 accent-brand"
             />
           </span>

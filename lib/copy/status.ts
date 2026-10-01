@@ -37,6 +37,8 @@ export const statusPage = {
     upload: {
       title: (doc: string) => `Upload your ${doc}`,
       body: "It's the last thing we need before we can send you quotes.",
+      bodyMore: (count: number) =>
+        `After that we need ${count} more ${count === 1 ? "document" : "documents"} — they're listed below.`,
       action: (doc: string) => `Upload ${doc}`,
     },
     reupload: {
@@ -94,6 +96,7 @@ export const statusPage = {
 
   quotes: {
     premium: "Premium per year",
+    premiumForTrip: "Premium for this trip",
     excess: (amount: string) => `Excess ${amount}`,
     choose: "Choose this cover",
     chosen: "Your choice",

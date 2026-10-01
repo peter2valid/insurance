@@ -1,11 +1,13 @@
 "use server";
 
 import { brand } from "@/lib/brand";
-import { flow, statusLabels } from "@/lib/copy";
+import { flow, productNamesInline, statusLabels } from "@/lib/copy";
+import { isProduct, type DocumentType } from "@/lib/data/types";
 import { getRepo } from "@/lib/data/repo";
 import type { ActionResult } from "@/lib/flow/action-result";
 import { getFlowContext, saveAndAdvance } from "@/lib/flow/context";
-import { screenHref } from "@/lib/flow/screens";
+import { isQuestionScreen, questionScreens, validateScreen } from "@/lib/flow/questions";
+import { laterKeyFor, screenHref } from "@/lib/flow/screens";
 import {
   codeSchema,
   coverSchema,
@@ -17,6 +19,7 @@ import {
   vehicleSchema,
 } from "@/lib/flow/validation";
 import { getNotifier } from "@/lib/notify";
+import { summarize } from "@/lib/products/summary";
 import { checkCode, clearPendingCode, getPendingCode, setPendingCode, startSession } from "@/lib/session";
 
 /**
@@ -48,7 +51,8 @@ export async function sendCode(_prev: ActionResult, formData: FormData): Promise
   const parsed = phoneSchema.safeParse(formData.get("phone") ?? "");
   if (!parsed.success) return fail({ phone: parsed.error.issues[0].message });
 
-  await setPendingCode(parsed.data);
+  const product = formData.get("product");
+  await setPendingCode(parsed.data, isProduct(product) ? product : undefined);
   await getNotifier().send({
     channel: "sms",
     to: parsed.data,
@@ -64,7 +68,7 @@ export async function sendCode(_prev: ActionResult, formData: FormData): Promise
 export async function resendCode(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
   const pending = await getPendingCode();
   if (!pending) return { ok: true, next: screenHref("phone") };
-  await setPendingCode(pending.phone);
+  await setPendingCode(pending.phone, pending.product);
   await getNotifier().send({
     channel: "sms",
     to: pending.phone,
@@ -92,7 +96,7 @@ export async function verifyCode(_prev: ActionResult, formData: FormData): Promi
   await startSession(client.id);
   await clearPendingCode();
 
-  const ctx = await getFlowContext(refFrom(formData));
+  const ctx = await getFlowContext(refFrom(formData), pending.product);
   if (ctx.kind === "not_yours") return formError(flow.errors.notYours);
   if (ctx.kind === "submitted") return { ok: true, next: `/my/${ctx.app.ref}`, toast: flow.code.toast };
   if (ctx.kind !== "active") return formError(flow.errors.generic);
@@ -151,6 +155,38 @@ export async function skipId(_prev: ActionResult, formData: FormData): Promise<A
   return saveDetails(formData, { idLater: "yes" });
 }
 
+/** "I'll upload it later" for any document asked for in the flow. */
+export async function skipDocument(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  const document = formData.get("document");
+  const laterKey = typeof document === "string" ? laterKeyFor(document as DocumentType) : undefined;
+  if (!laterKey) return formError(flow.errors.generic);
+  return saveDetails(formData, { [laterKey]: "yes" });
+}
+
+/**
+ * Every declarative question screen (health, travel, business) saves here.
+ * The screen's config decides which fields apply and how to check them.
+ */
+export async function saveAnswers(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  const screenId = formData.get("screen");
+  if (typeof screenId !== "string" || !isQuestionScreen(screenId)) return formError(flow.errors.generic);
+  const screen = questionScreens[screenId];
+
+  const { ctx, error } = await activeContext(formData);
+  if (error) return error;
+
+  // Multi-choice fields arrive as several values with the same name.
+  const raw: Record<string, string> = {};
+  for (const field of screen.fields) {
+    raw[field.name] = field.kind === "multi" ? formData.getAll(field.name).map(String).join(",") : String(formData.get(field.name) ?? "");
+  }
+
+  const result = validateScreen(screen, raw, ctx.app.details);
+  if (!result.ok) return fail(result.errors);
+  const { app, next } = await saveAndAdvance(ctx.app, ctx.client, result.values);
+  return { ok: true, next: screenHref(next, app.ref) };
+}
+
 // Step 5 — send
 
 export async function submitApplication(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
@@ -161,7 +197,6 @@ export async function submitApplication(_prev: ActionResult, formData: FormData)
   const repo = getRepo();
   const app = await repo.submitApplication(ctx.app.ref);
   const notifier = getNotifier();
-  const vehicle = [app.details.make, app.details.model, app.details.plate].filter(Boolean).join(" ");
   const link = `${brand.siteUrl}/my/${app.ref}`;
 
   // Tell the broker instantly (CLAUDE.md §1 core value 3) — simulated.
@@ -170,7 +205,7 @@ export async function submitApplication(_prev: ActionResult, formData: FormData)
     to: "admin",
     audience: "admin",
     template: "application_submitted",
-    data: { ref: app.ref, clientName: ctx.client.name, vehicle },
+    data: { ref: app.ref, clientName: ctx.client.name, product: productNamesInline[app.product], summary: summarize(app) },
     applicationRef: app.ref,
   });
   // Give the client their link to follow along — simulated.

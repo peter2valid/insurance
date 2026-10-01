@@ -11,7 +11,9 @@ import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatusBadge, type BadgeTone } from "@/components/ui/status-badge";
 import { TextLink } from "@/components/ui/text-link";
-import { admin, flow, kit } from "@/lib/copy";
+import { admin, flow, kit, productNames } from "@/lib/copy";
+import { answerRows, isQuestionScreen, type QuestionScreenId } from "@/lib/flow/questions";
+import { flows } from "@/lib/flow/screens";
 import { getRepo } from "@/lib/data/repo";
 import type { Application, DocumentItem, Message, Quote } from "@/lib/data/types";
 import { getQuoteProvider } from "@/lib/data/quote-provider";
@@ -119,10 +121,10 @@ function NextStep({
             label={admin.actions.markQuotesReady}
             variant="primary"
           />
-          <QuoteDialog refValue={app.ref} suggestion={suggestion} variant="secondary" />
+          <QuoteDialog refValue={app.ref} product={app.product} suggestion={suggestion} variant="secondary" />
         </>
       ) : (
-        <QuoteDialog refValue={app.ref} suggestion={suggestion} />
+        <QuoteDialog refValue={app.ref} product={app.product} suggestion={suggestion} />
       );
   } else if (app.status === "quotes_ready") {
     copy = n.waitingChoice;
@@ -213,18 +215,26 @@ function answers(app: Application, name?: string, phone?: string) {
   const f = flow.confirm.fields;
   const l = admin.answerLabels;
   const cover = flow.cover.options.find((option) => option.value === d.coverType)?.label;
+  // Motor has bespoke screens; other products describe their own answers.
+  const productRows =
+    app.product === "motor"
+      ? [
+          { label: f.plate, value: d.plate },
+          { label: f.make, value: d.make },
+          { label: f.model, value: d.model },
+          { label: f.year, value: d.year },
+          { label: f.chassisNumber, value: d.chassisNumber },
+          { label: f.bodyType, value: d.bodyType },
+          { label: f.ownerName, value: d.ownerName },
+          { label: l.coverType, value: cover },
+          { label: l.vehicleValueKes, value: d.vehicleValueKes ? formatKes(Number(d.vehicleValueKes)) : undefined },
+        ]
+      : answerRows(flows[app.product].filter(isQuestionScreen) as QuestionScreenId[], d);
   const rows = [
+    { label: l.product, value: productNames[app.product] },
     { label: l.name, value: name },
     { label: l.phone, value: phone ? formatKenyanPhone(phone) : undefined },
-    { label: f.plate, value: d.plate },
-    { label: f.make, value: d.make },
-    { label: f.model, value: d.model },
-    { label: f.year, value: d.year },
-    { label: f.chassisNumber, value: d.chassisNumber },
-    { label: f.bodyType, value: d.bodyType },
-    { label: f.ownerName, value: d.ownerName },
-    { label: l.coverType, value: cover },
-    { label: l.vehicleValueKes, value: d.vehicleValueKes ? formatKes(Number(d.vehicleValueKes)) : undefined },
+    ...productRows,
     { label: l.submitted, value: app.submittedAt ? formatDateTime(app.submittedAt) : undefined },
     { label: l.started, value: formatDateTime(app.createdAt) },
   ];

@@ -18,7 +18,7 @@ import { useFlowAction } from "./use-flow-action";
 type ScreenProps = { refValue: string; backHref: string };
 
 export function PlateScreen({ refValue, backHref, plate }: ScreenProps & { plate?: string }) {
-  const { formAction, pending, errors } = useFlowAction(savePlate);
+  const { formAction, pending, errors, submitted } = useFlowAction(savePlate);
   const copy = flow.vehicle;
 
   return (
@@ -48,7 +48,7 @@ export function PlateScreen({ refValue, backHref, plate }: ScreenProps & { plate
         name="plate"
         label={copy.label}
         hint={copy.hint}
-        defaultValue={plate}
+        defaultValue={submitted.plate ?? plate}
         error={errors.plate}
         autoCapitalize="characters"
         autoComplete="off"
@@ -115,7 +115,7 @@ export function ConfirmScreen({
   lowConfidence,
   extracted,
 }: ScreenProps & { values: Record<string, string>; lowConfidence: string[]; extracted: boolean }) {
-  const { formAction, pending, errors } = useFlowAction(confirmVehicle);
+  const { formAction, pending, errors, submitted } = useFlowAction(confirmVehicle);
   const copy = flow.confirm;
 
   return (
@@ -145,7 +145,7 @@ export function ConfirmScreen({
             key={field.name}
             name={field.name}
             label={copy.fields[field.name]}
-            defaultValue={values[field.name] ?? ""}
+            defaultValue={submitted[field.name] ?? values[field.name] ?? ""}
             error={errors[field.name]}
             optional={field.optional}
             inputMode={field.inputMode}

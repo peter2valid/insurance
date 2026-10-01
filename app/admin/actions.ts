@@ -4,7 +4,7 @@ import { z } from "zod";
 import * as workflow from "@/lib/admin/workflow";
 import { getRepo } from "@/lib/data/repo";
 import { admin } from "@/lib/copy";
-import { coverTypes } from "@/lib/data/products";
+import { allCoverTypes } from "@/lib/data/products";
 import type { ActionResult } from "@/lib/flow/action-result";
 import { fieldErrors } from "@/lib/flow/validation";
 
@@ -65,7 +65,7 @@ const money = (message: string) =>
 
 const quoteSchema = z.object({
   insurer: z.string().trim().min(2, admin.quoteForm.errors.insurer),
-  coverType: z.enum(coverTypes, { error: admin.quoteForm.errors.coverType }),
+  coverType: z.string().refine((value) => allCoverTypes.includes(value), admin.quoteForm.errors.coverType),
   premium: money(admin.quoteForm.errors.premium),
   excess: z.union([z.literal(""), money(admin.quoteForm.errors.excess)]),
   benefits: z.string().optional().default(""),

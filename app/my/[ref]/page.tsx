@@ -14,6 +14,7 @@ import { StatusTimeline } from "@/components/ui/status-timeline";
 import { flow, statusLabels, statusPage } from "@/lib/copy";
 import { getRepo } from "@/lib/data/repo";
 import { getFlowContext } from "@/lib/flow/context";
+import { summarizeWithProduct } from "@/lib/products/summary";
 import { buildNow, buildTimeline, currentStepLabel } from "@/lib/status/view";
 
 export const metadata: Metadata = { title: statusPage.progress, robots: { index: false } };
@@ -52,8 +53,7 @@ export default async function MyApplicationPage(props: PageProps<"/my/[ref]">) {
   const quotes = await getRepo().listQuotes(app.ref);
   const now = buildNow(app);
   const message = statusPage.whatsappMessage(app.ref, currentStepLabel(app));
-  const car = [app.details.make, app.details.model].filter(Boolean).join(" ");
-  const vehicle = [car, app.details.plate].filter(Boolean).join(" · ");
+  const summary = summarizeWithProduct(app);
 
   const documents = app.documents.filter((doc) => doc.required || doc.status !== "needed");
   const showQuotes = quotes.length > 0 && ["quotes_ready", "cover_chosen", "covered"].includes(app.status);
@@ -63,7 +63,7 @@ export default async function MyApplicationPage(props: PageProps<"/my/[ref]">) {
       <LiveRefresh refValue={app.ref} watch={app.status} announce={statusPage.updatedToast(statusLabels[app.status])} />
       <StatusPage
         reference={app.ref}
-        subtitle={vehicle}
+        subtitle={summary}
         status={app.status}
         helpMessage={message}
         now={{
@@ -91,6 +91,7 @@ export default async function MyApplicationPage(props: PageProps<"/my/[ref]">) {
                       // After choosing, show only their choice.
                       quotes={app.status === "quotes_ready" ? quotes : quotes.filter((quote) => quote.chosen)}
                       canChoose={app.status === "quotes_ready" && now.kind === "quotes"}
+                      perTrip={app.product === "travel"}
                     />
                   ),
                 },

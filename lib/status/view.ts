@@ -24,7 +24,8 @@ export function documentsToAct(app: Application): DocumentItem[] {
 
 export function buildNow(app: Application): NowView {
   const copy = statusPage.now;
-  const next = app.status === "covered" ? undefined : documentsToAct(app)[0];
+  const toAct = app.status === "covered" ? [] : documentsToAct(app);
+  const next = toAct[0];
 
   if (next) {
     const name = flow.documentsInline[next.type];
@@ -41,7 +42,7 @@ export function buildNow(app: Application): NowView {
       kind: "upload",
       document: next,
       title: copy.upload.title(name),
-      body: copy.upload.body,
+      body: toAct.length > 1 ? copy.upload.bodyMore(toAct.length - 1) : copy.upload.body,
       actionLabel: copy.upload.action(name),
     };
   }

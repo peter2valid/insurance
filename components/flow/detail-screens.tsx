@@ -16,7 +16,7 @@ import { useFlowAction } from "./use-flow-action";
 type ScreenProps = { refValue: string; backHref: string };
 
 export function CoverScreen({ refValue, backHref, coverType }: ScreenProps & { coverType?: string }) {
-  const { formAction, pending, errors } = useFlowAction(saveCover);
+  const { formAction, pending, errors, submitted } = useFlowAction(saveCover);
   const copy = flow.cover;
 
   return (
@@ -42,7 +42,7 @@ export function CoverScreen({ refValue, backHref, coverType }: ScreenProps & { c
         label={copy.label}
         hideLabel
         options={copy.options}
-        defaultValue={coverType}
+        defaultValue={submitted.coverType ?? coverType}
         error={errors.coverType}
       />
     </FlowStep>
@@ -50,7 +50,7 @@ export function CoverScreen({ refValue, backHref, coverType }: ScreenProps & { c
 }
 
 export function ValueScreen({ refValue, backHref, value }: ScreenProps & { value?: string }) {
-  const { formAction, pending, errors } = useFlowAction(saveValue);
+  const { formAction, pending, errors, submitted } = useFlowAction(saveValue);
   const copy = flow.value;
 
   return (
@@ -78,7 +78,7 @@ export function ValueScreen({ refValue, backHref, value }: ScreenProps & { value
         prefix={copy.prefix}
         inputMode="numeric"
         autoComplete="off"
-        defaultValue={value ? Number(value).toLocaleString("en-KE") : ""}
+        defaultValue={submitted.value ?? (value ? Number(value).toLocaleString("en-KE") : "")}
         error={errors.value}
         autoFocus
       />
@@ -86,8 +86,13 @@ export function ValueScreen({ refValue, backHref, value }: ScreenProps & { value
   );
 }
 
-export function NameScreen({ refValue, backHref, name }: ScreenProps & { name?: string }) {
-  const { formAction, pending, errors } = useFlowAction(saveName);
+export function NameScreen({
+  refValue,
+  backHref,
+  name,
+  description,
+}: ScreenProps & { name?: string; description?: string }) {
+  const { formAction, pending, errors, submitted } = useFlowAction(saveName);
   const copy = flow.name;
 
   return (
@@ -98,7 +103,7 @@ export function NameScreen({ refValue, backHref, name }: ScreenProps & { name?: 
       step={{ current: stepOf.name, total: TOTAL_STEPS }}
       backHref={backHref}
       title={copy.title}
-      description={copy.description}
+      description={description ?? copy.description}
       helpStep={flow.stepNames.name}
       formError={errors._form}
       primaryAction={
@@ -113,7 +118,7 @@ export function NameScreen({ refValue, backHref, name }: ScreenProps & { name?: 
         label={copy.label}
         autoComplete="name"
         autoCapitalize="words"
-        defaultValue={name}
+        defaultValue={submitted.name ?? name}
         error={errors.name}
         autoFocus
       />

@@ -68,6 +68,7 @@ export const admin = {
     rejected: "Re-upload asked",
   },
   answerLabels: {
+    product: "Insurance",
     name: "Name",
     phone: "Phone",
     coverType: "Type of cover",
@@ -183,6 +184,7 @@ export const admin = {
     insurerHint: "Use the real insurer name once partners are confirmed.",
     coverType: "Type of cover",
     premium: "Premium per year",
+    premiumForTrip: "Premium for this trip",
     excess: "Excess",
     benefits: "Benefits",
     benefitsHint: "Separate with commas, e.g. Windscreen cover, Towing",

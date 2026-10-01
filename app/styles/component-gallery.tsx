@@ -208,6 +208,12 @@ function ChoiceSection() {
         <State label={s.disabled}>
           <ChoiceCards {...base} name="demo-cover-4" defaultValue="third_party" disabled />
         </State>
+        <State label={s.multiple}>
+          <ChoiceCards name="demo-multi-1" label={d.multi.label} options={d.multi.options} multiple defaultValue="stock_contents,employees" />
+        </State>
+        <State label={`${s.multiple} · ${s.error}`}>
+          <ChoiceCards name="demo-multi-2" label={d.multi.label} options={d.multi.options} multiple error={d.multi.error} />
+        </State>
       </StateGrid>
     </Section>
   );

@@ -42,6 +42,8 @@ Hero (pick Motor)
 
 Health, travel and business appear on the hero as cards marked "coming next" and are **not** built. Do not add features outside this slice unless asked.
 
+**Update (Oct 2026, decided by the owner):** stages 1–10 for motor are done. Health, travel and business are now being built as **full flows following the motor pattern** (own questions, documents, quotes, status page, admin handling). After that, data moves to **Supabase** so the demo can be shared from a **Vercel** link (deployed via GitHub). Phone login stays simulated unless an SMS provider is set up.
+
 ### Honesty rules for the demo
 - Data is **mock** (see section 6). It must look and behave realistically.
 - Logbook reading is **simulated** behind `extractLogbook()`. The UI must still always show a confirm screen, because real reading will not be perfect.
@@ -255,4 +257,4 @@ Interface in `lib/notify/`: `send({ channel: 'email' | 'whatsapp' | 'sms', to, t
 10. **Demo rehearsal** — seed data reset button (admin only), walk through the demo path end to end, fix rough edges. No new features.
 
 ## 12. Later (do NOT build now)
-Health, travel and business products · real Supabase database, storage and phone auth · real OCR/vision for documents · real email and WhatsApp Business API · insurer API or rating-engine integration · M-Pesa payments · Swahili translation · renewals engine · e-signatures.
+Real Supabase phone auth (needs an SMS provider) · real OCR/vision for documents · real email and WhatsApp Business API · insurer API or rating-engine integration · M-Pesa payments · Swahili translation · renewals engine · e-signatures.

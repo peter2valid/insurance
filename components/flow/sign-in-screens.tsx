@@ -13,8 +13,8 @@ import { useFlowAction } from "./use-flow-action";
 
 /* Step 1: phone number, then the code. SIMULATED sign-in (code 123456). */
 
-export function PhoneScreen({ refValue }: { refValue?: string }) {
-  const { formAction, pending, errors } = useFlowAction(sendCode);
+export function PhoneScreen({ refValue, product }: { refValue?: string; product?: string }) {
+  const { formAction, pending, errors, submitted } = useFlowAction(sendCode);
   const copy = flow.phone;
 
   return (
@@ -36,7 +36,15 @@ export function PhoneScreen({ refValue }: { refValue?: string }) {
       }
     >
       {refValue && <input type="hidden" name="ref" value={refValue} />}
-      <PhoneInput name="phone" label={copy.label} hint={copy.hint} error={errors.phone} autoFocus />
+      {product && <input type="hidden" name="product" value={product} />}
+      <PhoneInput
+        name="phone"
+        label={copy.label}
+        hint={copy.hint}
+        error={errors.phone}
+        defaultValue={submitted.phone}
+        autoFocus
+      />
     </FlowStep>
   );
 }

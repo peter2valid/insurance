@@ -3,7 +3,7 @@ import { getRepo } from "@/lib/data/repo";
 import type { Application, Client, DocumentType } from "@/lib/data/types";
 import { ExtractionError, extractLogbook, MAX_LOGBOOK_BYTES } from "@/lib/extract";
 import { getFlowContext, saveAndAdvance } from "@/lib/flow/context";
-import { screenHref } from "@/lib/flow/screens";
+import { laterKeyFor, screenHref } from "@/lib/flow/screens";
 import { getNotifier } from "@/lib/notify";
 
 /**
@@ -16,8 +16,16 @@ import { getNotifier } from "@/lib/notify";
  * a plain-language message in lib/copy/flow.
  */
 
-const FLOW_KINDS: DocumentType[] = ["logbook", "national_id"];
-const ALL_KINDS: DocumentType[] = ["logbook", "national_id", "kra_pin", "driving_licence"];
+const FLOW_KINDS: DocumentType[] = ["logbook", "national_id", "passport", "business_registration"];
+const ALL_KINDS: DocumentType[] = [
+  "logbook",
+  "national_id",
+  "kra_pin",
+  "driving_licence",
+  "passport",
+  "business_registration",
+  "dependants_ids",
+];
 
 function isAllowedType(type: string) {
   return type.startsWith("image/") || type === "application/pdf";
@@ -69,7 +77,8 @@ export async function POST(request: Request) {
       return fail("upload", 500);
     }
   } else {
-    details.idLater = "";
+    const laterKey = laterKeyFor(kind as DocumentType);
+    if (laterKey) details[laterKey] = "";
   }
 
   const stored = await repo.saveFile({

@@ -1,14 +1,17 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { DoneScreen } from "@/components/flow/done-screen";
-import { ConfirmScreen, LogbookScreen, PlateScreen } from "@/components/flow/vehicle-screens";
-import { CodeScreen, PhoneScreen } from "@/components/flow/sign-in-screens";
 import { CoverScreen, IdScreen, NameScreen, ValueScreen } from "@/components/flow/detail-screens";
+import { DoneScreen } from "@/components/flow/done-screen";
+import { QuestionScreen } from "@/components/flow/question-screen";
 import { ReviewScreen, type ReviewDocument, type ReviewSection } from "@/components/flow/review-screens";
-import { flow } from "@/lib/copy";
-import type { Application, Client } from "@/lib/data/types";
+import { CodeScreen, PhoneScreen } from "@/components/flow/sign-in-screens";
+import { UploadScreen } from "@/components/flow/upload-screen";
+import { ConfirmScreen, LogbookScreen, PlateScreen } from "@/components/flow/vehicle-screens";
+import { flow, nameDescriptions, questions } from "@/lib/copy";
+import { isProduct, type Application, type Client } from "@/lib/data/types";
 import { getFlowContext } from "@/lib/flow/context";
-import { canOpen, isScreen, needsValue, previousScreen, screenHref, type Screen } from "@/lib/flow/screens";
+import { answerRows, isQuestionScreen, questionScreens, type QuestionScreenId } from "@/lib/flow/questions";
+import { canOpen, flows, isScreen, needsValue, previousScreen, screenHref, type Screen } from "@/lib/flow/screens";
 import { formatKes } from "@/lib/format/money";
 import { formatKenyanPhone } from "@/lib/format/phone";
 import { getPendingCode } from "@/lib/session";
@@ -23,8 +26,11 @@ const screenTitles: Record<string, string> = {
   value: flow.value.title,
   name: flow.name.title,
   id: flow.id.title,
+  passport: questions.passport.title,
+  registration: questions.registration.title,
   review: flow.review.title,
   done: flow.done.title,
+  ...Object.fromEntries(Object.values(questionScreens).map((screen) => [screen.id, screen.title])),
 };
 
 /** Each step gets its own tab title, so the browser history makes sense. */
@@ -34,21 +40,23 @@ export async function generateMetadata(props: PageProps<"/start/[step]">): Promi
 }
 
 /**
- * Every screen of the client flow lives at /start/<screen>?ref=<ref>.
+ * Every screen of every product's flow lives at /start/<screen>?ref=<ref>.
  * The ?ref makes each application's link resumable; /start/resume?ref=…
- * always lands on the first unanswered screen.
+ * always lands on the first unanswered screen. ?product=health on the
+ * phone screen starts (or resumes) that product.
  */
 export default async function StartStepPage(props: PageProps<"/start/[step]">) {
   const { step } = await props.params;
   const search = await props.searchParams;
   const ref = typeof search.ref === "string" ? search.ref : undefined;
+  const product = isProduct(search.product) ? search.product : undefined;
   const withRef = (path: string) => (ref ? `${path}?ref=${encodeURIComponent(ref)}` : path);
 
   if (step === "phone") {
-    const ctx = await getFlowContext(ref);
+    const ctx = await getFlowContext(ref, product);
     if (ctx.kind === "active") redirect(screenHref(ctx.resume, ctx.app.ref));
     if (ctx.kind === "submitted") redirect(`/my/${ctx.app.ref}`);
-    return <PhoneScreen refValue={ref} />;
+    return <PhoneScreen refValue={ref} product={product} />;
   }
 
   if (step === "code") {
@@ -57,7 +65,7 @@ export default async function StartStepPage(props: PageProps<"/start/[step]">) {
     return <CodeScreen phone={formatKenyanPhone(pending.phone)} refValue={ref} />;
   }
 
-  const ctx = await getFlowContext(ref);
+  const ctx = await getFlowContext(ref, product);
   if (ctx.kind === "signed_out" || ctx.kind === "not_yours") redirect(withRef("/start/phone"));
 
   if (step === "done") {
@@ -80,13 +88,10 @@ export default async function StartStepPage(props: PageProps<"/start/[step]">) {
   return renderScreen(step, app, client, screenProps);
 }
 
-function renderScreen(
-  step: Screen,
-  app: Application,
-  client: Client,
-  props: { refValue: string; backHref: string },
-) {
+function renderScreen(step: Screen, app: Application, client: Client, props: { refValue: string; backHref: string }) {
   const d = app.details;
+  if (isQuestionScreen(step)) return <QuestionScreen screenId={step} values={d} {...props} />;
+
   switch (step) {
     case "vehicle":
       return <PlateScreen {...props} plate={d.plate} />;
@@ -108,9 +113,12 @@ function renderScreen(
     case "value":
       return <ValueScreen {...props} value={d.vehicleValueKes} />;
     case "name":
-      return <NameScreen {...props} name={client.name} />;
+      return <NameScreen {...props} name={client.name} description={nameDescriptions[app.product]} />;
     case "id":
       return <IdScreen {...props} />;
+    case "passport":
+    case "registration":
+      return <UploadScreen screen={step} {...props} />;
     case "review":
       return <ReviewScreen {...props} {...reviewData(app, client)} />;
     default:
@@ -122,41 +130,58 @@ function reviewData(app: Application, client: Client): { sections: ReviewSection
   const d = app.details;
   const labels = flow.review.labels;
   const none = flow.review.notProvided;
-  const coverLabel = flow.cover.options.find((option) => option.value === d.coverType)?.label ?? none;
 
-  const sections: ReviewSection[] = [
-    {
-      id: "you",
-      title: flow.review.sections.you,
-      changeHref: screenHref("name", app.ref),
-      rows: [
-        { label: labels.name, value: client.name || none },
-        { label: labels.phone, value: formatKenyanPhone(client.phone) },
-      ],
-    },
-    {
-      id: "car",
-      title: flow.review.sections.car,
-      changeHref: screenHref("confirm", app.ref),
-      rows: [
-        { label: labels.plate, value: d.plate || none },
-        { label: labels.car, value: [d.make, d.model].filter(Boolean).join(" ") || none },
-        { label: labels.year, value: d.year || none },
-        { label: labels.chassisNumber, value: d.chassisNumber || none },
-      ],
-    },
-    {
-      id: "cover",
-      title: flow.review.sections.cover,
-      changeHref: screenHref("cover", app.ref),
-      rows: [
-        { label: labels.coverType, value: coverLabel },
-        ...(needsValue(d.coverType)
-          ? [{ label: labels.value, value: d.vehicleValueKes ? formatKes(Number(d.vehicleValueKes)) : none }]
-          : []),
-      ],
-    },
-  ];
+  const you: ReviewSection = {
+    id: "you",
+    title: flow.review.sections.you,
+    changeHref: screenHref("name", app.ref),
+    rows: [
+      { label: labels.name, value: client.name || none },
+      { label: labels.phone, value: formatKenyanPhone(client.phone) },
+    ],
+  };
+
+  let sections: ReviewSection[];
+  if (app.product === "motor") {
+    const coverLabel = flow.cover.options.find((option) => option.value === d.coverType)?.label ?? none;
+    sections = [
+      you,
+      {
+        id: "car",
+        title: flow.review.sections.car,
+        changeHref: screenHref("confirm", app.ref),
+        rows: [
+          { label: labels.plate, value: d.plate || none },
+          { label: labels.car, value: [d.make, d.model].filter(Boolean).join(" ") || none },
+          { label: labels.year, value: d.year || none },
+          { label: labels.chassisNumber, value: d.chassisNumber || none },
+        ],
+      },
+      {
+        id: "cover",
+        title: flow.review.sections.cover,
+        changeHref: screenHref("cover", app.ref),
+        rows: [
+          { label: labels.coverType, value: coverLabel },
+          ...(needsValue(d.coverType)
+            ? [{ label: labels.value, value: d.vehicleValueKes ? formatKes(Number(d.vehicleValueKes)) : none }]
+            : []),
+        ],
+      },
+    ];
+  } else {
+    // One card per question screen, each with its own "Change" link.
+    const questionIds = flows[app.product].filter(isQuestionScreen) as QuestionScreenId[];
+    sections = [
+      you,
+      ...questionIds.map((id) => ({
+        id,
+        title: questionScreens[id].title,
+        changeHref: screenHref(id, app.ref),
+        rows: answerRows([id], d).map((row) => ({ label: row.label, value: row.value ?? none })),
+      })),
+    ];
+  }
 
   const documents: ReviewDocument[] = app.documents
     .filter((doc) => doc.required)

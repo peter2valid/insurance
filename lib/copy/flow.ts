@@ -8,6 +8,7 @@ export const flow = {
   helpMessageWithRef: (ref: string, step: string) =>
     `Hello, I need help with my application ${ref}. I'm on: ${step}.`,
   change: "Change",
+  continue: "Continue",
   saving: "Saving",
 
   loadError: {
@@ -226,6 +227,9 @@ export const flow = {
     national_id: "National ID",
     kra_pin: "KRA PIN certificate",
     driving_licence: "Driving licence",
+    passport: "Passport",
+    business_registration: "Business registration certificate",
+    dependants_ids: "IDs or birth certificates for others covered",
   },
   // For use mid-sentence ("Upload your KRA PIN certificate").
   documentsInline: {
@@ -233,6 +237,9 @@ export const flow = {
     national_id: "national ID",
     kra_pin: "KRA PIN certificate",
     driving_licence: "driving licence",
+    passport: "passport",
+    business_registration: "business registration certificate",
+    dependants_ids: "IDs or birth certificates for the others covered",
   },
 
   // Names of steps for the "Need help?" WhatsApp message.

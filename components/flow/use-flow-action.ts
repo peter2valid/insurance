@@ -9,7 +9,9 @@ type FlowAction = (prev: ActionResult, formData: FormData) => Promise<ActionResu
 
 /**
  * Runs a flow server action. On success: toast (if any) and go to the next
- * screen. On failure: returns field errors to show next to inputs.
+ * screen. On failure: returns field errors to show next to inputs, plus
+ * `submitted` — what the person typed. React resets a form after its action
+ * runs, so inputs use `submitted` as their default to keep their answers.
  */
 export function useFlowAction(action: FlowAction, onSuccess?: () => void) {
   const router = useRouter();
@@ -20,6 +22,20 @@ export function useFlowAction(action: FlowAction, onSuccess?: () => void) {
   });
 
   const [navigating, startNavigation] = React.useTransition();
+  const [submitted, setSubmitted] = React.useState<Record<string, string>>({});
+
+  const submit = React.useCallback(
+    (formData: FormData) => {
+      const values: Record<string, string> = {};
+      formData.forEach((value, key) => {
+        if (typeof value !== "string") return;
+        values[key] = key in values ? `${values[key]},${value}` : value; // multi-choice
+      });
+      setSubmitted(values);
+      return formAction(formData);
+    },
+    [formAction],
+  );
 
   React.useEffect(() => {
     if (!state.ok) return;
@@ -31,5 +47,5 @@ export function useFlowAction(action: FlowAction, onSuccess?: () => void) {
   const errors = state.ok ? {} : state.errors;
   // Stay "busy" until the next screen (or refreshed page) is ready, so the
   // button can't be pressed twice — then free again for the next action.
-  return { formAction, pending: pending || navigating, errors };
+  return { formAction: submit, pending: pending || navigating, errors, submitted };
 }

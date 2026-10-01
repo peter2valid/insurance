@@ -8,6 +8,17 @@ export { common } from "./common";
 export { flow } from "./flow";
 export { kit } from "./kit";
 export { notifyLabels, notifyTemplates } from "./notify";
+export {
+  coverLabels,
+  nameDescriptions,
+  productBlurbs,
+  productCta,
+  productNames,
+  productNamesInline,
+  questionErrors,
+  questions,
+  summaries,
+} from "./products";
 export { site } from "./site";
 export { statusLabels, statusPage } from "./status";
 export { styles } from "./styles";
