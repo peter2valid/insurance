@@ -224,7 +224,9 @@ export const admin = {
       not_configured: "Not sent: the Twilio keys aren't set on this site yet.",
       auth: "Not sent: Twilio rejected the keys. Check TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN (no spaces), then redeploy.",
       not_joined: "Not delivered: this number hasn't joined the sandbox. From WhatsApp, send your \"join …\" code to the sandbox number, then try again.",
-      bad_sender: "Not sent: TWILIO_WHATSAPP_FROM isn't your sandbox number. Copy it from Twilio → Messaging → Try it out (e.g. whatsapp:+14155238886).",
+      window:
+        "Not delivered: WhatsApp only allows free-form messages within 24 hours of the person messaging you. From that phone, send any WhatsApp (e.g. \"hi\") to your Twilio WhatsApp number, then try again.",
+      bad_sender: "Not sent: TWILIO_WHATSAPP_FROM isn't your sandbox number. Copy your WhatsApp sender from Twilio (e.g. whatsapp:+17372508034).",
       bad_number: "Not sent: Twilio says the destination number isn't valid for WhatsApp.",
       network: "Not sent: couldn't reach Twilio. Try again in a moment.",
       other: (detail: string) => `Not sent. Twilio says: ${detail}`,

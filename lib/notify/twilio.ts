@@ -33,11 +33,16 @@ export function missingTwilioVars(): string[] {
 
 export type WhatsAppResult =
   | { ok: true; status: string }
-  | { ok: false; reason: "not_configured" | "auth" | "not_joined" | "bad_sender" | "bad_number" | "network" | "other"; detail?: string };
+  | {
+      ok: false;
+      reason: "not_configured" | "auth" | "not_joined" | "window" | "bad_sender" | "bad_number" | "network" | "other";
+      detail?: string;
+    };
 
 function reasonFor(code: number | undefined, httpStatus: number): Exclude<WhatsAppResult, { ok: true }>["reason"] {
   if (httpStatus === 401 || code === 20003) return "auth";
-  if (code === 63015 || code === 63016) return "not_joined"; // sandbox: recipient hasn't joined
+  if (code === 63015) return "not_joined"; // sandbox: recipient hasn't joined
+  if (code === 63016) return "window"; // outside WhatsApp's 24-hour window: needs a template
   if (code === 63007 || code === 21606 || code === 21212) return "bad_sender";
   if (code === 21211 || code === 21614 || code === 63003) return "bad_number";
   return "other";
