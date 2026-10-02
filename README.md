@@ -34,9 +34,8 @@ messages are sent; they appear in the admin Outbox.
   error screen.
 - **Demo data** resets when the server restarts, or with **Reset demo data**
   at the bottom of the admin board.
-- **WhatsApp buttons** open WhatsApp with a deliberately invalid placeholder
-  number (`254000000000` in `lib/brand.ts`) until the real one is set, so a
-  demo tap can never reach a stranger.
+- **WhatsApp buttons** ("WhatsApp us", "Need help?", "Message us") open a chat
+  with the agency's number, set in `lib/brand.ts` (+254 117 537 025).
 
 Suggested path: a new client applies from the hero → it appears in
 "Needs me now" with a toast → open it, ask for a re-upload → the client's
