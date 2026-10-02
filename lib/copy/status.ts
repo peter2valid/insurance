@@ -18,6 +18,7 @@ export const statusPage = {
   stillNeeded: "Documents",
   progress: "Progress",
   quotesHeading: "Your quotes",
+  priceHeading: "Your price",
   messageUs: "Message us on WhatsApp",
   messageUsHint: "Questions? Message us — we'll see your reference and where you are.",
   whatsappMessage: (ref: string, step: string) =>
@@ -109,5 +110,13 @@ export const statusPage = {
 
   timeline: {
     submitted: "Sent",
+  },
+
+  estimate: {
+    heading: "Your instant estimate",
+    range: (min: string, max: string) => `${min} – ${max}`,
+    perYear: "a year, from 3 insurers",
+    perTrip: "for this trip, from 3 insurers",
+    note: "An estimate from your answers. Your final quotes come after we check your documents.",
   },
 } as const;

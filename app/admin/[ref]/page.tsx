@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { CircleCheck, FileText, MessageCircle, SearchX } from "lucide-react";
-import { coveredAction, nudgeAction, quotesReadyAction, verifyAction } from "@/app/admin/actions";
+import { CircleCheck, FileText, SearchX, Send } from "lucide-react";
+import { coveredAction, quotesReadyAction, sendQuotesAction, verifyAction, verifyAllAction } from "@/app/admin/actions";
 import { ActionButton } from "@/components/admin/action-button";
 import { AdminDetail, AnswerList } from "@/components/admin/admin-detail";
 import { AdminStatusBadge } from "@/components/admin/admin-status-badge";
+import { NudgeButton } from "@/components/admin/nudge-button";
 import { QuoteDialog } from "@/components/admin/quote-dialog";
 import { ReuploadDialog } from "@/components/admin/reupload-dialog";
 import { Button } from "@/components/ui/button";
@@ -15,8 +16,10 @@ import { admin, flow, kit, productNames } from "@/lib/copy";
 import { answerRows, isQuestionScreen, type QuestionScreenId } from "@/lib/flow/questions";
 import { flows } from "@/lib/flow/screens";
 import { getRepo } from "@/lib/data/repo";
-import type { Application, DocumentItem, Message, Quote } from "@/lib/data/types";
+import type { Application, Client, DocumentItem, Message, Quote } from "@/lib/data/types";
 import { getQuoteProvider } from "@/lib/data/quote-provider";
+import { nudgeText } from "@/lib/admin/workflow";
+import { isSampleNumber, whatsappUrlTo } from "@/lib/whatsapp";
 import { formatDateTime } from "@/lib/format/date";
 import { formatKes } from "@/lib/format/money";
 import { formatKenyanPhone } from "@/lib/format/phone";
@@ -70,7 +73,7 @@ export default async function AdminApplicationPage(props: PageProps<"/admin/[ref
       name={client?.name || admin.noName}
       reference={app.ref}
       badges={app.submittedAt ? <AdminStatusBadge status={app.status} /> : undefined}
-      nextStep={<NextStep app={app} quotes={quotes} suggestion={suggestion} />}
+      nextStep={<NextStep app={app} client={client} quotes={quotes} suggestion={suggestion} />}
       documents={<Documents app={app} />}
       answers={
         <div className="flex flex-col gap-6">
@@ -85,18 +88,26 @@ export default async function AdminApplicationPage(props: PageProps<"/admin/[ref
 
 function NextStep({
   app,
+  client,
   quotes,
   suggestion,
 }: {
   app: Application;
+  client: Client | null;
   quotes: Quote[];
   suggestion?: { insurer: string; coverType: string; premiumKes: number; excessKes?: number };
 }) {
   const n = admin.next;
   const toCheck = app.documents.some((doc) => doc.status === "uploaded");
   const owed = app.documents.some((doc) => doc.required && (doc.status === "needed" || doc.status === "rejected"));
+  const real = client ? !isSampleNumber(client.phone) : false;
   const nudgeButton = (
-    <ActionButton action={nudgeAction} fields={{ ref: app.ref }} label={admin.actions.nudge} icon={<MessageCircle aria-hidden />} />
+    <NudgeButton
+      refValue={app.ref}
+      label={admin.actions.nudge}
+      whatsappUrl={client && real ? whatsappUrlTo(client.phone, nudgeText(app, client)) : undefined}
+      title={real ? admin.whatsapp.realHint : admin.whatsapp.sampleHint}
+    />
   );
 
   let copy: { title: string; body: string } = n.covered;
@@ -107,6 +118,15 @@ function NextStep({
     actions = nudgeButton;
   } else if (toCheck) {
     copy = n.check;
+    actions = (
+      <ActionButton
+        action={verifyAllAction}
+        fields={{ ref: app.ref }}
+        label={admin.actions.verifyAll}
+        icon={<CircleCheck aria-hidden />}
+        variant="primary"
+      />
+    );
   } else if (owed && app.status !== "covered") {
     copy = n.waitingDocs;
     actions = nudgeButton;
@@ -124,7 +144,22 @@ function NextStep({
           <QuoteDialog refValue={app.ref} product={app.product} suggestion={suggestion} variant="secondary" />
         </>
       ) : (
-        <QuoteDialog refValue={app.ref} product={app.product} suggestion={suggestion} />
+        <>
+          <ActionButton
+            action={sendQuotesAction}
+            fields={{ ref: app.ref }}
+            label={admin.actions.sendQuotes}
+            icon={<Send aria-hidden />}
+            variant="primary"
+          />
+          <QuoteDialog
+            refValue={app.ref}
+            product={app.product}
+            suggestion={suggestion}
+            variant="ghost"
+            label={admin.actions.addQuoteManually}
+          />
+        </>
       );
   } else if (app.status === "quotes_ready") {
     copy = n.waitingChoice;

@@ -1,5 +1,6 @@
 import { brand } from "@/lib/brand";
 import { admin, flow, statusLabels } from "@/lib/copy";
+import { getQuoteProvider } from "@/lib/data/quote-provider";
 import { getRepo } from "@/lib/data/repo";
 import type { Application, ApplicationStatus, Client, Quote } from "@/lib/data/types";
 import { getNotifier, renderTemplate, type TemplateData, type TemplateName } from "@/lib/notify";
@@ -131,4 +132,70 @@ export async function nudge(ref: string): Promise<void> {
     ? statusLink(ref)
     : `${brand.siteUrl}/start/resume?ref=${encodeURIComponent(ref)}`;
   await messageClient(app, client, "nudge", { firstName: firstName(client) || "there", link });
+}
+
+/** Benefits shown on one-click quotes, per product (fixture wording). */
+const SUGGESTED_BENEFITS: Record<Application["product"], string[][]> = {
+  motor: [
+    ["Windscreen cover", "Towing up to KES 30,000", "Courtesy car for 10 days"],
+    ["Windscreen cover", "Political violence and terrorism cover"],
+    ["Windscreen cover", "Towing up to KES 20,000", "Radio and entertainment system"],
+  ],
+  health: [
+    ["Outpatient from day one", "Day-care procedures", "Ambulance cover"],
+    ["Chronic conditions after 12 months", "Optical and dental add-on"],
+    ["Wide hospital network", "Last expense cover"],
+  ],
+  travel: [
+    ["Emergency medical up to USD 50,000", "Lost luggage", "Trip cancellation"],
+    ["Emergency medical up to USD 100,000", "Flight delay", "Schengen visa letter"],
+    ["Emergency medical up to USD 30,000", "Lost passport help"],
+  ],
+  business: [
+    ["Fire and burglary", "Public liability up to KES 1,000,000"],
+    ["Fire, burglary and floods", "Money in transit"],
+    ["Fire and burglary", "Staff injuries (WIBA)", "Business interruption"],
+  ],
+};
+
+/**
+ * One click: prepare three quotes from the QuoteProvider (fixture prices,
+ * placeholder insurers) and send them to the client. Replaces adding each
+ * quote by hand — the "Add quote" form is still there for custom quotes.
+ */
+export async function sendSuggestedQuotes(ref: string): Promise<void> {
+  const { app, client } = await load(ref);
+  if (!["documents_checked", "preparing_quotes"].includes(app.status)) {
+    throw new WorkflowError(admin.errors.notAllowed);
+  }
+  const repo = getRepo();
+  const existing = await repo.listQuotes(ref);
+  if (existing.length === 0) {
+    const suggestions = await getQuoteProvider().suggest(app);
+    const benefits = SUGGESTED_BENEFITS[app.product];
+    for (const [i, quote] of suggestions.entries()) {
+      await repo.addQuote(ref, { ...quote, benefits: benefits[i] ?? [] });
+    }
+  }
+  await setStatusAndTell(app, client, "quotes_ready");
+}
+
+/** One click: verify every document that's waiting to be checked. */
+export async function verifyAllDocuments(ref: string): Promise<{ allVerified: boolean }> {
+  const { app } = await load(ref);
+  const waiting = app.documents.filter((doc) => doc.status === "uploaded");
+  if (waiting.length === 0) throw new WorkflowError(admin.errors.notAllowed);
+  let allVerified = false;
+  for (const doc of waiting) {
+    ({ allVerified } = await verifyDocument(ref, doc.id));
+  }
+  return { allVerified };
+}
+
+/** The pre-written nudge text, so the admin can also send it from their own WhatsApp. */
+export function nudgeText(app: Application, client: Client): string {
+  const link = app.submittedAt
+    ? statusLink(app.ref)
+    : `${brand.siteUrl}/start/resume?ref=${encodeURIComponent(app.ref)}`;
+  return renderTemplate("nudge", { firstName: firstName(client) || "there", link });
 }

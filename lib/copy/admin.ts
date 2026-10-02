@@ -7,6 +7,8 @@ export const admin = {
     outbox: "Outbox",
   },
   boardHeading: "Today",
+  boardSummary: (count: number) =>
+    count === 0 ? "Nothing needs you right now." : count === 1 ? "1 thing needs you. Start here." : `${count} things need you. Start at the top.`,
   boardIntro: "Work from the top. Anything that needs you is in the first list.",
   backToBoard: "Back to board",
   liveNote: "Updates by itself as clients act.",
@@ -115,8 +117,8 @@ export const admin = {
       body: "They're still filling it in. If they've gone quiet, nudge them on WhatsApp.",
     },
     addQuotes: {
-      title: "Add quotes",
-      body: "Add a quote from each insurer, then mark quotes ready to let the client choose.",
+      title: "Send quotes",
+      body: "We've prepared 3 quotes from the client's answers. Send them in one click, or add your own.",
     },
     quotesReady: {
       title: "Quotes added",
@@ -137,6 +139,13 @@ export const admin = {
   },
 
   actions: {
+    sendQuotes: "Send 3 quotes",
+    sendQuotesShort: "Send quotes",
+    verifyAll: "Verify all documents",
+    review: "Review",
+    readReply: "Read reply",
+    nudgeShort: "Nudge",
+    addQuoteManually: "Add a quote by hand",
     nudge: "Nudge on WhatsApp",
     markVerified: "Mark verified",
     askReupload: "Ask for re-upload",
@@ -147,6 +156,7 @@ export const admin = {
 
   // Toasts match the button words (CLAUDE.md §7), and say messages are simulated.
   toasts: {
+    quotesSent: "3 quotes sent — client notified (simulated)",
     nudged: "Nudge sent (simulated — see Outbox)",
     verified: "Marked verified",
     verifiedAll: "All documents verified — client updated (simulated message)",
@@ -196,6 +206,12 @@ export const admin = {
       excess: "Enter the excess in shillings, or leave it empty.",
       coverType: "Choose the type of cover.",
     },
+  },
+
+  whatsapp: {
+    realHint: "Opens your WhatsApp with the message typed. Press send.",
+    sampleHint: "Sample client — the message is shown in the Outbox only.",
+    sendFromOutbox: "Send on WhatsApp",
   },
 
   demo: {

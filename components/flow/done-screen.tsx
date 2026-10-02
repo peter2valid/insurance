@@ -4,13 +4,23 @@ import { MinimalHeader } from "@/components/site/minimal-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { TextLink } from "@/components/ui/text-link";
+import { EstimateCard } from "@/components/status/estimate-card";
 import { flow } from "@/lib/copy";
+import type { Estimate } from "@/lib/products/estimate";
 
 /**
  * Confirmation after sending: the reference, what happens next, and the
  * link to the status page (CLAUDE.md §8.1 step 6). One primary action.
  */
-export function DoneScreen({ refValue, stillNeeded }: { refValue: string; stillNeeded: string[] }) {
+export function DoneScreen({
+  refValue,
+  stillNeeded,
+  estimate,
+}: {
+  refValue: string;
+  stillNeeded: string[];
+  estimate?: Estimate | null;
+}) {
   const copy = flow.done;
 
   return (
@@ -24,6 +34,8 @@ export function DoneScreen({ refValue, stillNeeded }: { refValue: string; stillN
           <p className="max-w-prose text-base text-ink-quiet">{copy.body}</p>
           <p className="max-w-prose text-sm text-ink-quiet">{copy.demoNote}</p>
         </div>
+
+        {estimate && <EstimateCard estimate={estimate} />}
 
         <Card className="gap-3">
           <h2 className="font-sans text-lg font-semibold">{copy.nextHeading}</h2>

@@ -101,14 +101,32 @@ export async function quotesReadyAction(_prev: ActionResult, formData: FormData)
 
 export async function coveredAction(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
   const ref = text(formData, "ref");
-  return run(ref, async () => {
+  const result = await run(ref, async () => {
     await workflow.markCovered(ref);
     return admin.toasts.covered;
   });
+  return result.ok && formData.get("from") === "board" ? { ...result, next: "/admin" } : result;
 }
 
 /** Demo only (Stage 10): restore the sample applications and clear the outbox. */
 export async function resetDemoAction(): Promise<ActionResult> {
   await getRepo().reset();
   return { ok: true, next: "/admin", toast: admin.demo.toast };
+}
+
+export async function sendQuotesAction(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  const ref = text(formData, "ref");
+  const result = await run(ref, async () => {
+    await workflow.sendSuggestedQuotes(ref);
+    return admin.toasts.quotesSent;
+  });
+  return result.ok && formData.get("from") === "board" ? { ...result, next: "/admin" } : result;
+}
+
+export async function verifyAllAction(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  const ref = text(formData, "ref");
+  return run(ref, async () => {
+    const { allVerified } = await workflow.verifyAllDocuments(ref);
+    return allVerified ? admin.toasts.verifiedAll : admin.toasts.verified;
+  });
 }

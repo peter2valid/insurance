@@ -15,13 +15,16 @@ export default async function AdminBoardPage() {
     <EmptyState size="compact" icon={Inbox} title={admin.empty.other.title} body={admin.empty.other.body} />
   );
   const cards = (bucket: keyof typeof board) =>
-    board[bucket].map((item) => <BoardCard key={item.application.ref} item={item} now={now} />);
+    board[bucket].map((item) => ({
+      key: item.application.ref,
+      node: <BoardCard item={item} now={now} />,
+    }));
 
   return (
     <>
       <AdminBoard
         heading={admin.boardHeading}
-        intro={admin.boardIntro}
+        summary={admin.boardSummary(board.needs_me.length)}
         buckets={[
           {
             id: "needs-me",

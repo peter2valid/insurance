@@ -9,6 +9,7 @@ import type { Channel } from "@/lib/data/types";
 import { formatAgo, formatDateTime, requestTime } from "@/lib/format/date";
 import { maskPhone } from "@/lib/format/mask";
 import { getNotifier } from "@/lib/notify";
+import { isSampleNumber, whatsappUrlTo } from "@/lib/whatsapp";
 
 export const metadata: Metadata = { title: admin.outbox.heading };
 
@@ -55,11 +56,19 @@ export default async function OutboxPage() {
                     <time dateTime={item.createdAt} title={formatDateTime(item.createdAt)} className="text-sm text-ink-quiet">
                       {formatAgo(item.createdAt, now)}
                     </time>
-                    {item.applicationRef && (
-                      <TextLink href={`/admin/${item.applicationRef}`} standalone className="text-sm">
-                        {copy.viewApplication} {item.applicationRef}
-                      </TextLink>
-                    )}
+                    <div className="flex flex-wrap items-center gap-x-4">
+                      {/* Real applicants: send this exact message from your own WhatsApp. */}
+                      {item.audience === "client" && item.channel === "whatsapp" && !isSampleNumber(item.to) && (
+                        <TextLink href={whatsappUrlTo(item.to, item.body)} external standalone className="text-sm">
+                          {admin.whatsapp.sendFromOutbox}
+                        </TextLink>
+                      )}
+                      {item.applicationRef && (
+                        <TextLink href={`/admin/${item.applicationRef}`} standalone className="text-sm">
+                          {copy.viewApplication} {item.applicationRef}
+                        </TextLink>
+                      )}
+                    </div>
                   </div>
                 </Card>
               </li>

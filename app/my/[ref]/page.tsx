@@ -14,7 +14,9 @@ import { StatusTimeline } from "@/components/ui/status-timeline";
 import { flow, statusLabels, statusPage } from "@/lib/copy";
 import { getRepo } from "@/lib/data/repo";
 import { getFlowContext } from "@/lib/flow/context";
+import { estimateFor } from "@/lib/products/estimate";
 import { summarizeWithProduct } from "@/lib/products/summary";
+import { EstimateCard } from "@/components/status/estimate-card";
 import { buildNow, buildTimeline, currentStepLabel } from "@/lib/status/view";
 
 export const metadata: Metadata = { title: statusPage.progress, robots: { index: false } };
@@ -57,6 +59,7 @@ export default async function MyApplicationPage(props: PageProps<"/my/[ref]">) {
 
   const documents = app.documents.filter((doc) => doc.required || doc.status !== "needed");
   const showQuotes = quotes.length > 0 && ["quotes_ready", "cover_chosen", "covered"].includes(app.status);
+  const estimate = showQuotes ? null : await estimateFor(app);
 
   return (
     <>
@@ -80,6 +83,9 @@ export default async function MyApplicationPage(props: PageProps<"/my/[ref]">) {
             ) : undefined,
         }}
         sections={[
+          ...(estimate
+            ? [{ id: "estimate", title: statusPage.priceHeading, content: <EstimateCard estimate={estimate} /> }]
+            : []),
           ...(showQuotes
             ? [
                 {

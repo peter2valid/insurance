@@ -14,6 +14,7 @@ import { answerRows, isQuestionScreen, questionScreens, type QuestionScreenId } 
 import { canOpen, flows, isScreen, needsValue, previousScreen, screenHref, type Screen } from "@/lib/flow/screens";
 import { formatKes } from "@/lib/format/money";
 import { formatKenyanPhone } from "@/lib/format/phone";
+import { estimateFor } from "@/lib/products/estimate";
 import { getPendingCode } from "@/lib/session";
 
 const screenTitles: Record<string, string> = {
@@ -73,7 +74,7 @@ export default async function StartStepPage(props: PageProps<"/start/[step]">) {
     const stillNeeded = ctx.app.documents
       .filter((doc) => doc.required && (doc.status === "needed" || doc.status === "rejected"))
       .map((doc) => flow.documents[doc.type]);
-    return <DoneScreen refValue={ctx.app.ref} stillNeeded={stillNeeded} />;
+    return <DoneScreen refValue={ctx.app.ref} stillNeeded={stillNeeded} estimate={await estimateFor(ctx.app)} />;
   }
 
   if (ctx.kind === "submitted") redirect(`/my/${ctx.app.ref}`);

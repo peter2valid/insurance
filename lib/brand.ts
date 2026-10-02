@@ -14,6 +14,8 @@ export const brand = {
   // On Vercel this falls back to the production domain automatically.
   siteUrl:
     process.env.SITE_URL ??
+    // Netlify sets URL to the site's main address (e.g. https://insurance20.netlify.app).
+    process.env.URL ??
     (process.env.VERCEL_PROJECT_PRODUCTION_URL
       ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
       : "http://localhost:3000"),

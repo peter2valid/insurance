@@ -9,3 +9,18 @@ export function whatsappUrl(message?: string): string {
   return message ? `${base}?text=${encodeURIComponent(message)}` : base;
 }
 
+
+/** wa.me link to a client's number (E.164), with the message ready to send. */
+export function whatsappUrlTo(e164: string, message?: string): string {
+  const base = `https://wa.me/${e164.replace(/\D/g, "")}`;
+  return message ? `${base}?text=${encodeURIComponent(message)}` : base;
+}
+
+/**
+ * Seeded sample clients use the fake range +254 700 000 1xx. Those numbers
+ * might belong to real people, so we never open WhatsApp to them — their
+ * messages stay simulated in the Outbox. Real applicants get a real link.
+ */
+export function isSampleNumber(e164: string): boolean {
+  return /^\+2547000001\d{2}$/.test(e164);
+}

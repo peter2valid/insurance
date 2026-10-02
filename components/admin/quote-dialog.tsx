@@ -25,11 +25,14 @@ export function QuoteDialog({
   product,
   suggestion,
   variant = "primary",
+  label,
 }: {
   refValue: string;
   product: Product;
   suggestion?: QuoteSuggestion;
   variant?: ButtonProps["variant"];
+  /** Button text; defaults to "Add quote". */
+  label?: string;
 }) {
   const [open, setOpen] = React.useState(false);
   const { formAction, pending, errors, submitted } = useAdminAction(addQuoteAction, () => setOpen(false));
@@ -44,7 +47,7 @@ export function QuoteDialog({
       <DialogTrigger asChild>
         <Button variant={variant}>
           <Plus aria-hidden />
-          {admin.actions.addQuote}
+          {label ?? admin.actions.addQuote}
         </Button>
       </DialogTrigger>
       <DialogContent title={copy.title} description={copy.description}>
