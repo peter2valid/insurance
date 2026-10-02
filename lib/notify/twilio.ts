@@ -35,12 +35,27 @@ export type WhatsAppResult =
   | { ok: true; status: string }
   | {
       ok: false;
-      reason: "not_configured" | "auth" | "not_joined" | "window" | "bad_sender" | "bad_number" | "network" | "other";
+      reason:
+        | "not_configured"
+        | "auth"
+        | "not_joined"
+        | "window"
+        | "template_only"
+        | "bad_sender"
+        | "bad_number"
+        | "network"
+        | "other";
       detail?: string;
     };
 
-function reasonFor(code: number | undefined, httpStatus: number): Exclude<WhatsAppResult, { ok: true }>["reason"] {
+function reasonFor(
+  code: number | undefined,
+  httpStatus: number,
+  message?: string,
+): Exclude<WhatsAppResult, { ok: true }>["reason"] {
   if (httpStatus === 401 || code === 20003) return "auth";
+  // This sender only accepts approved templates (no free-form messages).
+  if (message && /contentsid/i.test(message)) return "template_only";
   if (code === 63015) return "not_joined"; // sandbox: recipient hasn't joined
   if (code === 63016) return "window"; // outside WhatsApp's 24-hour window: needs a template
   if (code === 63007 || code === 21606 || code === 21212) return "bad_sender";
@@ -67,7 +82,7 @@ export async function sendWhatsAppDetailed(toE164: string, body: string, confirm
       signal: AbortSignal.timeout(7000),
     });
     const data = (await response.json().catch(() => ({}))) as { sid?: string; status?: string; code?: number; message?: string };
-    if (!response.ok) return { ok: false, reason: reasonFor(data.code, response.status), detail: data.message };
+    if (!response.ok) return { ok: false, reason: reasonFor(data.code, response.status, data.message), detail: data.message };
     if (!confirm || !data.sid) return { ok: true, status: data.status ?? "queued" };
 
     // Check the outcome once it has had a moment to go through.
@@ -79,7 +94,11 @@ export async function sendWhatsAppDetailed(toE164: string, body: string, confirm
       });
       const latest = (await check.json().catch(() => ({}))) as { status?: string; error_code?: number | null; error_message?: string | null };
       if (latest.status === "failed" || latest.status === "undelivered") {
-        return { ok: false, reason: reasonFor(latest.error_code ?? undefined, 200), detail: latest.error_message ?? undefined };
+        return {
+          ok: false,
+          reason: reasonFor(latest.error_code ?? undefined, 200, latest.error_message ?? undefined),
+          detail: latest.error_message ?? undefined,
+        };
       }
       if (latest.status === "sent" || latest.status === "delivered" || latest.status === "read") {
         return { ok: true, status: latest.status };
