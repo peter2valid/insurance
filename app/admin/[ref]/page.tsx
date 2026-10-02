@@ -19,6 +19,7 @@ import { getRepo } from "@/lib/data/repo";
 import type { Application, Client, DocumentItem, Message, Quote } from "@/lib/data/types";
 import { getQuoteProvider } from "@/lib/data/quote-provider";
 import { nudgeText } from "@/lib/admin/workflow";
+import { twilioConfigured } from "@/lib/notify/twilio";
 import { isSampleNumber, whatsappUrlTo } from "@/lib/whatsapp";
 import { formatDateTime } from "@/lib/format/date";
 import { formatKes } from "@/lib/format/money";
@@ -101,12 +102,13 @@ function NextStep({
   const toCheck = app.documents.some((doc) => doc.status === "uploaded");
   const owed = app.documents.some((doc) => doc.required && (doc.status === "needed" || doc.status === "rejected"));
   const real = client ? !isSampleNumber(client.phone) : false;
+  const auto = real && twilioConfigured(); // the server sends it via Twilio
   const nudgeButton = (
     <NudgeButton
       refValue={app.ref}
       label={admin.actions.nudge}
-      whatsappUrl={client && real ? whatsappUrlTo(client.phone, nudgeText(app, client)) : undefined}
-      title={real ? admin.whatsapp.realHint : admin.whatsapp.sampleHint}
+      whatsappUrl={client && real && !auto ? whatsappUrlTo(client.phone, nudgeText(app, client)) : undefined}
+      title={auto ? admin.whatsapp.autoHint : real ? admin.whatsapp.realHint : admin.whatsapp.sampleHint}
     />
   );
 

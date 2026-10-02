@@ -3,7 +3,7 @@ import { admin, flow, statusLabels } from "@/lib/copy";
 import { getQuoteProvider } from "@/lib/data/quote-provider";
 import { getRepo } from "@/lib/data/repo";
 import type { Application, ApplicationStatus, Client, Quote } from "@/lib/data/types";
-import { getNotifier, renderTemplate, type TemplateData, type TemplateName } from "@/lib/notify";
+import { getNotifier, renderTemplate, type Delivery, type TemplateData, type TemplateName } from "@/lib/notify";
 
 /**
  * The broker's one-click actions (CLAUDE.md §8.3). Each one changes the
@@ -34,8 +34,13 @@ const firstName = (client: Client) => client.name.split(" ")[0] || client.name;
 const statusLink = (ref: string) => `${brand.siteUrl}/my/${ref}`;
 
 /** Send a WhatsApp to the client (simulated) and keep a copy in the message log. */
-async function messageClient<T extends TemplateName>(app: Application, client: Client, template: T, data: TemplateData<T>) {
-  await getNotifier().send({
+async function messageClient<T extends TemplateName>(
+  app: Application,
+  client: Client,
+  template: T,
+  data: TemplateData<T>,
+): Promise<Delivery> {
+  const sent = await getNotifier().send({
     channel: "whatsapp",
     to: client.phone,
     audience: "client",
@@ -49,6 +54,7 @@ async function messageClient<T extends TemplateName>(app: Application, client: C
     channel: "whatsapp",
     body: renderTemplate(template, data),
   });
+  return sent.delivery;
 }
 
 async function setStatusAndTell(app: Application, client: Client, status: ApplicationStatus) {
@@ -125,13 +131,13 @@ export async function markCovered(ref: string): Promise<void> {
 }
 
 /** Pre-written WhatsApp nudge for a client who has gone quiet. */
-export async function nudge(ref: string): Promise<void> {
+export async function nudge(ref: string): Promise<Delivery> {
   const { app, client } = await load(ref);
   if (app.status === "covered") throw new WorkflowError(admin.errors.notAllowed);
   const link = app.submittedAt
     ? statusLink(ref)
     : `${brand.siteUrl}/start/resume?ref=${encodeURIComponent(ref)}`;
-  await messageClient(app, client, "nudge", { firstName: firstName(client) || "there", link });
+  return messageClient(app, client, "nudge", { firstName: firstName(client) || "there", link });
 }
 
 /** Benefits shown on one-click quotes, per product (fixture wording). */

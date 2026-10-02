@@ -12,6 +12,7 @@ import { TOTAL_STEPS } from "@/lib/flow/screens";
 import { formatAgo, formatDate } from "@/lib/format/date";
 import { maskPhone } from "@/lib/format/mask";
 import { summarizeWithProduct } from "@/lib/products/summary";
+import { twilioConfigured } from "@/lib/notify/twilio";
 import { isSampleNumber, whatsappUrlTo } from "@/lib/whatsapp";
 import { ActionButton } from "./action-button";
 import { AdminStatusBadge } from "./admin-status-badge";
@@ -95,13 +96,14 @@ function RowAction({ item }: { item: BoardItem }) {
   if (!owesSomething || app.status === "covered" || !client) return null;
 
   const real = !isSampleNumber(client.phone);
+  const auto = real && twilioConfigured(); // the server sends it via Twilio
   return (
     <NudgeButton
       refValue={app.ref}
       from="board"
       label={a.nudgeShort}
-      whatsappUrl={real ? whatsappUrlTo(client.phone, nudgeText(app, client)) : undefined}
-      title={real ? admin.whatsapp.realHint : admin.whatsapp.sampleHint}
+      whatsappUrl={real && !auto ? whatsappUrlTo(client.phone, nudgeText(app, client)) : undefined}
+      title={auto ? admin.whatsapp.autoHint : real ? admin.whatsapp.realHint : admin.whatsapp.sampleHint}
     />
   );
 }

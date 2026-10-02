@@ -49,16 +49,23 @@ export default async function OutboxPage() {
                     <Icon className="size-5 shrink-0 text-brand" aria-hidden />
                     <span className="text-sm font-medium text-ink">{notifyLabels.channels[item.channel]}</span>
                     <span className="text-sm text-ink-quiet">· {to}</span>
-                    <StatusBadge tone="neutral" label={copy.simulated} className="ml-auto" />
+                    {item.delivery === "sent" ? (
+                      <StatusBadge tone="success" label={copy.sent} className="ml-auto" />
+                    ) : item.delivery === "failed" ? (
+                      <StatusBadge tone="danger" label={copy.failed} className="ml-auto" />
+                    ) : (
+                      <StatusBadge tone="neutral" label={copy.simulated} className="ml-auto" />
+                    )}
                   </div>
                   <p className="text-base text-ink">{item.body}</p>
+                  {item.delivery === "failed" && <p className="text-sm text-danger">{copy.failedHint}</p>}
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <time dateTime={item.createdAt} title={formatDateTime(item.createdAt)} className="text-sm text-ink-quiet">
                       {formatAgo(item.createdAt, now)}
                     </time>
                     <div className="flex flex-wrap items-center gap-x-4">
                       {/* Real applicants: send this exact message from your own WhatsApp. */}
-                      {item.audience === "client" && item.channel === "whatsapp" && !isSampleNumber(item.to) && (
+                      {item.audience === "client" && item.channel === "whatsapp" && item.delivery !== "sent" && !isSampleNumber(item.to) && (
                         <TextLink href={whatsappUrlTo(item.to, item.body)} external standalone className="text-sm">
                           {admin.whatsapp.sendFromOutbox}
                         </TextLink>

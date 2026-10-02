@@ -156,14 +156,16 @@ export const admin = {
 
   // Toasts match the button words (CLAUDE.md §7), and say messages are simulated.
   toasts: {
-    quotesSent: "3 quotes sent — client notified (simulated)",
-    nudged: "Nudge sent (simulated — see Outbox)",
+    quotesSent: "3 quotes sent — client notified (see Outbox)",
+    nudged: "Nudge logged (simulated — see Outbox)",
+    nudgeSent: "Nudge sent on WhatsApp",
+    nudgeFailed: "WhatsApp not delivered — usually because that number hasn't joined the demo yet. See the Outbox.",
     verified: "Marked verified",
-    verifiedAll: "All documents verified — client updated (simulated message)",
-    reuploadRequested: "Re-upload requested — client notified (simulated)",
+    verifiedAll: "All documents verified — client notified (see Outbox)",
+    reuploadRequested: "Re-upload requested — client notified (see Outbox)",
     quoteAdded: "Quote added",
-    quotesReady: "Quotes ready — client notified (simulated)",
-    covered: "Marked covered — client notified (simulated)",
+    quotesReady: "Quotes ready — client notified (see Outbox)",
+    covered: "Marked covered — client notified (see Outbox)",
   },
 
   errors: {
@@ -210,6 +212,7 @@ export const admin = {
 
   whatsapp: {
     realHint: "Opens your WhatsApp with the message typed. Press send.",
+    autoHint: "Sends a real WhatsApp from the demo number.",
     sampleHint: "Sample client — the message is shown in the Outbox only.",
     sendFromOutbox: "Send on WhatsApp",
   },
@@ -228,7 +231,7 @@ export const admin = {
 
   outbox: {
     heading: "Outbox",
-    intro: "Every message the system would have sent. Nothing here was really sent — it's a demo.",
+    intro: "Every message the system sent or would have sent. Only messages marked “Sent on WhatsApp” really went out; the rest are simulated.",
     empty: {
       title: "No messages yet",
       body: "When a client applies or you take an action, the message appears here.",
@@ -236,6 +239,9 @@ export const admin = {
     toClient: "To client",
     toAdmin: "To you",
     simulated: "Simulated",
+    sent: "Sent on WhatsApp",
+    failed: "Not delivered",
+    failedHint: "Twilio didn't deliver it — usually because this number hasn't joined the WhatsApp demo yet.",
     viewApplication: "Open application",
   },
 } as const;

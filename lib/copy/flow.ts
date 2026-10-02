@@ -210,7 +210,7 @@ export const flow = {
     title: "Application sent",
     reference: (ref: string) => `Your reference is ${ref}`,
     body: "Keep your reference. You can follow your application at any time from the link below.",
-    demoNote: "Demo: WhatsApp messages are simulated. You can see them in the admin Outbox.",
+    demoNote: "Demo: WhatsApp updates only reach numbers that have joined the demo. You can always follow your application here.",
     nextHeading: "What happens next",
     next: [
       "We check your documents, usually within [X working hours].",

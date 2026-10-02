@@ -31,8 +31,8 @@ async function run(ref: string, work: () => Promise<string>): Promise<ActionResu
 export async function nudgeAction(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
   const ref = text(formData, "ref");
   const result = await run(ref, async () => {
-    await workflow.nudge(ref);
-    return admin.toasts.nudged;
+    const delivery = await workflow.nudge(ref);
+    return delivery === "sent" ? admin.toasts.nudgeSent : delivery === "failed" ? admin.toasts.nudgeFailed : admin.toasts.nudged;
   });
   // From the board, stay on the board.
   return result.ok && formData.get("from") === "board" ? { ...result, next: "/admin" } : result;

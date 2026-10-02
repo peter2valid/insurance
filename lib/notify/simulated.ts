@@ -1,6 +1,8 @@
 import { getSupabase } from "@/lib/data/supabase-client";
 import { publish, subscribe } from "@/lib/events";
-import { renderTemplate, type Notifier, type OutboxItem } from "./types";
+import { isSampleNumber } from "@/lib/whatsapp";
+import { sendWhatsApp, twilioConfigured } from "./twilio";
+import { renderTemplate, type Delivery, type Notifier, type OutboxItem } from "./types";
 
 /**
  * SIMULATED notifier. Writes to the Outbox — a Supabase table when
@@ -33,12 +35,18 @@ export const simulatedNotifier: Notifier = {
       body: renderTemplate(input.template, input.data),
       applicationRef: input.applicationRef,
       createdAt: new Date().toISOString(),
-      simulated: true,
+      delivery: "simulated",
     };
+
+    // Demo: really send client WhatsApps through the Twilio sandbox when it's
+    // configured — never to sample clients, whose numbers may be strangers'.
+    if (item.channel === "whatsapp" && item.audience === "client" && twilioConfigured() && !isSampleNumber(item.to)) {
+      item.delivery = (await sendWhatsApp(item.to, item.body)) ? "sent" : "failed";
+    }
     const db = getSupabase();
     if (db) {
       item.id = `out-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-      await db.from("outbox").insert({
+      const row = {
         id: item.id,
         channel: item.channel,
         recipient: item.to,
@@ -47,7 +55,10 @@ export const simulatedNotifier: Notifier = {
         body: item.body,
         application_ref: item.applicationRef ?? null,
         created_at: item.createdAt,
-      });
+      };
+      const { error } = await db.from("outbox").insert({ ...row, delivery: item.delivery });
+      // Database not yet migrated (no "delivery" column): still keep the log.
+      if (error) await db.from("outbox").insert(row);
       // A change with no ref reaches every admin page (for the toast).
       await db.from("changes").insert({ ref: null });
       return item;
@@ -70,7 +81,7 @@ export const simulatedNotifier: Notifier = {
         body: row.body as string,
         applicationRef: (row.application_ref as string) ?? undefined,
         createdAt: row.created_at as string,
-        simulated: true as const,
+        delivery: ((row.delivery as Delivery) ?? "simulated") as Delivery,
       }));
     }
     return structuredClone(outbox.items);

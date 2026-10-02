@@ -48,6 +48,7 @@ Health, travel and business appear on the hero as cards marked "coming next" and
 - Data is **mock** (see section 6). It must look and behave realistically.
 - Logbook reading is **simulated** behind `extractLogbook()`. The UI must still always show a confirm screen, because real reading will not be perfect.
 - Notifications (email/WhatsApp) are **simulated** and shown as toasts plus an "Outbox" panel in admin. Never claim in the UI that a real message was sent.
+  - **Exception (Oct 2026, owner's decision):** for demos, client WhatsApps may be really sent through the **Twilio WhatsApp Sandbox** when `TWILIO_*` env vars are set, only to numbers that opted in and never to seeded sample numbers. The Outbox labels each message honestly: "Sent on WhatsApp", "Not delivered" or "Simulated".
 - No real payments, no real insurer quotes yet. Quotes are fixture data behind a `QuoteProvider` interface.
 
 ---
@@ -257,4 +258,4 @@ Interface in `lib/notify/`: `send({ channel: 'email' | 'whatsapp' | 'sms', to, t
 10. **Demo rehearsal** — seed data reset button (admin only), walk through the demo path end to end, fix rough edges. No new features.
 
 ## 12. Later (do NOT build now)
-Real Supabase phone auth (needs an SMS provider) · real OCR/vision for documents · real email and WhatsApp Business API · insurer API or rating-engine integration · M-Pesa payments · Swahili translation · renewals engine · e-signatures.
+Real Supabase phone auth (needs an SMS provider) · real OCR/vision for documents · real email and production WhatsApp Business API (Meta-verified sender + templates; the Twilio sandbox is demo-only) · insurer API or rating-engine integration · M-Pesa payments · Swahili translation · renewals engine · e-signatures.

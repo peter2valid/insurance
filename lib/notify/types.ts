@@ -23,9 +23,16 @@ export interface OutboxItem {
   body: string;
   applicationRef?: string;
   createdAt: string;
-  /** Always true until a real provider is wired in. Shown in the UI. */
-  simulated: true;
+  /**
+   * What actually happened, shown in the Outbox:
+   * - "simulated": logged only (no provider, admin messages, sample clients)
+   * - "sent": really sent on WhatsApp via Twilio (demo sandbox)
+   * - "failed": Twilio refused it (e.g. the number hasn't joined the sandbox)
+   */
+  delivery: Delivery;
 }
+
+export type Delivery = "simulated" | "sent" | "failed";
 
 export interface Notifier {
   send<T extends TemplateName>(input: NotificationInput<T>): Promise<OutboxItem>;

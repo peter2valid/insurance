@@ -72,6 +72,9 @@ create table if not exists public.outbox (
   created_at       timestamptz not null default now()
 );
 
+-- Was the message really sent? simulated | sent (Twilio WhatsApp sandbox) | failed
+alter table public.outbox add column if not exists delivery text not null default 'simulated';
+
 -- Uploaded file metadata (the file itself lives in the "documents" bucket)
 create table if not exists public.files (
   id          text primary key,
