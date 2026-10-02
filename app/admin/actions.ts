@@ -32,7 +32,10 @@ export async function nudgeAction(_prev: ActionResult, formData: FormData): Prom
   const ref = text(formData, "ref");
   const result = await run(ref, async () => {
     const delivery = await workflow.nudge(ref);
-    return delivery === "sent" ? admin.toasts.nudgeSent : delivery === "failed" ? admin.toasts.nudgeFailed : admin.toasts.nudged;
+    if (delivery === "sent") return admin.toasts.nudgeSent;
+    if (delivery === "failed") return admin.toasts.nudgeFailed;
+    const { twilioConfigured } = await import("@/lib/notify/twilio");
+    return twilioConfigured() ? admin.toasts.nudged : admin.toasts.nudgeOff;
   });
   // From the board, stay on the board.
   return result.ok && formData.get("from") === "board" ? { ...result, next: "/admin" } : result;
@@ -129,4 +132,15 @@ export async function verifyAllAction(_prev: ActionResult, formData: FormData): 
     const { allVerified } = await workflow.verifyAllDocuments(ref);
     return allVerified ? admin.toasts.verifiedAll : admin.toasts.verified;
   });
+}
+
+/** "Send test WhatsApp" on the Outbox page: sends to the agency number and reports Twilio's answer. */
+export async function testWhatsAppAction(): Promise<ActionResult> {
+  const { brand } = await import("@/lib/brand");
+  const { sendWhatsAppDetailed } = await import("@/lib/notify/twilio");
+  const r = admin.whatsappCheck.results;
+  const result = await sendWhatsAppDetailed(`+${brand.contact.whatsappE164}`, admin.whatsappCheck.testMessage, true);
+  if (result.ok) return { ok: true, next: "/admin/outbox", toast: r.sent(result.status) };
+  const message = result.reason === "other" ? r.other(result.detail ?? "unknown error") : r[result.reason];
+  return { ok: false, errors: { _form: message } };
 }

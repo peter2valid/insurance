@@ -113,6 +113,8 @@ function Toaster() {
           open={item.open}
           onOpenChange={(open) => !open && dismiss(item.id)}
           type={item.tone === "error" ? "foreground" : "background"}
+          // Errors explain what to do, so give people time to read them.
+          duration={item.tone === "error" ? 10000 : undefined}
           className="data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0"
         >
           <ToastCard

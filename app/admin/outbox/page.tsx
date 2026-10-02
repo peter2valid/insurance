@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inbox, Mail, MessageCircle, MessageSquare, type LucideIcon } from "lucide-react";
+import { CircleAlert, CircleCheck, Inbox, Mail, MessageCircle, MessageSquare, Send, type LucideIcon } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -9,6 +9,9 @@ import type { Channel } from "@/lib/data/types";
 import { formatAgo, formatDateTime, requestTime } from "@/lib/format/date";
 import { maskPhone } from "@/lib/format/mask";
 import { getNotifier } from "@/lib/notify";
+import { missingTwilioVars, twilioConfigured } from "@/lib/notify/twilio";
+import { testWhatsAppAction } from "@/app/admin/actions";
+import { ActionButton } from "@/components/admin/action-button";
 import { isSampleNumber, whatsappUrlTo } from "@/lib/whatsapp";
 
 export const metadata: Metadata = { title: admin.outbox.heading };
@@ -34,6 +37,8 @@ export default async function OutboxPage() {
         <h1 className="text-2xl">{copy.heading}</h1>
         <p className="max-w-prose text-base text-ink-quiet">{copy.intro}</p>
       </div>
+
+      <WhatsAppCheck />
 
       {items.length === 0 ? (
         <EmptyState icon={Inbox} title={copy.empty.title} body={copy.empty.body} className="max-w-flow" />
@@ -84,5 +89,27 @@ export default async function OutboxPage() {
         </ul>
       )}
     </>
+  );
+}
+
+/** Is real WhatsApp on? Shows what's missing and lets the admin send a test. */
+function WhatsAppCheck() {
+  const copy = admin.whatsappCheck;
+  const on = twilioConfigured();
+  return (
+    <Card tone="alt" className="max-w-flow gap-3 md:flex-row md:items-center md:justify-between">
+      <div className="flex items-start gap-3">
+        {on ? (
+          <CircleCheck className="size-6 shrink-0 text-success" aria-hidden />
+        ) : (
+          <CircleAlert className="size-6 shrink-0 text-warn" aria-hidden />
+        )}
+        <div className="flex flex-col gap-1">
+          <p className="text-base font-medium text-ink">{on ? copy.on : copy.off}</p>
+          <p className="max-w-prose text-sm text-ink-quiet">{on ? copy.onBody : copy.offBody(missingTwilioVars().join(", "))}</p>
+        </div>
+      </div>
+      <ActionButton action={testWhatsAppAction} fields={{}} label={copy.test} icon={<Send aria-hidden />} />
+    </Card>
   );
 }

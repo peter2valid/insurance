@@ -157,7 +157,8 @@ export const admin = {
   // Toasts match the button words (CLAUDE.md §7), and say messages are simulated.
   toasts: {
     quotesSent: "3 quotes sent — client notified (see Outbox)",
-    nudged: "Nudge logged (simulated — see Outbox)",
+    nudged: "Sample client: the nudge is logged in the Outbox (sample numbers are never messaged).",
+    nudgeOff: "Not sent: real WhatsApp is off on this site. Open the Outbox to see what's missing.",
     nudgeSent: "Nudge sent on WhatsApp",
     nudgeFailed: "WhatsApp not delivered — usually because that number hasn't joined the demo yet. See the Outbox.",
     verified: "Marked verified",
@@ -207,6 +208,26 @@ export const admin = {
       premium: "Enter the yearly premium in shillings.",
       excess: "Enter the excess in shillings, or leave it empty.",
       coverType: "Choose the type of cover.",
+    },
+  },
+
+  whatsappCheck: {
+    on: "Real WhatsApp is on (Twilio sandbox)",
+    onBody: "Messages to applicants who joined the sandbox are really sent. Use the test to check your own number.",
+    off: "WhatsApp is simulated on this site",
+    offBody: (missing: string) =>
+      `The server can't see: ${missing}. In Netlify, add them under Environment variables (scope: Functions or All), then Deploys → Trigger deploy.`,
+    test: "Send test WhatsApp",
+    testMessage: "Test from your Beacon Cover admin. If you can read this, real WhatsApp messages are working.",
+    results: {
+      sent: (status: string) => `Twilio accepted it (status: ${status}). Check your WhatsApp.`,
+      not_configured: "Not sent: the Twilio keys aren't set on this site yet.",
+      auth: "Not sent: Twilio rejected the keys. Check TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN (no spaces), then redeploy.",
+      not_joined: "Not delivered: this number hasn't joined the sandbox. From WhatsApp, send your \"join …\" code to the sandbox number, then try again.",
+      bad_sender: "Not sent: TWILIO_WHATSAPP_FROM isn't your sandbox number. Copy it from Twilio → Messaging → Try it out (e.g. whatsapp:+14155238886).",
+      bad_number: "Not sent: Twilio says the destination number isn't valid for WhatsApp.",
+      network: "Not sent: couldn't reach Twilio. Try again in a moment.",
+      other: (detail: string) => `Not sent. Twilio says: ${detail}`,
     },
   },
 
