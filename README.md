@@ -97,3 +97,27 @@ Only `lib/data/` (plus `lib/events.ts`) changes. Screens stay as they are.
    subscriptions on `applications` and `messages`.
 6. **Keep** `rules.ts`, `queries.ts` and all screens unchanged; delete
    `mock.ts` and `seed.ts` (or keep the seed for a staging project).
+
+## Deploying the shareable demo (Supabase + GitHub + Vercel)
+
+The app uses **Supabase** automatically when `SUPABASE_URL` and
+`SUPABASE_SERVICE_ROLE_KEY` are set; without them it falls back to the
+in-memory demo data (local development).
+
+1. **Supabase** — create a project, open **SQL Editor → New query**, paste
+   all of `supabase/schema.sql` and press **Run**. It creates the tables, a
+   private `documents` storage bucket, and locks everything to the server
+   (RLS on, no public access). The sample applications are inserted
+   automatically the first time the app runs.
+2. **Keys** — in Supabase **Project Settings → API**, copy the Project URL
+   and the `service_role` key. Locally, paste them into `.env.local` (git
+   ignores it). Never commit the key or prefix it with `NEXT_PUBLIC_`.
+3. **GitHub** — push this repo to an empty private GitHub repository.
+4. **Vercel** — **Add New → Project → Import** the GitHub repo. Before
+   deploying, add the two environment variables (same names). Deploy.
+   Every later push to `main` redeploys the same link.
+
+Live sync on Vercel: pages check `/api/version` every 3 seconds and refresh
+when anything changed (a `changes` table in Supabase). Uploads are limited to
+4 MB (Vercel's request limit is 4.5 MB); phone photos are compressed far
+below that.

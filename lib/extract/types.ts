@@ -24,4 +24,5 @@ export class ExtractionError extends Error {
   }
 }
 
-export const MAX_LOGBOOK_BYTES = 10 * 1024 * 1024;
+// 4 MB: under Vercel's 4.5 MB request limit. Photos are compressed far below this.
+export const MAX_LOGBOOK_BYTES = 4 * 1024 * 1024;

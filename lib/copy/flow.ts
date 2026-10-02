@@ -81,7 +81,7 @@ export const flow = {
     errors: {
       unreadable: "We couldn't read that photo. Take it again in good light, with the whole page in view.",
       unsupported_file: "That file type won't work. Take a photo, or choose a JPG, PNG or PDF.",
-      too_large: "That file is larger than 10 MB. Take a photo instead, or choose a smaller file.",
+      too_large: "That file is larger than 4 MB. Take a photo instead, or choose a smaller file.",
       upload: "The upload didn't finish. Check your connection and try again.",
     },
     toast: "Logbook uploaded",
@@ -170,7 +170,7 @@ export const flow = {
     later: "I'll upload it later",
     errors: {
       unsupported_file: "That file type won't work. Take a photo, or choose a JPG, PNG or PDF.",
-      too_large: "That file is larger than 10 MB. Take a photo instead, or choose a smaller file.",
+      too_large: "That file is larger than 4 MB. Take a photo instead, or choose a smaller file.",
       upload: "The upload didn't finish. Check your connection and try again.",
     },
     toast: "ID uploaded",

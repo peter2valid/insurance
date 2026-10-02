@@ -11,7 +11,12 @@ export const brand = {
   tagline: "[Tagline]",
 
   // Used in links inside messages. Set SITE_URL in the environment for a real domain.
-  siteUrl: process.env.SITE_URL ?? "http://localhost:3000",
+  // On Vercel this falls back to the production domain automatically.
+  siteUrl:
+    process.env.SITE_URL ??
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : "http://localhost:3000"),
 
   licence: {
     number: "[Licence no.]",

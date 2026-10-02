@@ -24,7 +24,7 @@ export const kit = {
     remove: "Remove",
     uploading: "Uploading",
     uploaded: "Uploaded",
-    accepted: "Photo or PDF, up to 10 MB",
+    accepted: "Photo or PDF, up to 4 MB",
   },
 
   timeline: {

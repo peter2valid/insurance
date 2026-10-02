@@ -127,7 +127,7 @@ export const styles = {
       label: "Photo of your logbook",
       hint: "Only our team sees this. It is stored securely and used only for your application.",
       fileName: "logbook-KDA123A.pdf",
-      error: "That file is larger than 10 MB. Take a photo instead, or choose a smaller file.",
+      error: "That file is larger than 4 MB. Take a photo instead, or choose a smaller file.",
       idLabel: "Your national ID",
     },
     card: {

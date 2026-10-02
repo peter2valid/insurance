@@ -10,6 +10,8 @@ import type {
   Quote,
 } from "./types";
 import { createMockRepo } from "./mock";
+import { createSupabaseRepo } from "./supabase";
+import { getSupabase } from "./supabase-client";
 
 /**
  * The ONLY way screens touch data (CLAUDE.md §6). Screens import
@@ -71,7 +73,9 @@ export { NotFoundError } from "./errors";
 let repo: Repo | undefined;
 
 export function getRepo(): Repo {
-  // SIMULATED: in-memory mock. Later: `repo ??= createSupabaseRepo()`.
-  repo ??= createMockRepo();
+  // Supabase when its keys are set (deployed demo); otherwise the
+  // SIMULATED in-memory mock (local development, no setup needed).
+  const db = getSupabase();
+  repo ??= db ? createSupabaseRepo(db) : createMockRepo();
   return repo;
 }

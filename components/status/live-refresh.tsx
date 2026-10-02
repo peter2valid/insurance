@@ -4,10 +4,13 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { msSinceLastToast, toast } from "@/components/ui/toast";
 
+const POLL_MS = 3000;
+
 /**
- * Keeps a page in sync: listens to /api/events and re-renders the page's
- * server data when something relevant changes. Shared by the client status
- * page (one ref) and the admin board (all refs).
+ * Keeps a page in sync: asks /api/version every few seconds whether anything
+ * changed, and re-renders the page's server data when it did. Polling (not a
+ * stream) so it works on Vercel. Shared by the client status page (one ref)
+ * and the admin pages (everything).
  *
  * `watch` + `announce`: when the watched value changes after a refresh,
  * show a toast naming the change (motion only to show what changed).
@@ -32,22 +35,35 @@ export function LiveRefresh({
   const router = useRouter();
 
   React.useEffect(() => {
-    const url = refValue ? `/api/events?ref=${encodeURIComponent(refValue)}` : "/api/events";
-    const source = new EventSource(url);
-    let timer: ReturnType<typeof setTimeout> | undefined;
+    const url = refValue ? `/api/version?ref=${encodeURIComponent(refValue)}` : "/api/version";
+    let last: string | undefined;
+    let stopped = false;
 
-    source.onmessage = () => {
-      // Several events often arrive together; refresh once.
-      clearTimeout(timer);
-      timer = setTimeout(() => router.refresh(), 250);
+    async function check() {
+      if (document.visibilityState === "hidden") return; // save data in background tabs
+      try {
+        const response = await fetch(url, { cache: "no-store" });
+        const { v } = (await response.json()) as { v: string };
+        if (!stopped && last !== undefined && v !== last) router.refresh();
+        last = v;
+      } catch {
+        // Offline for a moment — try again on the next tick.
+      }
+    }
+
+    void check();
+    const poll = setInterval(check, POLL_MS);
+    // Coming back to a background tab: catch up straight away.
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void check();
     };
-
+    document.addEventListener("visibilitychange", onVisible);
     const interval = intervalMs ? setInterval(() => router.refresh(), intervalMs) : undefined;
-
     return () => {
-      clearTimeout(timer);
+      stopped = true;
+      document.removeEventListener("visibilitychange", onVisible);
+      clearInterval(poll);
       clearInterval(interval);
-      source.close();
     };
   }, [refValue, router, intervalMs]);
 
