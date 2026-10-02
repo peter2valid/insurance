@@ -1,9 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 import { Upload } from "lucide-react";
-import { DocumentUpload } from "@/components/flow/document-upload";
+import { BackgroundUpload } from "@/components/flow/background-upload";
 import { Button, type ButtonProps } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { flow, statusPage } from "@/lib/copy";
@@ -18,15 +17,17 @@ export function UploadDialog({
   documentType,
   label,
   variant = "secondary",
+  defaultOpen = false,
 }: {
   refValue: string;
   documentType: DocumentType;
   /** Button text, e.g. "Upload KRA PIN certificate". */
   label: string;
   variant?: ButtonProps["variant"];
+  /** Open straight away — e.g. arriving from a WhatsApp "Upload it here" link. */
+  defaultOpen?: boolean;
 }) {
-  const router = useRouter();
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = React.useState(defaultOpen);
   const name = flow.documents[documentType];
   const inline = flow.documentsInline[documentType];
   const copy = statusPage.upload;
@@ -40,19 +41,17 @@ export function UploadDialog({
         </Button>
       </DialogTrigger>
       <DialogContent title={copy.dialogTitle(inline)} description={copy.dialogDescription}>
-        <DocumentUpload
+        <BackgroundUpload
           kind={documentType}
           refValue={refValue}
           label={copy.label(inline)}
           hint={copy.reassurance}
+          documentName={inline}
           takePhotoLabel={flow.logbook.takePhoto}
           chooseFileLabel={flow.logbook.chooseFile}
           errorMessages={flow.id.errors}
           successToast={copy.toast(name)}
-          onDone={() => {
-            setOpen(false);
-            router.refresh();
-          }}
+              onStarted={() => setOpen(false)}
         />
       </DialogContent>
     </Dialog>

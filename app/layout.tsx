@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Sans, IBM_Plex_Serif } from "next/font/google";
+import { UploadTray } from "@/components/flow/upload-tray";
 import { Toaster } from "@/components/ui/toast";
 import { brand } from "@/lib/brand";
 import { common } from "@/lib/copy";
@@ -43,6 +44,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           {common.skipToContent}
         </a>
         {children}
+        <UploadTray />
         <Toaster />
       </body>
     </html>

@@ -7,7 +7,7 @@ export { admin } from "./admin";
 export { common } from "./common";
 export { flow } from "./flow";
 export { kit } from "./kit";
-export { notifyLabels, notifyTemplates } from "./notify";
+export { notifyLabels, notifyTemplates, statusMessages } from "./notify";
 export {
   coverLabels,
   nameDescriptions,

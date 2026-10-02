@@ -57,7 +57,7 @@ export default async function OutboxPage() {
                       <StatusBadge tone="neutral" label={copy.simulated} className="ml-auto" />
                     )}
                   </div>
-                  <p className="text-base text-ink">{item.body}</p>
+                  <p className="text-base whitespace-pre-line text-ink">{item.body}</p>
                   {item.delivery === "failed" && <p className="text-sm text-danger">{copy.failedHint}</p>}
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <time dateTime={item.createdAt} title={formatDateTime(item.createdAt)} className="text-sm text-ink-quiet">

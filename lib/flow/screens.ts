@@ -110,7 +110,8 @@ function isDone(screen: Screen, app: Application, client: Client | null): boolea
     case "passport":
     case "registration": {
       const { document, laterKey } = uploadScreens[screen];
-      return docIn(app, document) || d[laterKey] === "yes";
+      // "uploading": the file is uploading in the background — carry on.
+      return docIn(app, document) || d[laterKey] === "yes" || d[laterKey] === "uploading";
     }
     case "review":
     case "phone":

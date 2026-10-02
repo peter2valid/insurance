@@ -1,5 +1,5 @@
 import { brand } from "@/lib/brand";
-import { admin, flow, statusLabels } from "@/lib/copy";
+import { admin, flow, productNamesInline, statusMessages } from "@/lib/copy";
 import { getQuoteProvider } from "@/lib/data/quote-provider";
 import { getRepo } from "@/lib/data/repo";
 import type { Application, ApplicationStatus, Client, Quote } from "@/lib/data/types";
@@ -59,11 +59,13 @@ async function messageClient<T extends TemplateName>(
 
 async function setStatusAndTell(app: Application, client: Client, status: ApplicationStatus) {
   const updated = await getRepo().setStatus(app.ref, status);
+  const message = statusMessages[status];
   await messageClient(updated, client, "status_changed", {
     firstName: firstName(client),
     ref: app.ref,
-    statusLabel: statusLabels[status],
-    link: statusLink(app.ref),
+    detail: message.detail,
+    linkLabel: message.linkLabel,
+    link: `${statusLink(app.ref)}${message.anchor}`,
   });
   return updated;
 }
@@ -97,7 +99,7 @@ export async function requestReupload(ref: string, documentId: string, reason: s
     ref,
     document: flow.documentsInline[doc.type],
     reason,
-    link: statusLink(ref),
+    link: `${statusLink(ref)}?upload=${doc.type}`,
   });
 }
 
@@ -137,7 +139,7 @@ export async function nudge(ref: string): Promise<Delivery> {
   const link = app.submittedAt
     ? statusLink(ref)
     : `${brand.siteUrl}/start/resume?ref=${encodeURIComponent(ref)}`;
-  return messageClient(app, client, "nudge", { firstName: firstName(client) || "there", link });
+  return messageClient(app, client, "nudge", nudgeData(app, client, link));
 }
 
 /** Benefits shown on one-click quotes, per product (fixture wording). */
@@ -203,5 +205,15 @@ export function nudgeText(app: Application, client: Client): string {
   const link = app.submittedAt
     ? statusLink(app.ref)
     : `${brand.siteUrl}/start/resume?ref=${encodeURIComponent(app.ref)}`;
-  return renderTemplate("nudge", { firstName: firstName(client) || "there", link });
+  return renderTemplate("nudge", nudgeData(app, client, link));
+}
+
+function nudgeData(app: Application, client: Client, link: string) {
+  return {
+    firstName: firstName(client) || "there",
+    product: productNamesInline[app.product],
+    ref: app.ref,
+    submitted: Boolean(app.submittedAt),
+    link,
+  };
 }

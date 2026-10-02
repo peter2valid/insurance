@@ -7,7 +7,7 @@ import { ChoiceCards } from "@/components/ui/choice-cards";
 import { Input } from "@/components/ui/input";
 import { flow } from "@/lib/copy";
 import { stepOf, TOTAL_STEPS } from "@/lib/flow/screens";
-import { DocumentUpload } from "./document-upload";
+import { FlowBackgroundUpload } from "./flow-background-upload";
 import { FlowStep } from "./flow-step";
 import { useFlowAction } from "./use-flow-action";
 
@@ -128,7 +128,6 @@ export function NameScreen({
 
 export function IdScreen({ refValue, backHref }: ScreenProps) {
   const skip = useFlowAction(skipId);
-  const [uploading, setUploading] = React.useState(false);
   const copy = flow.id;
 
   return (
@@ -142,21 +141,18 @@ export function IdScreen({ refValue, backHref }: ScreenProps) {
       helpStep={flow.stepNames.id}
       formError={skip.errors._form}
       secondaryAction={
-        <Button type="submit" variant="ghost" loading={skip.pending} disabled={uploading}>
+        <Button type="submit" variant="ghost" loading={skip.pending}>
           {copy.later}
         </Button>
       }
     >
       <input type="hidden" name="ref" value={refValue} />
-      <DocumentUpload
-        onBusyChange={setUploading}
+      <FlowBackgroundUpload
         kind="national_id"
         refValue={refValue}
         label={copy.label}
         hint={copy.reassurance}
-        takePhotoLabel={flow.logbook.takePhoto}
-        chooseFileLabel={flow.logbook.chooseFile}
-        errorMessages={copy.errors}
+        documentName={flow.documentsInline.national_id}
         successToast={copy.toast}
       />
     </FlowStep>

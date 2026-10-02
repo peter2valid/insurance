@@ -145,9 +145,12 @@ export function createSupabaseRepo(db: SupabaseClient): Repo {
 
   async function saveApp(app: Application): Promise<Application> {
     app.updatedAt = now();
-    const data = check(await db.from("applications").update(appRow(app)).eq("ref", app.ref).select("*").single(), "save application");
-    await recordChange(app.ref);
-    return toApp(data as Row);
+    // Save and record the change at the same time (one round trip, not two).
+    const [result] = await Promise.all([
+      db.from("applications").update(appRow(app)).eq("ref", app.ref).select("*").single(),
+      recordChange(app.ref),
+    ]);
+    return toApp(check(result, "save application") as Row);
   }
 
   return {

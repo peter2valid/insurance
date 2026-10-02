@@ -20,12 +20,13 @@ export async function getFlowContext(ref?: string | null, product?: Product): Pr
   const clientId = await getSessionClientId();
   if (!clientId) return { kind: "signed_out" };
 
-  const client = await repo.getClient(clientId);
+  // Look up the client and the application together (one wait, not two).
+  const [client, byRef] = await Promise.all([repo.getClient(clientId), ref ? repo.getApplication(ref) : null]);
   if (!client) return { kind: "signed_out" };
 
   let app: Application | null = null;
   if (ref) {
-    app = await repo.getApplication(ref);
+    app = byRef;
     if (!app || app.clientId !== client.id) return { kind: "not_yours" };
   } else {
     app = await findOrCreateDraft(client.id, product);

@@ -1,11 +1,10 @@
 "use client";
 
-import * as React from "react";
 import { skipDocument } from "@/app/start/actions";
 import { Button } from "@/components/ui/button";
 import { flow, questions } from "@/lib/copy";
 import { stepOf, TOTAL_STEPS, uploadScreens } from "@/lib/flow/screens";
-import { DocumentUpload } from "./document-upload";
+import { FlowBackgroundUpload } from "./flow-background-upload";
 import { FlowStep } from "./flow-step";
 import { useFlowAction } from "./use-flow-action";
 
@@ -23,7 +22,6 @@ export function UploadScreen({
   backHref: string;
 }) {
   const skip = useFlowAction(skipDocument);
-  const [uploading, setUploading] = React.useState(false);
   const copy = questions[screen];
   const { document } = uploadScreens[screen];
 
@@ -38,22 +36,19 @@ export function UploadScreen({
       helpStep={copy.stepName}
       formError={skip.errors._form}
       secondaryAction={
-        <Button type="submit" variant="ghost" loading={skip.pending} disabled={uploading}>
+        <Button type="submit" variant="ghost" loading={skip.pending}>
           {copy.later}
         </Button>
       }
     >
       <input type="hidden" name="ref" value={refValue} />
       <input type="hidden" name="document" value={document} />
-      <DocumentUpload
-        onBusyChange={setUploading}
+      <FlowBackgroundUpload
         kind={document}
         refValue={refValue}
         label={copy.label}
         hint={copy.reassurance}
-        takePhotoLabel={flow.logbook.takePhoto}
-        chooseFileLabel={flow.logbook.chooseFile}
-        errorMessages={flow.id.errors}
+        documentName={flow.documentsInline[document]}
         successToast={copy.toast}
       />
     </FlowStep>

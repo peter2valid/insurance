@@ -8,6 +8,12 @@ export const flow = {
   helpMessageWithRef: (ref: string, step: string) =>
     `Hello, I need help with my application ${ref}. I'm on: ${step}.`,
   change: "Change",
+  background: {
+    uploading: (doc: string) => `Uploading your ${doc}`,
+    started: "Uploading in the background. Carry on.",
+    retry: "Try again",
+    dismiss: "Dismiss",
+  },
   continue: "Continue",
   saving: "Saving",
 
@@ -199,6 +205,7 @@ export const flow = {
       uploaded: "Uploaded",
       verified: "Checked",
       needed: "Upload after you send",
+      uploading: "Uploading now — you can still send",
       rejected: "Upload again",
     },
     notProvided: "Not provided",

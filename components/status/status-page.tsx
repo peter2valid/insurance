@@ -72,7 +72,12 @@ export function StatusPage({
       </Card>
 
       {sections.map((section) => (
-        <section key={section.id} aria-labelledby={`${section.id}-heading`} className="flex flex-col gap-4">
+        <section
+          key={section.id}
+          id={section.id}
+          aria-labelledby={`${section.id}-heading`}
+          className="flex scroll-mt-6 flex-col gap-4"
+        >
           <h2 id={`${section.id}-heading`} className="text-xl">
             {section.title}
           </h2>

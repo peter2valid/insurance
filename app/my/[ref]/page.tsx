@@ -28,6 +28,9 @@ export const metadata: Metadata = { title: statusPage.progress, robots: { index:
  */
 export default async function MyApplicationPage(props: PageProps<"/my/[ref]">) {
   const { ref } = await props.params;
+  // From a WhatsApp "Upload it here" link: open that document's upload straight away.
+  const uploadParam = (await props.searchParams).upload;
+  const openUpload = typeof uploadParam === "string" ? uploadParam : undefined;
   const ctx = await getFlowContext(ref);
 
   if (ctx.kind === "signed_out") redirect(`/start/phone?ref=${encodeURIComponent(ref)}`);
@@ -79,6 +82,7 @@ export default async function MyApplicationPage(props: PageProps<"/my/[ref]">) {
                 documentType={now.document.type}
                 label={now.actionLabel}
                 variant="primary"
+                defaultOpen={openUpload === now.document.type}
               />
             ) : undefined,
         }}
@@ -124,6 +128,7 @@ export default async function MyApplicationPage(props: PageProps<"/my/[ref]">) {
                           <UploadDialog
                             refValue={app.ref}
                             documentType={doc.type}
+                            defaultOpen={openUpload === doc.type}
                             label={doc.status === "rejected" ? statusPage.documentHints.rejected : statusPage.documentHints.needed}
                           />
                         )

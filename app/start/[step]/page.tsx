@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { CoverScreen, IdScreen, NameScreen, ValueScreen } from "@/components/flow/detail-screens";
 import { DoneScreen } from "@/components/flow/done-screen";
+import { PrefetchNext } from "@/components/flow/prefetch-next";
 import { QuestionScreen } from "@/components/flow/question-screen";
 import { ReviewScreen, type ReviewDocument, type ReviewSection } from "@/components/flow/review-screens";
 import { CodeScreen, PhoneScreen } from "@/components/flow/sign-in-screens";
@@ -11,7 +12,7 @@ import { flow, nameDescriptions, questions } from "@/lib/copy";
 import { isProduct, type Application, type Client } from "@/lib/data/types";
 import { getFlowContext } from "@/lib/flow/context";
 import { answerRows, isQuestionScreen, questionScreens, type QuestionScreenId } from "@/lib/flow/questions";
-import { canOpen, flows, isScreen, needsValue, previousScreen, screenHref, type Screen } from "@/lib/flow/screens";
+import { canOpen, flows, isScreen, laterKeyFor, needsValue, previousScreen, screenHref, type Screen } from "@/lib/flow/screens";
 import { formatKes } from "@/lib/format/money";
 import { formatKenyanPhone } from "@/lib/format/phone";
 import { estimateFor } from "@/lib/products/estimate";
@@ -86,7 +87,14 @@ export default async function StartStepPage(props: PageProps<"/start/[step]">) {
 
   const { app, client } = ctx;
   const screenProps = { refValue: app.ref, backHref: screenHref(previousScreen(step, app), app.ref) };
-  return renderScreen(step, app, client, screenProps);
+  const productFlow = flows[app.product];
+  const following = productFlow[productFlow.indexOf(step) + 1];
+  return (
+    <>
+      {renderScreen(step, app, client, screenProps)}
+      <PrefetchNext href={following ? screenHref(following, app.ref) : undefined} />
+    </>
+  );
 }
 
 function renderScreen(step: Screen, app: Application, client: Client, props: { refValue: string; backHref: string }) {
@@ -186,11 +194,15 @@ function reviewData(app: Application, client: Client): { sections: ReviewSection
 
   const documents: ReviewDocument[] = app.documents
     .filter((doc) => doc.required)
-    .map((doc) => ({
-      label: flow.documents[doc.type],
-      status: flow.review.documentStatus[doc.status],
-      done: doc.status === "uploaded" || doc.status === "verified",
-    }));
+    .map((doc) => {
+      const laterKey = laterKeyFor(doc.type);
+      const onItsWay = doc.status === "needed" && laterKey !== undefined && d[laterKey] === "uploading";
+      return {
+        label: flow.documents[doc.type],
+        status: onItsWay ? flow.review.documentStatus.uploading : flow.review.documentStatus[doc.status],
+        done: doc.status === "uploaded" || doc.status === "verified" || onItsWay,
+      };
+    });
 
   return { sections, documents };
 }

@@ -321,7 +321,7 @@ function Messages({ messages }: { messages: Message[] }) {
               <span className="text-xs text-ink-quiet">
                 {message.direction === "in" ? admin.detail.fromClient : admin.detail.fromUs} · {formatDateTime(message.createdAt)}
               </span>
-              <span className="text-sm text-ink">{message.body}</span>
+              <span className="text-sm whitespace-pre-line text-ink">{message.body}</span>
             </li>
           ))}
         </ul>

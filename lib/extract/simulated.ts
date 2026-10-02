@@ -23,7 +23,7 @@ const FIXTURES: Record<LogbookField, string>[] = [
 
 const LOW_CONFIDENCE: LogbookField[] = ["chassisNumber", "year", "chassisNumber"];
 
-const DELAY_MS = 1500;
+const DELAY_MS = 900;
 const MIN_READABLE_BYTES = 20 * 1024;
 
 export async function simulatedExtractLogbook(file: File): Promise<LogbookExtraction> {

@@ -1,7 +1,7 @@
 "use server";
 
 import { brand } from "@/lib/brand";
-import { flow, productNamesInline, statusLabels } from "@/lib/copy";
+import { flow, productNamesInline, statusMessages } from "@/lib/copy";
 import { isProduct, type DocumentType } from "@/lib/data/types";
 import { getRepo } from "@/lib/data/repo";
 import type { ActionResult } from "@/lib/flow/action-result";
@@ -217,11 +217,20 @@ export async function submitApplication(_prev: ActionResult, formData: FormData)
     data: {
       firstName: ctx.client.name.split(" ")[0],
       ref: app.ref,
-      statusLabel: statusLabels.received,
+      detail: statusMessages.received.detail,
+      linkLabel: statusMessages.received.linkLabel,
       link,
     },
     applicationRef: app.ref,
   });
 
   return { ok: true, next: `/start/done?ref=${encodeURIComponent(app.ref)}`, toast: flow.review.toast };
+}
+
+/** Background upload started: count the document as on its way and move on. */
+export async function deferDocument(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  const document = formData.get("document");
+  const laterKey = typeof document === "string" ? laterKeyFor(document as DocumentType) : undefined;
+  if (!laterKey) return formError(flow.errors.generic);
+  return saveDetails(formData, { [laterKey]: "uploading" });
 }
