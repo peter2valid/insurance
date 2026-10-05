@@ -36,7 +36,8 @@ export function summarize(app: Application): string {
 
   switch (app.product) {
     case "motor":
-      parts = [[d.make, d.model].filter(Boolean).join(" ") || undefined, d.plate];
+      // Non-breaking space keeps a plate like "KCU 456M" on one line.
+      parts = [[d.make, d.model].filter(Boolean).join(" ") || undefined, d.plate?.replace(" ", " ")];
       break;
     case "health":
       parts = d.who ? [summaries.people(peopleCovered(d)), d.plan ? coverLabels[d.plan] : undefined] : [];

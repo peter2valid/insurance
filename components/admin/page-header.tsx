@@ -27,7 +27,7 @@ export function Section({
 }) {
   return (
     <section className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-end justify-between gap-2">
+      <div className="flex min-h-touch flex-wrap items-center justify-between gap-2">
         <div className="flex flex-col gap-1">
           <h2 className="font-sans text-lg font-semibold">{title}</h2>
           {description && <p className="text-sm text-ink-quiet">{description}</p>}

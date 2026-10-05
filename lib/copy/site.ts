@@ -18,6 +18,7 @@ export const site = {
       { href: "/#about", label: "About us" },
       { href: "/#insurers", label: "Our insurers" },
       { href: "/#faq", label: "Questions" },
+      { href: "/#agents", label: "Agents" },
     ],
     whatsapp: "WhatsApp us",
     whatsappShort: "WhatsApp",
@@ -29,14 +30,15 @@ export const site = {
 
   hero: {
     heading: "Insurance you can sort out from your phone",
-    body: "Car, health, travel or business. Answer a few questions, send your documents, and we compare insurers and send you quotes. No forms to print, no chasing.",
+    body: "Private car, matatu, taxi or boda boda — plus health, travel and business. Compare insurers, choose your cover and pay with M-Pesa, all from your phone.",
     question: "What do you want to cover?",
     needsHeading: "Have these ready",
     needs: [
       "Your national ID (or passport for travel)",
-      "Your logbook, if it's for a car",
-      "Your business registration, if it's for a business",
+      "Your KRA PIN",
+      "Your logbook, if it's for a vehicle",
     ],
+    referred: (name: string) => `You were referred by ${name}, one of our agents.`,
     duration: "About 5 minutes. You can stop and come back.",
   },
 
@@ -49,12 +51,12 @@ export const site = {
         body: "Pick your cover and tell us the basics. For a car, just snap your logbook.",
       },
       {
-        title: "We compare insurers",
-        body: "We check your documents and send you quotes, with the differences explained.",
+        title: "Compare insurers",
+        body: "See quotes from our insurers straight away, with the total you pay and what each one covers.",
       },
       {
-        title: "Choose your cover",
-        body: "Pick the quote you want. We finalise it and tell you when you're covered.",
+        title: "Pay and get covered",
+        body: "Pay with M-Pesa. We check your documents and send your policy on WhatsApp and email — and remind you before it ends.",
       },
     ],
     trackNote: "You get a link to follow your application at every step.",
@@ -78,9 +80,14 @@ export const site = {
   insurers: {
     heading: "Our insurers",
     intro: "We compare quotes from the insurers we work with, so you don't have to call each one.",
-    placeholderName: "[Insurer name]",
-    count: 6,
-    note: "[Confirm the list of insurers the agency is appointed with before launch.]",
+    note: "[Confirm the final list of insurers the agency places business with before launch.]",
+  },
+
+  agents: {
+    heading: "Earn as an agent",
+    body: "Know people who need insurance? Share your own link. When they pay for their cover, you earn commission — paid to your M-Pesa.",
+    join: "Become an agent",
+    signIn: "Agent sign-in",
   },
 
   faq: {
@@ -89,7 +96,7 @@ export const site = {
     items: [
       {
         q: "What do I need to apply?",
-        a: "For a car: your logbook (or just the plate), national ID and KRA PIN. For health: your national ID. For travel: your passport. For a business: the registration certificate, KRA PIN and the owner's ID. A clear photo from your phone is fine.",
+        a: "For a vehicle: your logbook (or just the plate), national ID and KRA PIN. For health: your national ID. For travel: your passport. For a business: the registration certificate, KRA PIN and the owner's ID. A clear photo from your phone is fine.",
       },
       {
         q: "How long does it take?",
@@ -104,8 +111,8 @@ export const site = {
         a: "It's how you sign in — we text you a code, so there's no password to remember. We also use it to update you on WhatsApp.",
       },
       {
-        q: "Do I pay online?",
-        a: "Not at the moment. Once you've chosen your cover, we tell you exactly how to pay.",
+        q: "How do I pay?",
+        a: "With M-Pesa, from your phone. Once you choose a quote, we send a payment request — enter your PIN and you're done. Matatus, taxis and boda bodas can also pay monthly.",
       },
       {
         q: "Can I talk to someone?",

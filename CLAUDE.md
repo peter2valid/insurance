@@ -44,12 +44,22 @@ Health, travel and business appear on the hero as cards marked "coming next" and
 
 **Update (Oct 2026, decided by the owner):** stages 1–10 for motor are done. Health, travel and business are now being built as **full flows following the motor pattern** (own questions, documents, quotes, status page, admin handling). After that, data moves to **Supabase** so the demo can be shared from a **Vercel** link (deployed via GitHub). Phone login stays simulated unless an SMS provider is set up.
 
+**Update (5 Oct 2026, broker feedback relayed by the owner) — "broker v2":**
+- Motor is the core: vehicle use decides pricing — private, commercial (goods), PSV matatu/bus (per seat), PSV taxi/ride-hailing, boda boda, tuk-tuk. PSVs can buy monthly cover.
+- Documents for motor are only **logbook, national ID and KRA PIN**. Contact is phone plus (optional) email.
+- Journey: apply → **instant quotes** from the insurer panel (setting "autoQuote") → client chooses → **pays with M-Pesa** → broker verifies documents and **issues the cover** (policy number, certificate, dates) → automatic **renewal reminders**.
+- Insurer panel: the names the broker gave (Britam, Pioneer, Liberty, Cannon) in `lib/data/insurers.ts`. Rates are **sample** rate cards plus statutory levies (training levy 0.2%, PHCF 0.25%, stamp duty KES 40), always labelled as sample in the UI until real rate cards arrive.
+- **Agents**: sign up at `/agent/join`, broker approves, agent signs in with phone + code at `/agent`, shares `/r/CODE`. Commission (percent of basic premium, per agent) is earned when the client pays; broker pays out from Admin → Agents.
+- **Automations** (`lib/automation`): stalled nudges, quote and payment reminders, renewal reminders 30/14/7/1 days, daily renewals list to the broker. Run hourly via `/api/cron` (Netlify scheduled function / Vercel cron) and on admin visits.
+- Admin redesigned: sidebar shell with Today, Applications, Payments, Renewals, Agents, Automations, Messages. Optional `ADMIN_PASSWORD` gate.
+
 ### Honesty rules for the demo
 - Data is **mock** (see section 6). It must look and behave realistically.
 - Logbook reading is **simulated** behind `extractLogbook()`. The UI must still always show a confirm screen, because real reading will not be perfect.
 - Notifications (email/WhatsApp) are **simulated** and shown as toasts plus an "Outbox" panel in admin. Never claim in the UI that a real message was sent.
+  - **Exception (Oct 2026):** emails are really sent through **Resend** when `RESEND_API_KEY` and `EMAIL_FROM` are set — never to seeded `example.com` addresses. Admin alerts go to the agency WhatsApp (Twilio) and `ADMIN_EMAIL`.
   - **Exception (Oct 2026, owner's decision):** for demos, client WhatsApps may be really sent through the **Twilio WhatsApp Sandbox** when `TWILIO_*` env vars are set, only to numbers that opted in and never to seeded sample numbers. The Outbox labels each message honestly: "Sent on WhatsApp", "Not delivered" or "Simulated".
-- No real payments, no real insurer quotes yet. Quotes are fixture data behind a `QuoteProvider` interface.
+- No real payments, no real insurer quotes yet. Quotes come from sample rate cards behind a `QuoteProvider` interface. M-Pesa is simulated behind `PaymentProvider` (`lib/payments`): the client page shows a clearly labelled "Demo: approve on my phone" button. A Daraja implementation replaces it later.
 
 ---
 
@@ -133,7 +143,7 @@ Loading (skeletons, not spinners on blank pages), empty (says what to do next), 
 
 ## 5. Component kit — only these may be used
 
-`Button` (primary, secondary, ghost, danger) · `Input` · `PhoneInput` (+254) · `OtpInput` · `Select` · `FileUpload` (camera-first on mobile) · `StepHeader` (progress + back) · `Card` · `StatusBadge` · `StatusTimeline` · `ChecklistItem` (done / needed + upload action) · `Toast` · `EmptyState` · `Skeleton` · `Dialog` · `Tabs` · `Avatar`.
+`Button` (primary, secondary, ghost, danger) · `Input` · `PhoneInput` (+254) · `OtpInput` · `Select` · `FileUpload` (camera-first on mobile) · `StepHeader` (progress + back) · `Card` · `StatusBadge` · `StatusTimeline` · `ChecklistItem` (done / needed + upload action) · `Toast` · `EmptyState` · `Skeleton` · `Dialog` · `Tabs` · `Avatar` · `Switch` · `Table` (admin lists).
 
 Rules:
 - Build screens by composing these. If a screen needs something new, **add it to the kit and to `/styles` first**, then use it.
@@ -170,7 +180,7 @@ interface Application {
 Also define `Client`, `DocumentItem`, `Quote`, `Message`. Mock repo persists in memory and mirrors changes across the client and admin views so the demo shows real-time sync. Include realistic seed data: a mix of new, stalled, waiting-on-client and done applications with Kenyan names, plates like "KDA 123A", and KES amounts.
 
 ### Client-facing status labels (plain language)
-received -> "Received" · documents_checked -> "Documents checked" · preparing_quotes -> "Preparing your quotes" · needs_info -> "We need one more thing" · quotes_ready -> "Choose your cover" · cover_chosen -> "Finalising" · covered -> "You're covered"
+received -> "Received" · documents_checked -> "Documents checked" · preparing_quotes -> "Preparing your quotes" · needs_info -> "We need one more thing" · quotes_ready -> "Choose your cover" · cover_chosen -> "Pay for your cover" · paid -> "Payment received" · covered -> "You're covered"
 
 ### Admin buckets
 **Needs me now** (new submissions, stalled applications, replies received) · **Waiting on client** · **Quotes out** · **Done**. The admin home is these four lists, not a table of everything.
@@ -258,4 +268,4 @@ Interface in `lib/notify/`: `send({ channel: 'email' | 'whatsapp' | 'sms', to, t
 10. **Demo rehearsal** — seed data reset button (admin only), walk through the demo path end to end, fix rough edges. No new features.
 
 ## 12. Later (do NOT build now)
-Real Supabase phone auth (needs an SMS provider) · real OCR/vision for documents · real email and production WhatsApp Business API (Meta-verified sender + templates; the Twilio sandbox is demo-only) · insurer API or rating-engine integration · M-Pesa payments · Swahili translation · renewals engine · e-signatures.
+Real Supabase phone auth (needs an SMS provider) · real M-Pesa (Daraja STK push + callback, B2C payouts to agents) · real insurer rate cards · real OCR/vision for documents · real email and production WhatsApp Business API (Meta-verified sender + templates; the Twilio sandbox is demo-only) · insurer API or rating-engine integration · Swahili translation · e-signatures.

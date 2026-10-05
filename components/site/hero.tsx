@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Briefcase, Car, Check, HeartPulse, type LucideIcon, Plane } from "lucide-react";
+import { ArrowRight, Briefcase, Car, Check, HeartPulse, type LucideIcon, Plane, UserRound } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { productBlurbs, productCta, productNames, site } from "@/lib/copy";
 import { products, type Product } from "@/lib/data/types";
@@ -18,7 +18,7 @@ const productIcons: Record<Product, LucideIcon> = {
  * product goes straight into its flow. This is the one place the design is
  * allowed to be bold (§4.2).
  */
-export function Hero() {
+export function Hero({ referredBy }: { referredBy?: string }) {
   return (
     <section aria-labelledby="hero-heading" className="bg-brand text-on-brand">
       <div className="mx-auto grid w-full max-w-page gap-8 px-4 pt-8 pb-12 md:pt-16 md:pb-16 lg:grid-cols-2 lg:items-center lg:gap-12">
@@ -27,6 +27,12 @@ export function Hero() {
             {copy.heading}
           </h1>
           <p className="max-w-prose text-lg text-on-brand">{copy.body}</p>
+          {referredBy && (
+            <p className="flex items-center gap-2 self-start rounded-full bg-on-brand/15 px-3 py-1 text-sm text-on-brand">
+              <UserRound className="size-4" aria-hidden />
+              {copy.referred(referredBy)}
+            </p>
+          )}
 
           <div className="hidden flex-col gap-2 pt-4 lg:flex">
             <p className="text-base font-semibold text-on-brand">{copy.needsHeading}</p>

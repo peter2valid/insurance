@@ -210,5 +210,19 @@ export const styles = {
     avatar: {
       names: ["Wanjiku Kamau", "Otieno Odhiambo", "Amina Hassan"],
     },
+    switch: {
+      label: "Instant quotes",
+      description: "Price every insurer the moment an application arrives.",
+      on: "On",
+      off: "Off",
+      offState: "Off by default",
+    },
+    table: {
+      columns: { client: "Client", amount: "Amount", status: "Status" },
+      rows: [
+        { client: "Wanjiku Kamau", amount: 61_234, status: "Paid" },
+        { client: "Hassan Abdi", amount: 52_676, status: "Waiting" },
+      ],
+    },
   },
 } as const;

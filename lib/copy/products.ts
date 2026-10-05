@@ -322,7 +322,7 @@ export const nameDescriptions: Record<Product, string> = {
 
 /** What to have ready, per product, shown on the hero. */
 export const productBlurbs: Record<Product, string> = {
-  motor: "Private cars — third party or comprehensive",
+  motor: "Private cars, matatus, taxis and boda bodas",
   health: "You, your partner or your whole family",
   travel: "Medical and trip cover for any destination",
   business: "Stock, premises, liability and staff",

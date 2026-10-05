@@ -1,4 +1,8 @@
+import Link from "next/link";
 import { Building2, Camera, FileCheck, ShieldCheck } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { TextLink } from "@/components/ui/text-link";
+import { insurers } from "@/lib/data/insurers";
 import { WhatsAppButton } from "@/components/site/whatsapp-button";
 import { Avatar } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
@@ -79,18 +83,38 @@ export function Insurers() {
   const copy = site.insurers;
   return (
     <SiteSection id="insurers" title={copy.heading} intro={copy.intro}>
-      <ul className="grid grid-cols-2 gap-3 md:grid-cols-3">
-        {Array.from({ length: copy.count }, (_, index) => (
+      <ul className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        {insurers.map((insurer) => (
           <li
-            key={index}
-            className="flex min-h-touch items-center gap-2 rounded-control border border-dashed border-border px-4 py-4 text-sm text-ink-quiet"
+            key={insurer.id}
+            className="flex min-h-touch items-center gap-2 rounded-control border border-border bg-surface px-4 py-4 font-heading text-lg font-semibold text-ink"
           >
-            <Building2 className="size-5 shrink-0" aria-hidden />
-            {copy.placeholderName}
+            <Building2 className="size-5 shrink-0 text-brand" aria-hidden />
+            {insurer.name}
           </li>
         ))}
       </ul>
       <p className="text-sm text-ink-quiet">{copy.note}</p>
+    </SiteSection>
+  );
+}
+
+/** Invite people to refer clients as agents. */
+export function BecomeAgent() {
+  const copy = site.agents;
+  return (
+    <SiteSection id="agents" title={copy.heading} tone="alt">
+      <Card className="gap-4 md:flex-row md:items-center md:justify-between">
+        <p className="max-w-prose text-lg text-ink">{copy.body}</p>
+        <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
+          <Button asChild>
+            <Link href="/agent/join">{copy.join}</Link>
+          </Button>
+          <TextLink href="/agent/login" standalone>
+            {copy.signIn}
+          </TextLink>
+        </div>
+      </Card>
     </SiteSection>
   );
 }

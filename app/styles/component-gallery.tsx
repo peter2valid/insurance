@@ -24,6 +24,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { StatusTimeline } from "@/components/ui/status-timeline";
 import { StepHeader } from "@/components/ui/step-header";
+import { Switch } from "@/components/ui/switch";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TextLink } from "@/components/ui/text-link";
 import { ToastCard, toast } from "@/components/ui/toast";
@@ -58,6 +60,8 @@ export function ComponentGallery() {
       <DialogSection />
       <TabsSection />
       <AvatarSection />
+      <SwitchSection />
+      <TableSection />
     </>
   );
 }
@@ -638,6 +642,52 @@ function AvatarSection() {
           <Avatar name={second} />
           <Avatar name={third} size="lg" />
         </div>
+      </State>
+    </Section>
+  );
+}
+
+function SwitchSection() {
+  const t = d.switch;
+  return (
+    <Section id="switch" title="Switch">
+      <StateGrid>
+        <State label={s.default}>
+          <Switch name="demo-on" label={t.label} description={t.description} defaultChecked onLabel={t.on} offLabel={t.off} />
+        </State>
+        <State label={t.offState}>
+          <Switch name="demo-off" label={t.label} description={t.description} onLabel={t.on} offLabel={t.off} />
+        </State>
+      </StateGrid>
+    </Section>
+  );
+}
+
+function TableSection() {
+  const t = d.table;
+  return (
+    <Section id="table" title="Table">
+      <State label={s.default}>
+        <Card className="gap-0 overflow-hidden p-0 sm:p-0">
+          <Table>
+            <TableHead>
+              <tr>
+                <TableHeader>{t.columns.client}</TableHeader>
+                <TableHeader numeric>{t.columns.amount}</TableHeader>
+                <TableHeader>{t.columns.status}</TableHeader>
+              </tr>
+            </TableHead>
+            <TableBody>
+              {t.rows.map((row) => (
+                <TableRow key={row.client}>
+                  <TableCell>{row.client}</TableCell>
+                  <TableCell numeric>{row.amount.toLocaleString("en-KE")}</TableCell>
+                  <TableCell>{row.status}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
       </State>
     </Section>
   );

@@ -4,6 +4,7 @@
  * Keeping strings in one place makes the Swahili toggle cheap later.
  */
 export { admin } from "./admin";
+export { agent } from "./agent";
 export { common } from "./common";
 export { flow } from "./flow";
 export { kit } from "./kit";
