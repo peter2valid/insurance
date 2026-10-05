@@ -23,10 +23,23 @@ export function documentsToAct(app: Application): DocumentItem[] {
     .sort((a, b) => rank(a) - rank(b));
 }
 
-export function buildNow(app: Application): NowView {
+export function buildNow(app: Application, now: number = Date.now()): NowView {
   const copy = statusPage.now;
+  // Cover ending within 30 days: renewing is what to do now.
+  if (app.status === "covered" && app.policy) {
+    const left = Math.ceil((Date.parse(app.policy.endsAt) - now) / 86_400_000);
+    if (left <= 30) return { kind: "info", title: copy.renew.title(Math.max(left, 0)), body: copy.renew.body };
+  }
   const toAct = app.status === "covered" || app.status === "paid" ? [] : documentsToAct(app);
   const next = toAct[0];
+
+  // Once quotes are out, choosing and paying come first; a missing document
+  // is still asked for below, and must arrive before the cover is issued.
+  if (app.status === "quotes_ready" || app.status === "cover_chosen") {
+    const base = app.status === "quotes_ready" ? copy.quotes_ready : copy.cover_chosen;
+    const body = next ? `${base.body} ${copy.docStillNeeded(flow.documentsInline[next.type])}` : base.body;
+    return { kind: app.status === "quotes_ready" ? "quotes" : "pay", title: base.title, body };
+  }
 
   if (next) {
     const name = flow.documentsInline[next.type];
@@ -48,12 +61,6 @@ export function buildNow(app: Application): NowView {
     };
   }
 
-  if (app.status === "quotes_ready") {
-    return { kind: "quotes", ...copy.quotes_ready };
-  }
-  if (app.status === "cover_chosen") {
-    return { kind: "pay", ...copy.cover_chosen };
-  }
   // They've sent what we asked for; the ball is in our court.
   if (app.status === "needs_info" && app.documents.some((doc) => doc.status === "uploaded")) {
     return { kind: "info", ...copy.checking };

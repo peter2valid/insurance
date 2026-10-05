@@ -41,7 +41,18 @@ export function useFlowAction(action: FlowAction, onSuccess?: () => void) {
     if (!state.ok) return;
     if (state.toast) toast({ title: state.toast });
     onSuccessRef.current?.();
-    startNavigation(() => router.push(state.next));
+    const target = new URL(state.next, window.location.href);
+    const samePage = target.pathname + target.search === window.location.pathname + window.location.search;
+    if (samePage) {
+      // Same page (maybe a new #anchor): a push would only scroll, so refresh the data too.
+      startNavigation(() => {
+        if (target.hash) window.history.replaceState(null, "", target.hash);
+        router.refresh();
+      });
+      if (target.hash) setTimeout(() => document.querySelector(target.hash)?.scrollIntoView({ block: "start" }), 400);
+    } else {
+      startNavigation(() => router.push(state.next));
+    }
   }, [state, router]);
 
   const errors = state.ok ? {} : state.errors;

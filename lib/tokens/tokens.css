@@ -28,6 +28,9 @@
   --success: #3e7a5b;
   --warn: #b15a26;
   --danger: #b3372f;
+  /* Admin sidebar: deep brand green; its text and icons */
+  --sidebar: #0f423c;
+  --on-sidebar: #ffffff;
 
   /* Type */
   --typeface-heading: var(--font-plex-serif), Georgia, serif;
@@ -60,6 +63,8 @@
     --success: #72c295;
     --warn: #e8935f;
     --danger: #f08178;
+    --sidebar: #0b2a26;
+    --on-sidebar: #e7eeea;
     --elevation-raised: 0 1px 2px rgb(0 0 0 / 0.3), 0 1px 3px rgb(0 0 0 / 0.35);
     --elevation-overlay: 0 8px 24px rgb(0 0 0 / 0.45), 0 2px 6px rgb(0 0 0 / 0.35);
     color-scheme: dark;
@@ -80,6 +85,8 @@
   --success: #72c295;
   --warn: #e8935f;
   --danger: #f08178;
+  --sidebar: #0b2a26;
+  --on-sidebar: #e7eeea;
   --elevation-raised: 0 1px 2px rgb(0 0 0 / 0.3), 0 1px 3px rgb(0 0 0 / 0.35);
   --elevation-overlay: 0 8px 24px rgb(0 0 0 / 0.45), 0 2px 6px rgb(0 0 0 / 0.35);
   color-scheme: dark;
@@ -108,6 +115,8 @@
   --color-success: var(--success);
   --color-warn: var(--warn);
   --color-danger: var(--danger);
+  --color-sidebar: var(--sidebar);
+  --color-on-sidebar: var(--on-sidebar);
   --color-transparent: transparent;
   --color-current: currentColor;
 

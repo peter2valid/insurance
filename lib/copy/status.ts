@@ -36,6 +36,11 @@ export const statusPage = {
   // "What to do now" for each situation. Uploads come first: they're the
   // only thing that can hold an application up.
   now: {
+    renew: {
+      title: (days: number) => (days <= 0 ? "Your cover has ended — renew now" : days === 1 ? "Your cover ends tomorrow" : `Your cover ends in ${days} days`),
+      body: "Renew in two minutes: your details and documents are already filled in. Press “Renew now” below.",
+    },
+    docStillNeeded: (doc: string) => `Please also upload your ${doc} — we need it before we issue your cover.`,
     upload: {
       title: (doc: string) => `Upload your ${doc}`,
       body: "It's the last thing we need before we can send you quotes.",

@@ -71,7 +71,8 @@ export default async function MyApplicationPage(props: PageProps<"/my/[ref]">) {
 
   const documents = app.documents.filter((doc) => doc.required || doc.status !== "needed");
   const showQuotes = quotes.length > 0 && ["quotes_ready", "cover_chosen", "paid"].includes(app.status);
-  const estimate = showQuotes ? null : await estimateFor(app);
+  // The estimate only fills the gap before real quotes exist.
+  const estimate = quotes.length === 0 && app.status !== "covered" ? await estimateFor(app) : null;
 
   return (
     <>

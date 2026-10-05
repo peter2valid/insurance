@@ -9,14 +9,14 @@ import { getNotifier } from "@/lib/notify";
 /**
  * Document upload for the client flow and the status page. A route handler
  * (not a server action) so the browser can report real upload progress.
- * During the flow: logbook (read + confirm) and ID. After sending: any
+ * During the flow: logbook (read + confirm), ID and KRA PIN. After sending: any
  * document the broker still needs, including re-uploads.
  *
  * Responses: { ok: true, next } or { ok: false, code } where `code` maps to
  * a plain-language message in lib/copy/flow.
  */
 
-const FLOW_KINDS: DocumentType[] = ["logbook", "national_id", "passport", "business_registration"];
+const FLOW_KINDS: DocumentType[] = ["logbook", "national_id", "kra_pin", "passport", "business_registration"];
 const ALL_KINDS: DocumentType[] = [
   "logbook",
   "national_id",

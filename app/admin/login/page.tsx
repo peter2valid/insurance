@@ -9,7 +9,7 @@ export const metadata = { title: admin.login.title };
 export default async function AdminLoginPage() {
   if (!adminPasswordSet() || (await isAdmin())) redirect("/admin");
   return (
-    <main id="main" className="flex min-h-screen items-center justify-center bg-brand-dark px-4 py-12">
+    <main id="main" className="flex min-h-screen items-center justify-center bg-sidebar px-4 py-12">
       <AdminLoginForm />
     </main>
   );

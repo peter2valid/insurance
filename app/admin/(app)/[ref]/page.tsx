@@ -333,8 +333,8 @@ function QuotesTable({ quotes }: { quotes: Quote[] }) {
     <ul className="flex flex-col divide-y divide-border">
       {sorted.map((quote) => (
         <li key={quote.id} className="flex items-start justify-between gap-3 py-3 first:pt-0 last:pb-0">
-          <div className="flex flex-col gap-1">
-            <span className="flex items-center gap-2 text-base font-medium text-ink">
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <span className="flex flex-wrap items-center gap-2 text-base font-medium text-ink">
               {quote.insurer}
               {quote.chosen && <StatusBadge tone="success" label={admin.detail.chosen} icon={CircleCheck} />}
             </span>
@@ -343,9 +343,6 @@ function QuotesTable({ quotes }: { quotes: Quote[] }) {
               {quote.period === "monthly" ? ` · ${periodLabels.monthly}` : ""}
               {quote.excessKes ? ` · ${statusPage.quotes.excess(formatKes(quote.excessKes))}` : ""}
             </span>
-          </div>
-          <div className="flex flex-col items-end">
-            <span className="text-base font-semibold text-ink tabular-nums">{formatKes(quote.premiumKes)}</span>
             {quote.breakdown && (
               <span className="text-xs text-ink-quiet tabular-nums">
                 {statusPage.quotes.breakdown(
@@ -355,6 +352,7 @@ function QuotesTable({ quotes }: { quotes: Quote[] }) {
               </span>
             )}
           </div>
+          <span className="shrink-0 text-base font-semibold whitespace-nowrap text-ink tabular-nums">{formatKes(quote.premiumKes)}</span>
         </li>
       ))}
     </ul>

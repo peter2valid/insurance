@@ -234,8 +234,17 @@ const agents: (Omit<Agent, "createdAt"> & { createdAgo: number })[] = [
   { id: "agent-mary", name: "Mary Atieno", phone: "+254700000203", code: "MARY", commissionRate: 3, status: "pending", createdAgo: 2 * 60 },
 ];
 
-/** Fake but realistic-looking M-Pesa receipt (SIMULATED). */
-const receipt = (num: number) => `SK${(num * 7919).toString(36).toUpperCase().padStart(8, "X")}`;
+/** Fake but realistic-looking M-Pesa receipt (SIMULATED), stable per application. */
+function receipt(num: number): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789";
+  let seed = (num * 7919) % 2147483647;
+  let code = "SK";
+  for (let i = 0; i < 8; i++) {
+    seed = (seed * 48271) % 2147483647; // Park–Miller: stays within safe integers
+    code += chars[seed % chars.length];
+  }
+  return code;
+}
 
 export function createSeed(now: number = Date.now()): Seed {
   const iso = (minutesAgo: number) => new Date(now - minutesAgo * MIN).toISOString();

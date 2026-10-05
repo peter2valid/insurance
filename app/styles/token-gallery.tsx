@@ -27,6 +27,8 @@ const swatchClass: Record<(typeof colorTokens)[number]["name"], string> = {
   success: "bg-success",
   warn: "bg-warn",
   danger: "bg-danger",
+  sidebar: "bg-sidebar",
+  "on-sidebar": "bg-on-sidebar",
 };
 
 const spacingClass: Record<(typeof spacingScale)[number]["step"], string> = {

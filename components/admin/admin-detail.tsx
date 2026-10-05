@@ -63,7 +63,7 @@ export function AdminDetail({
             </div>
           </div>
         </div>
-        {actions && <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap md:justify-end">{actions}</div>}
+        {actions && <div className="flex flex-wrap gap-2 md:justify-end">{actions}</div>}
       </div>
 
       {nextStep}

@@ -17,7 +17,17 @@ export default async function AutomationsPage() {
   const repo = getRepo();
   const [settings, runs] = await Promise.all([repo.getSettings(), repo.listAutomationRuns(200)]);
   const copy = admin.automations;
-  const recent = runs.filter((run) => run.rule !== "tick").slice(0, 15);
+  // One line per rule and application (skipped earlier reminders are recorded too).
+  const seen = new Set<string>();
+  const recent = runs
+    .filter((run) => run.rule !== "tick")
+    .filter((run) => {
+      const id = `${run.rule}:${run.applicationRef ?? run.key}`;
+      if (seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    })
+    .slice(0, 15);
   const channels = [
     { name: copy.whatsapp, icon: MessageCircle, on: twilioConfigured(), missing: missingTwilioVars() },
     { name: copy.email, icon: Mail, on: emailConfigured(), missing: missingEmailVars() },

@@ -31,7 +31,6 @@ export function PolicyCard({
   const renew = useFlowAction(renewCover);
   const endingSoon = daysLeft <= 30;
   const rows: [string, string][] = [
-    [copy.insurer, policy.insurer],
     [copy.cover, coverLabels[policy.coverType] ?? policy.coverType],
     [copy.policyNumber, policy.policyNumber],
     ...(policy.certificateNumber ? ([[copy.certificate, policy.certificateNumber]] as [string, string][]) : []),
