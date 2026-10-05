@@ -28,7 +28,7 @@ export function NudgeButton({
   /** Present only for real (non-sample) numbers. */
   whatsappUrl?: string;
   label: string;
-  from?: "board";
+  from?: string;
   variant?: ButtonProps["variant"];
   block?: boolean;
   /** Tooltip explaining what happens. */

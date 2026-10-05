@@ -1,4 +1,5 @@
 import type { Application, Client, DocumentType, Product } from "@/lib/data/types";
+import { coversFor } from "@/lib/data/motor";
 import { isAnswered, isQuestionScreen, questionScreens, type QuestionScreenId } from "./questions";
 
 /**
@@ -12,14 +13,14 @@ import { isAnswered, isQuestionScreen, questionScreens, type QuestionScreenId } 
 
 type MotorScreen = "vehicle" | "logbook" | "confirm" | "cover" | "value";
 type SharedScreen = "phone" | "code" | "name" | "id" | "review";
-type UploadScreen = "passport" | "registration";
+type UploadScreen = "passport" | "registration" | "kra";
 export type Screen = SharedScreen | MotorScreen | UploadScreen | QuestionScreenId;
 
 export const TOTAL_STEPS = 5;
 
 /** The content screens (after sign-in) for each product, in order. */
 export const flows: Record<Product, readonly Screen[]> = {
-  motor: ["vehicle", "logbook", "confirm", "cover", "value", "name", "id", "review"],
+  motor: ["category", "vehicle", "logbook", "confirm", "cover", "value", "name", "id", "kra", "review"],
   health: ["who", "ages", "plan", "limit", "conditions", "name", "id", "review"],
   travel: ["destination", "dates", "travellers", "purpose", "name", "passport", "review"],
   business: ["business", "covers", "size", "name", "registration", "review"],
@@ -30,11 +31,13 @@ export const stepOf: Record<Screen, number> = {
   phone: 1,
   code: 1,
   // motor
+  category: 2,
   vehicle: 2,
-  logbook: 3,
+  logbook: 2,
   confirm: 3,
-  cover: 4,
-  value: 4,
+  cover: 3,
+  value: 3,
+  kra: 4,
   // health
   who: 2,
   ages: 2,
@@ -69,6 +72,7 @@ export const uploadScreens: Record<"id" | UploadScreen, { document: DocumentType
   id: { document: "national_id", laterKey: "idLater" },
   passport: { document: "passport", laterKey: "passportLater" },
   registration: { document: "business_registration", laterKey: "registrationLater" },
+  kra: { document: "kra_pin", laterKey: "kraLater" },
 };
 
 /** The "upload later" flag for a document uploaded in the flow. */
@@ -101,13 +105,14 @@ function isDone(screen: Screen, app: Application, client: Client | null): boolea
     case "confirm":
       return d.vehicleConfirmed === "yes";
     case "cover":
-      return Boolean(d.coverType);
+      return Boolean(d.coverType) && coversFor(d.category).includes(d.coverType as never);
     case "value":
       return Boolean(d.vehicleValueKes);
     case "name":
       return Boolean(client?.name);
     case "id":
     case "passport":
+    case "kra":
     case "registration": {
       const { document, laterKey } = uploadScreens[screen];
       // "uploading": the file is uploading in the background — carry on.

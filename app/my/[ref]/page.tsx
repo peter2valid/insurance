@@ -11,7 +11,12 @@ import { Button } from "@/components/ui/button";
 import { ChecklistItem } from "@/components/ui/checklist-item";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatusTimeline } from "@/components/ui/status-timeline";
-import { flow, statusLabels, statusPage } from "@/lib/copy";
+import { PayCard } from "@/components/status/pay-card";
+import { PolicyCard } from "@/components/status/policy-card";
+import { daysLeft } from "@/lib/automation";
+import { coverLabels, flow, statusLabels, statusPage } from "@/lib/copy";
+import { formatKenyanPhone } from "@/lib/format/phone";
+import { getPaymentProvider } from "@/lib/payments";
 import { getRepo } from "@/lib/data/repo";
 import { getFlowContext } from "@/lib/flow/context";
 import { estimateFor } from "@/lib/products/estimate";
@@ -54,14 +59,18 @@ export default async function MyApplicationPage(props: PageProps<"/my/[ref]">) {
   // Not sent yet: carry on where they stopped.
   if (ctx.kind === "active") redirect(`/start/resume?ref=${encodeURIComponent(ref)}`);
 
-  const { app } = ctx;
-  const quotes = await getRepo().listQuotes(app.ref);
+  const { app, client } = ctx;
+  const repo = getRepo();
+  const [quotes, payments] = await Promise.all([repo.listQuotes(app.ref), repo.listPayments(app.ref)]);
+  const chosen = quotes.find((quote) => quote.chosen);
+  const pendingPayment = payments.filter((payment) => payment.status === "pending").at(-1);
+  const paidPayment = payments.find((payment) => payment.status === "paid");
   const now = buildNow(app);
   const message = statusPage.whatsappMessage(app.ref, currentStepLabel(app));
   const summary = summarizeWithProduct(app);
 
   const documents = app.documents.filter((doc) => doc.required || doc.status !== "needed");
-  const showQuotes = quotes.length > 0 && ["quotes_ready", "cover_chosen", "covered"].includes(app.status);
+  const showQuotes = quotes.length > 0 && ["quotes_ready", "cover_chosen", "paid"].includes(app.status);
   const estimate = showQuotes ? null : await estimateFor(app);
 
   return (
@@ -87,6 +96,35 @@ export default async function MyApplicationPage(props: PageProps<"/my/[ref]">) {
             ) : undefined,
         }}
         sections={[
+          ...(app.policy && app.status === "covered"
+            ? [
+                {
+                  id: "cover",
+                  title: statusPage.policy.heading,
+                  content: (
+                    <PolicyCard refValue={app.ref} policy={app.policy} daysLeft={daysLeft(app.policy.endsAt)} receipt={paidPayment?.receipt} />
+                  ),
+                },
+              ]
+            : []),
+          ...(app.status === "cover_chosen" && chosen
+            ? [
+                {
+                  id: "payment",
+                  title: statusPage.pay.heading,
+                  content: (
+                    <PayCard
+                      refValue={app.ref}
+                      amountKes={chosen.premiumKes}
+                      summary={`${chosen.insurer} · ${coverLabels[chosen.coverType] ?? chosen.coverType}`}
+                      phone={formatKenyanPhone(client.phone).replace(/^\+254\s?/, "")}
+                      pending={pendingPayment ? { id: pendingPayment.id, phoneDisplay: formatKenyanPhone(pendingPayment.phone) } : undefined}
+                      simulated={getPaymentProvider().simulated}
+                    />
+                  ),
+                },
+              ]
+            : []),
           ...(estimate
             ? [{ id: "estimate", title: statusPage.priceHeading, content: <EstimateCard estimate={estimate} /> }]
             : []),

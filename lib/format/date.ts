@@ -47,3 +47,13 @@ export function formatAgo(iso: string, now: number = Date.now()): string {
 export function requestTime(): number {
   return Date.now();
 }
+
+/** Today as yyyy-mm-dd in Nairobi time (for date inputs). */
+export function todayIso(now: number = Date.now()): string {
+  return new Date(now).toLocaleDateString("en-CA", { timeZone: brand.locale.timeZone });
+}
+
+/** The hour (0–23) in Nairobi, for "Good morning". */
+export function nairobiHour(now: number = Date.now()): number {
+  return Number(new Date(now).toLocaleString("en-GB", { hour: "2-digit", hour12: false, timeZone: brand.locale.timeZone }));
+}

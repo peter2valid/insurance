@@ -1,4 +1,4 @@
-import { CircleAlert, CircleCheck, FileCheck, Hourglass, Inbox, Send, ShieldCheck, type LucideIcon } from "lucide-react";
+import { CircleAlert, FileCheck, Hourglass, Inbox, Send, ShieldCheck, Wallet, type LucideIcon } from "lucide-react";
 import { StatusBadge, type BadgeTone } from "@/components/ui/status-badge";
 import { admin } from "@/lib/copy";
 import type { ApplicationStatus } from "@/lib/data/types";
@@ -9,7 +9,8 @@ const style: Record<ApplicationStatus, { tone: BadgeTone; icon: LucideIcon }> = 
   preparing_quotes: { tone: "info", icon: Hourglass },
   needs_info: { tone: "warn", icon: CircleAlert },
   quotes_ready: { tone: "info", icon: Send },
-  cover_chosen: { tone: "success", icon: CircleCheck },
+  cover_chosen: { tone: "action", icon: Wallet },
+  paid: { tone: "success", icon: Wallet },
   covered: { tone: "success", icon: ShieldCheck },
 };
 

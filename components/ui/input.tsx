@@ -8,8 +8,8 @@ type InputProps = Omit<React.ComponentProps<"input">, "children" | "prefix"> & {
   error?: string;
   optional?: boolean;
   hideLabel?: boolean;
-  /** Fixed text before the value, e.g. "KES" or "+254". */
-  prefix?: string;
+  /** Text like "KES" or "+254", or an icon. */
+  prefix?: React.ReactNode;
   "data-force"?: string;
 };
 

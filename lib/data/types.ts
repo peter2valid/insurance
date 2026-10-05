@@ -9,7 +9,8 @@ export type ApplicationStatus =
   | "preparing_quotes"
   | "needs_info"
   | "quotes_ready"
-  | "cover_chosen"
+  | "cover_chosen" // client picked a quote; waiting for payment
+  | "paid" // payment received; broker issues the cover
   | "covered";
 
 export const applicationStatuses: readonly ApplicationStatus[] = [
@@ -19,6 +20,7 @@ export const applicationStatuses: readonly ApplicationStatus[] = [
   "needs_info",
   "quotes_ready",
   "cover_chosen",
+  "paid",
   "covered",
 ];
 
@@ -80,9 +82,95 @@ export interface Application {
    * is still in the flow (a draft); drafts are what can stall.
    */
   submittedAt?: string;
+  /** The agent who referred this client, if any (commission on payment). */
+  agentId?: string;
+  /** Set when the cover is issued. Drives renewal reminders. */
+  policy?: Policy;
   updatedAt: string;
   createdAt: string;
 }
+
+export interface Policy {
+  insurer: string;
+  coverType: string;
+  premiumKes: number;
+  /** Placeholder until the insurer issues the real number. */
+  policyNumber: string;
+  /** Digital certificate number (DMVIC for motor) — placeholder in the demo. */
+  certificateNumber?: string;
+  startsAt: string;
+  endsAt: string;
+}
+
+export type PaymentStatus = "pending" | "paid" | "failed";
+
+export interface Payment {
+  id: string;
+  applicationRef: string;
+  amountKes: number;
+  method: "mpesa";
+  /** E.164 number the M-Pesa request went to. */
+  phone: string;
+  status: PaymentStatus;
+  /** M-Pesa receipt, e.g. "SJK4H7Q2LM". SIMULATED in the demo. */
+  receipt?: string;
+  createdAt: string;
+  paidAt?: string;
+}
+
+export type AgentStatus = "pending" | "active" | "paused";
+
+export interface Agent {
+  id: string;
+  name: string;
+  /** E.164 — also the agent's login (phone + code). */
+  phone: string;
+  email?: string;
+  /** Short referral code used in links: /?agent=CODE */
+  code: string;
+  /** Percent of the premium (before levies) paid as commission. */
+  commissionRate: number;
+  status: AgentStatus;
+  createdAt: string;
+}
+
+export type CommissionStatus = "pending" | "approved" | "paid";
+
+export interface Commission {
+  id: string;
+  agentId: string;
+  applicationRef: string;
+  premiumKes: number;
+  rate: number;
+  amountKes: number;
+  status: CommissionStatus;
+  createdAt: string;
+  paidAt?: string;
+}
+
+/** Broker-controlled switches for the automations (admin → Automations). */
+export interface Settings {
+  /** Send quotes from insurer rate cards the moment a motor application arrives. */
+  autoQuote: boolean;
+  /** Nudge clients who stop halfway. */
+  nudgeStalled: boolean;
+  /** Remind clients who haven't chosen a quote or paid. */
+  remindQuotes: boolean;
+  remindPayment: boolean;
+  /** Remind clients before their cover ends. */
+  renewalReminders: boolean;
+  /** Default commission for new agents, in percent. */
+  defaultCommissionRate: number;
+}
+
+export const defaultSettings: Settings = {
+  autoQuote: true,
+  nudgeStalled: true,
+  remindQuotes: true,
+  remindPayment: true,
+  renewalReminders: true,
+  defaultCommissionRate: 3,
+};
 
 export interface Quote {
   id: string;
@@ -90,12 +178,24 @@ export interface Quote {
   /** Placeholder until real insurer partners are confirmed — never invent names. */
   insurer: string;
   coverType: string;
+  /** Total the client pays: basic premium plus levies. */
   premiumKes: number;
   excessKes?: number;
   benefits: string[];
+  /** How the total is made up (Kenyan statutory levies). */
+  breakdown?: QuoteBreakdown;
+  /** "annual" unless a monthly PSV cover. */
+  period?: "annual" | "monthly";
   /** Set when the client picks this quote. */
   chosen?: boolean;
   createdAt: string;
+}
+
+export interface QuoteBreakdown {
+  basicKes: number;
+  trainingLevyKes: number;
+  phcfKes: number;
+  stampDutyKes: number;
 }
 
 export type MessageDirection = "in" | "out";

@@ -1,6 +1,7 @@
 import { questionErrors, questions } from "@/lib/copy";
 import { formatDate } from "@/lib/format/date";
 import { formatKes } from "@/lib/format/money";
+import { needsSeats, offersMonthly } from "@/lib/data/motor";
 
 /**
  * Declarative question screens for health, travel and business (motor keeps
@@ -39,6 +40,7 @@ export type QuestionScreenConfig = {
 };
 
 export type QuestionScreenId =
+  | "category"
   | "who"
   | "ages"
   | "plan"
@@ -62,6 +64,15 @@ const MAX_TRIP_DAYS = 365;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export const questionScreens: Record<QuestionScreenId, QuestionScreenConfig> = {
+  category: {
+    id: "category",
+    ...pick(q.category),
+    fields: [
+      { name: "category", kind: "choice", ...q.category.fields.category },
+      { name: "seats", kind: "number", ...q.category.fields.seats, min: 7, max: 90, showIf: (d) => needsSeats(d.category) },
+      { name: "period", kind: "choice", ...q.category.fields.period, showIf: (d) => offersMonthly(d.category) },
+    ],
+  },
   who: {
     id: "who",
     ...pick(q.who),

@@ -1,4 +1,4 @@
--- Beacon Cover demo — Supabase schema
+-- Beacon Cover — Supabase schema (v2: agents, payments, policies, automations)
 -- Run once in Supabase: SQL Editor -> New query -> paste all -> Run.
 -- Safe to re-run: it only creates what doesn't exist yet.
 --
@@ -112,3 +112,87 @@ revoke execute on function public.next_application_ref() from anon, authenticate
 insert into storage.buckets (id, name, public)
 values ('documents', 'documents', false)
 on conflict (id) do nothing;
+
+-- ==========================================================================
+-- Version 2 (Oct 2026): broker system — PSV motor, payments, policies,
+-- agents and commissions, automations. Safe to run on an existing database.
+-- ==========================================================================
+
+-- New status "paid" (client paid; broker issues the cover)
+alter table public.applications drop constraint if exists applications_status_check;
+alter table public.applications add constraint applications_status_check check (status in (
+  'received', 'documents_checked', 'preparing_quotes',
+  'needs_info', 'quotes_ready', 'cover_chosen', 'paid', 'covered'));
+
+-- Agents who refer clients and earn commission
+create table if not exists public.agents (
+  id               text primary key,
+  name             text not null,
+  phone            text not null unique,              -- also the agent's login
+  email            text,
+  code             text not null unique,              -- referral code: /r/CODE
+  commission_rate  numeric(5,2) not null default 3,   -- percent of the basic premium
+  status           text not null default 'pending' check (status in ('pending', 'active', 'paused')),
+  created_at       timestamptz not null default now()
+);
+
+-- Who referred the application, and the cover once it's issued
+alter table public.applications add column if not exists agent_id text references public.agents(id) on delete set null;
+alter table public.applications add column if not exists policy jsonb;
+create index if not exists applications_agent_idx on public.applications (agent_id);
+
+-- Quote breakdown (basic premium + training levy + PHCF + stamp duty) and period
+alter table public.quotes add column if not exists breakdown jsonb;
+alter table public.quotes add column if not exists period text not null default 'annual';
+
+-- M-Pesa payments (SIMULATED in the demo; Daraja STK push later)
+create table if not exists public.payments (
+  id               text primary key,
+  application_ref  text not null references public.applications(ref) on delete cascade,
+  amount_kes       integer not null,
+  method           text not null default 'mpesa',
+  phone            text not null,
+  status           text not null check (status in ('pending', 'paid', 'failed')),
+  receipt          text,
+  created_at       timestamptz not null default now(),
+  paid_at          timestamptz
+);
+create index if not exists payments_ref_idx on public.payments (application_ref);
+
+-- Agent commissions: created when the client pays, paid out by the broker
+create table if not exists public.commissions (
+  id               text primary key,
+  agent_id         text not null references public.agents(id) on delete cascade,
+  application_ref  text not null references public.applications(ref) on delete cascade,
+  premium_kes      integer not null,
+  rate             numeric(5,2) not null,
+  amount_kes       integer not null,
+  status           text not null default 'pending' check (status in ('pending', 'approved', 'paid')),
+  created_at       timestamptz not null default now(),
+  paid_at          timestamptz
+);
+create index if not exists commissions_agent_idx on public.commissions (agent_id);
+
+-- Broker settings (automation switches, default commission) — one row, id 'broker'
+create table if not exists public.settings (
+  id     text primary key,
+  value  jsonb not null default '{}'::jsonb
+);
+
+-- Each automation runs once per key (e.g. 'renewal:BC-5003:30')
+create table if not exists public.automation_runs (
+  key              text primary key,
+  rule             text not null,
+  application_ref  text,
+  created_at       timestamptz not null default now()
+);
+
+-- Messages can now go to agents too
+alter table public.outbox drop constraint if exists outbox_audience_check;
+alter table public.outbox add constraint outbox_audience_check check (audience in ('client', 'admin', 'agent'));
+
+alter table public.agents          enable row level security;
+alter table public.payments        enable row level security;
+alter table public.commissions     enable row level security;
+alter table public.settings        enable row level security;
+alter table public.automation_runs enable row level security;

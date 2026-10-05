@@ -27,14 +27,24 @@ export const codeSchema = z
   .min(1, flow.code.errors.required)
   .regex(/^\d{6}$/, flow.code.errors.required);
 
-/** Kenyan plates: KAA 123A style, plus older KAA 123 and diplomatic/GK are out of scope. */
+/**
+ * Kenyan plates: cars KAA 123A (older KAA 123), motorcycles KMEX 123A.
+ * Diplomatic and GK plates are out of scope.
+ */
 export const plateSchema = z
   .string()
   .trim()
   .min(1, flow.vehicle.errors.required)
   .transform((value) => value.toUpperCase().replace(/\s+/g, ""))
-  .refine((value) => /^K[A-Z]{2}\d{3}[A-Z]?$/.test(value), flow.vehicle.errors.invalid)
-  .transform((value) => `${value.slice(0, 3)} ${value.slice(3)}`);
+  .refine((value) => /^K[A-Z]{2,3}\d{3}[A-Z]?$/.test(value), flow.vehicle.errors.invalid)
+  .transform((value) => value.replace(/^([A-Z]+)(\d.*)$/, "$1 $2"));
+
+export const emailSchema = z
+  .string()
+  .trim()
+  .max(120, flow.name.errors.email)
+  .refine((value) => value === "" || /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value), flow.name.errors.email)
+  .transform((value) => value.toLowerCase());
 
 const thisYear = new Date().getFullYear();
 const required = (label: string) => z.string().trim().min(1, flow.confirm.errors.required(label));

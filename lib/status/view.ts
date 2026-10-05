@@ -12,6 +12,7 @@ import { formatDateTime } from "@/lib/format/date";
 export type NowView =
   | { kind: "upload"; document: DocumentItem; title: string; body: string; actionLabel: string }
   | { kind: "quotes"; title: string; body: string }
+  | { kind: "pay"; title: string; body: string }
   | { kind: "info"; title: string; body: string };
 
 /** Documents the client still has to act on, most urgent first. */
@@ -24,7 +25,7 @@ export function documentsToAct(app: Application): DocumentItem[] {
 
 export function buildNow(app: Application): NowView {
   const copy = statusPage.now;
-  const toAct = app.status === "covered" ? [] : documentsToAct(app);
+  const toAct = app.status === "covered" || app.status === "paid" ? [] : documentsToAct(app);
   const next = toAct[0];
 
   if (next) {
@@ -50,6 +51,9 @@ export function buildNow(app: Application): NowView {
   if (app.status === "quotes_ready") {
     return { kind: "quotes", ...copy.quotes_ready };
   }
+  if (app.status === "cover_chosen") {
+    return { kind: "pay", ...copy.cover_chosen };
+  }
   // They've sent what we asked for; the ball is in our court.
   if (app.status === "needs_info" && app.documents.some((doc) => doc.status === "uploaded")) {
     return { kind: "info", ...copy.checking };
@@ -57,14 +61,11 @@ export function buildNow(app: Application): NowView {
   return { kind: "info", ...copy[app.status] };
 }
 
-const ORDER: ApplicationStatus[] = [
-  "received",
-  "documents_checked",
-  "preparing_quotes",
-  "quotes_ready",
-  "cover_chosen",
-  "covered",
-];
+/** The client's journey. Document checks run alongside, so they aren't a stage here. */
+const ORDER: ApplicationStatus[] = ["received", "preparing_quotes", "quotes_ready", "cover_chosen", "paid", "covered"];
+
+/** Where a status sits on the timeline. */
+const position = (status: ApplicationStatus) => (status === "documents_checked" ? ORDER.indexOf("preparing_quotes") : ORDER.indexOf(status));
 
 export function buildTimeline(app: Application): TimelineItem[] {
   const submitted = app.submittedAt ? formatDateTime(app.submittedAt) : undefined;
@@ -83,7 +84,7 @@ export function buildTimeline(app: Application): TimelineItem[] {
     ];
   }
 
-  const current = ORDER.indexOf(app.status);
+  const current = position(app.status);
   return ORDER.map((status, index) => {
     const state = index < current || app.status === "covered" ? "done" : index === current ? "current" : "upcoming";
     const meta = status === "received" ? submitted : index === current ? updated : undefined;

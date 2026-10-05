@@ -63,3 +63,68 @@ export function checkCode(code: string, pending: PendingCode, now: number = Date
   if (now - pending.sentAt > CODE_TTL_MS) return "expired";
   return code === DEMO_CODE ? "ok" : "wrong";
 }
+
+// ---------------------------------------------------------------------------
+// Agents: same SIMULATED phone + code sign-in, separate cookie.
+// ---------------------------------------------------------------------------
+
+const AGENT_COOKIE = "bc_agent_session";
+const REFERRAL_COOKIE = "bc_ref";
+
+export async function getSessionAgentId(): Promise<string | null> {
+  return (await cookies()).get(AGENT_COOKIE)?.value ?? null;
+}
+
+export async function startAgentSession(agentId: string): Promise<void> {
+  (await cookies()).set(AGENT_COOKIE, agentId, { ...cookieOptions, maxAge: 60 * 60 * 24 * 30 });
+}
+
+export async function endAgentSession(): Promise<void> {
+  (await cookies()).delete(AGENT_COOKIE);
+}
+
+/** Referral: the agent code from a /r/CODE link, remembered for 60 days. */
+export async function setReferral(code: string): Promise<void> {
+  (await cookies()).set(REFERRAL_COOKIE, code.toUpperCase(), { ...cookieOptions, maxAge: 60 * 60 * 24 * 60 });
+}
+
+export async function getReferral(): Promise<string | null> {
+  return (await cookies()).get(REFERRAL_COOKIE)?.value ?? null;
+}
+
+// ---------------------------------------------------------------------------
+// Admin: optional password gate. When ADMIN_PASSWORD is set, /admin asks
+// for it; when it isn't (local demo), admin stays open. The cookie holds a
+// hash of the password, so changing the password signs everyone out.
+// ---------------------------------------------------------------------------
+
+const ADMIN_COOKIE = "bc_admin";
+
+export function adminPasswordSet(): boolean {
+  return Boolean(process.env.ADMIN_PASSWORD?.trim());
+}
+
+async function adminToken(password: string): Promise<string> {
+  const data = new TextEncoder().encode(`beacon-admin:${password}`);
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return Buffer.from(digest).toString("hex");
+}
+
+export async function isAdmin(): Promise<boolean> {
+  const password = process.env.ADMIN_PASSWORD?.trim();
+  if (!password) return true;
+  const value = (await cookies()).get(ADMIN_COOKIE)?.value;
+  return value === (await adminToken(password));
+}
+
+/** Returns false when the password is wrong. */
+export async function signInAdmin(password: string): Promise<boolean> {
+  const expected = process.env.ADMIN_PASSWORD?.trim();
+  if (!expected || password !== expected) return false;
+  (await cookies()).set(ADMIN_COOKIE, await adminToken(expected), { ...cookieOptions, maxAge: 60 * 60 * 24 * 14 });
+  return true;
+}
+
+export async function signOutAdmin(): Promise<void> {
+  (await cookies()).delete(ADMIN_COOKIE);
+}

@@ -11,13 +11,19 @@ import { FlowBackgroundUpload } from "./flow-background-upload";
 import { FlowStep } from "./flow-step";
 import { useFlowAction } from "./use-flow-action";
 
-/* Step 4: only what's actually needed — cover, value, name, ID. */
+/* Only what's actually needed — cover, value, your details, ID. */
 
 type ScreenProps = { refValue: string; backHref: string };
 
-export function CoverScreen({ refValue, backHref, coverType }: ScreenProps & { coverType?: string }) {
+export function CoverScreen({
+  refValue,
+  backHref,
+  coverType,
+  allowed,
+}: ScreenProps & { coverType?: string; allowed: readonly string[] }) {
   const { formAction, pending, errors, submitted } = useFlowAction(saveCover);
   const copy = flow.cover;
+  const options = copy.options.filter((option) => allowed.includes(option.value));
 
   return (
     <FlowStep
@@ -41,8 +47,8 @@ export function CoverScreen({ refValue, backHref, coverType }: ScreenProps & { c
         name="coverType"
         label={copy.label}
         hideLabel
-        options={copy.options}
-        defaultValue={submitted.coverType ?? coverType}
+        options={options}
+        defaultValue={submitted.coverType ?? (coverType && allowed.includes(coverType) ? coverType : undefined)}
         error={errors.coverType}
       />
     </FlowStep>
@@ -90,8 +96,9 @@ export function NameScreen({
   refValue,
   backHref,
   name,
+  email,
   description,
-}: ScreenProps & { name?: string; description?: string }) {
+}: ScreenProps & { name?: string; email?: string; description?: string }) {
   const { formAction, pending, errors, submitted } = useFlowAction(saveName);
   const copy = flow.name;
 
@@ -121,6 +128,16 @@ export function NameScreen({
         defaultValue={submitted.name ?? name}
         error={errors.name}
         autoFocus
+      />
+      <Input
+        name="email"
+        type="email"
+        label={copy.emailLabel}
+        hint={copy.emailHint}
+        autoComplete="email"
+        inputMode="email"
+        defaultValue={submitted.email ?? email}
+        error={errors.email}
       />
     </FlowStep>
   );

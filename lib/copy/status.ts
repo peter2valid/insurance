@@ -7,7 +7,8 @@ export const statusLabels: Record<ApplicationStatus, string> = {
   preparing_quotes: "Preparing your quotes",
   needs_info: "We need one more thing",
   quotes_ready: "Choose your cover",
-  cover_chosen: "Finalising",
+  cover_chosen: "Pay for your cover",
+  paid: "Payment received",
   covered: "You're covered",
 };
 
@@ -69,11 +70,15 @@ export const statusPage = {
     },
     quotes_ready: {
       title: "Choose your cover",
-      body: "Compare the quotes below and choose the one you want. We'll finalise it for you.",
+      body: "Compare the insurers below and choose the one you want. You pay after you choose.",
     },
     cover_chosen: {
-      title: "Nothing to do — we're finalising your cover",
-      body: "We'll tell you how to pay and when you're covered.",
+      title: "Pay for your cover",
+      body: "Pay with M-Pesa. We issue your cover as soon as the payment arrives.",
+    },
+    paid: {
+      title: "Nothing to do — we're issuing your cover",
+      body: "Your payment arrived. We're getting your policy and certificate from the insurer.",
     },
     covered: {
       title: "You're covered",
@@ -96,13 +101,16 @@ export const statusPage = {
   optional: "optional",
 
   quotes: {
-    premium: "Premium per year",
+    premium: "Total per year",
+    premiumMonthly: "Total per month",
+    cheapest: "Lowest price",
+    breakdown: (basic: string, levies: string) => `Premium ${basic} + levies ${levies}`,
     premiumForTrip: "Premium for this trip",
     excess: (amount: string) => `Excess ${amount}`,
     choose: "Choose this cover",
     chosen: "Your choice",
     chosenToast: "Cover chosen",
-    placeholderNote: "Insurer names are placeholders until partners are confirmed.",
+    placeholderNote: "Demo: prices come from sample rate cards, not the insurers' real rates.",
     errors: {
       notReady: "These quotes can't be chosen any more. Refresh the page to see the latest.",
     },
@@ -112,11 +120,50 @@ export const statusPage = {
     submitted: "Sent",
   },
 
+  pay: {
+    heading: "Payment",
+    amount: "Amount to pay",
+    action: (amount: string) => `Pay ${amount} with M-Pesa`,
+    dialogTitle: "Pay with M-Pesa",
+    dialogDescription: "We'll send a payment request to your phone. Enter your M-Pesa PIN to approve it.",
+    phoneLabel: "M-Pesa number",
+    send: "Send payment request",
+    waitingTitle: "Check your phone",
+    waitingBody: (phone: string) => `Enter your M-Pesa PIN on ${phone} to approve the payment. This page updates by itself.`,
+    demoApprove: "Demo: approve on my phone",
+    demoNote: "Demo: no real M-Pesa request is sent. Use the button to act as the phone.",
+    cancel: "Close",
+    retry: "Send a new request",
+    sentToast: "Payment request sent",
+    paidToast: "Payment received",
+    receipt: (code: string) => `M-Pesa receipt ${code}`,
+    paidOn: (date: string) => `Paid ${date}`,
+    errors: {
+      notReady: "This cover isn't waiting for payment any more. Refresh the page to see the latest.",
+      phone: "Enter the Safaricom number to send the request to.",
+    },
+  },
+
+  policy: {
+    heading: "Your cover",
+    insurer: "Insurer",
+    cover: "Cover",
+    policyNumber: "Policy number",
+    certificate: "Certificate number",
+    period: "Cover period",
+    premium: "Premium paid",
+    renewNote: (date: string) => `We'll remind you on WhatsApp and email before it ends on ${date}.`,
+    renew: "Renew now",
+    renewed: "Renewal started — your new quotes are ready",
+    endsIn: (days: number) => (days === 1 ? "Ends tomorrow" : `Ends in ${days} days`),
+    ended: "This cover has ended",
+  },
+
   estimate: {
     heading: "Your instant estimate",
     range: (min: string, max: string) => `${min} – ${max}`,
-    perYear: "a year, from 3 insurers",
-    perTrip: "for this trip, from 3 insurers",
-    note: "An estimate from your answers. Your final quotes come after we check your documents.",
+    perYear: "a year, from 4 insurers",
+    perTrip: "for this trip, from 4 insurers",
+    note: "An estimate from your answers. Your quotes appear here shortly.",
   },
 } as const;

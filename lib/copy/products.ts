@@ -51,7 +51,58 @@ export const questionErrors = {
   tripTooLong: "Trips over a year need a different kind of cover. Message us on WhatsApp.",
 };
 
+/** How a vehicle is used (motor). */
+export const vehicleCategoryLabels: Record<string, string> = {
+  private: "Private car",
+  commercial: "Commercial — goods",
+  psv_matatu: "PSV — matatu or bus",
+  psv_taxi: "PSV — taxi or ride-hailing",
+  motorcycle: "Boda boda / motorcycle",
+  tuktuk: "Tuk-tuk",
+};
+
+export const periodLabels: Record<string, string> = {
+  annual: "1 year",
+  monthly: "1 month",
+};
+
 export const questions = {
+  // Motor
+  category: {
+    title: "What do you use the vehicle for?",
+    description: "Insurers price private cars, matatus, taxis and boda bodas differently.",
+    stepName: "vehicle use",
+    fields: {
+      category: {
+        label: "Vehicle use",
+        options: [
+          { value: "private", label: "Private car", description: "Personal and family use" },
+          { value: "commercial", label: "Commercial — goods", description: "Pick-up, van or lorry carrying goods" },
+          { value: "psv_matatu", label: "PSV — matatu or bus", description: "Carries fare-paying passengers" },
+          { value: "psv_taxi", label: "PSV — taxi or ride-hailing", description: "Uber, Bolt, Little or a taxi" },
+          { value: "motorcycle", label: "Boda boda / motorcycle" },
+          { value: "tuktuk", label: "Tuk-tuk" },
+        ],
+      },
+      seats: { label: "Number of passenger seats", hint: "As on the logbook, for example 14" },
+      period: {
+        label: "How long do you want cover for?",
+        options: [
+          { value: "annual", label: "1 year", description: "Best value" },
+          { value: "monthly", label: "1 month", description: "Pay as you go — popular with matatus and boda bodas" },
+        ],
+      },
+    },
+  },
+  kra: {
+    title: "Upload your KRA PIN certificate",
+    description: "A photo or the PDF from iTax is fine.",
+    label: "KRA PIN certificate",
+    reassurance: "Only our team and the insurer see it. Insurers need a KRA PIN to issue cover.",
+    later: "I'll upload it later",
+    toast: "KRA PIN uploaded",
+    stepName: "KRA PIN upload",
+  },
   // Health
   who: {
     title: "Who do you want to cover?",

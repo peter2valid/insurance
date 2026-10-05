@@ -8,8 +8,10 @@ import { ReviewScreen, type ReviewDocument, type ReviewSection } from "@/compone
 import { CodeScreen, PhoneScreen } from "@/components/flow/sign-in-screens";
 import { UploadScreen } from "@/components/flow/upload-screen";
 import { ConfirmScreen, LogbookScreen, PlateScreen } from "@/components/flow/vehicle-screens";
-import { flow, nameDescriptions, questions } from "@/lib/copy";
+import { coverLabels, flow, nameDescriptions, periodLabels, questions, vehicleCategoryLabels } from "@/lib/copy";
+import { coversFor, needsSeats, offersMonthly } from "@/lib/data/motor";
 import { isProduct, type Application, type Client } from "@/lib/data/types";
+import { getRepo } from "@/lib/data/repo";
 import { getFlowContext } from "@/lib/flow/context";
 import { answerRows, isQuestionScreen, questionScreens, type QuestionScreenId } from "@/lib/flow/questions";
 import { canOpen, flows, isScreen, laterKeyFor, needsValue, previousScreen, screenHref, type Screen } from "@/lib/flow/screens";
@@ -29,6 +31,7 @@ const screenTitles: Record<string, string> = {
   name: flow.name.title,
   id: flow.id.title,
   passport: questions.passport.title,
+  kra: questions.kra.title,
   registration: questions.registration.title,
   review: flow.review.title,
   done: flow.done.title,
@@ -75,7 +78,15 @@ export default async function StartStepPage(props: PageProps<"/start/[step]">) {
     const stillNeeded = ctx.app.documents
       .filter((doc) => doc.required && (doc.status === "needed" || doc.status === "rejected"))
       .map((doc) => flow.documents[doc.type]);
-    return <DoneScreen refValue={ctx.app.ref} stillNeeded={stillNeeded} estimate={await estimateFor(ctx.app)} />;
+    const quotes = ctx.app.status === "quotes_ready" ? await getRepo().listQuotes(ctx.app.ref) : [];
+    return (
+      <DoneScreen
+        refValue={ctx.app.ref}
+        stillNeeded={stillNeeded}
+        estimate={quotes.length ? null : await estimateFor(ctx.app)}
+        quotes={quotes.length ? { count: quotes.length, cheapestKes: Math.min(...quotes.map((q) => q.premiumKes)) } : undefined}
+      />
+    );
   }
 
   if (ctx.kind === "submitted") redirect(`/my/${ctx.app.ref}`);
@@ -118,15 +129,16 @@ function renderScreen(step: Screen, app: Application, client: Client, props: { r
       );
     }
     case "cover":
-      return <CoverScreen {...props} coverType={d.coverType} />;
+      return <CoverScreen {...props} coverType={d.coverType} allowed={coversFor(d.category)} />;
     case "value":
       return <ValueScreen {...props} value={d.vehicleValueKes} />;
     case "name":
-      return <NameScreen {...props} name={client.name} description={nameDescriptions[app.product]} />;
+      return <NameScreen {...props} name={client.name} email={client.email} description={nameDescriptions[app.product]} />;
     case "id":
       return <IdScreen {...props} />;
     case "passport":
     case "registration":
+    case "kra":
       return <UploadScreen screen={step} {...props} />;
     case "review":
       return <ReviewScreen {...props} {...reviewData(app, client)} />;
@@ -147,12 +159,13 @@ function reviewData(app: Application, client: Client): { sections: ReviewSection
     rows: [
       { label: labels.name, value: client.name || none },
       { label: labels.phone, value: formatKenyanPhone(client.phone) },
+      ...(client.email ? [{ label: labels.email, value: client.email }] : []),
     ],
   };
 
   let sections: ReviewSection[];
   if (app.product === "motor") {
-    const coverLabel = flow.cover.options.find((option) => option.value === d.coverType)?.label ?? none;
+    const coverLabel = (d.coverType && coverLabels[d.coverType]) || none;
     sections = [
       you,
       {
@@ -160,6 +173,8 @@ function reviewData(app: Application, client: Client): { sections: ReviewSection
         title: flow.review.sections.car,
         changeHref: screenHref("confirm", app.ref),
         rows: [
+          { label: labels.category, value: vehicleCategoryLabels[d.category] ?? none },
+          ...(needsSeats(d.category) ? [{ label: labels.seats, value: d.seats || none }] : []),
           { label: labels.plate, value: d.plate || none },
           { label: labels.car, value: [d.make, d.model].filter(Boolean).join(" ") || none },
           { label: labels.year, value: d.year || none },
@@ -172,6 +187,7 @@ function reviewData(app: Application, client: Client): { sections: ReviewSection
         changeHref: screenHref("cover", app.ref),
         rows: [
           { label: labels.coverType, value: coverLabel },
+          ...(offersMonthly(d.category) ? [{ label: labels.period, value: periodLabels[d.period] ?? periodLabels.annual }] : []),
           ...(needsValue(d.coverType)
             ? [{ label: labels.value, value: d.vehicleValueKes ? formatKes(Number(d.vehicleValueKes)) : none }]
             : []),

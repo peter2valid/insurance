@@ -16,6 +16,7 @@ export type AppEvent =
   | { type: "message.added"; ref: string }
   | { type: "quote.added"; ref: string }
   | { type: "outbox.sent"; id: string; ref?: string }
+  | { type: "agent.updated" }
   | { type: "demo.reset" };
 
 type Listener = (event: AppEvent) => void;

@@ -1,6 +1,6 @@
 import { getRepo } from "@/lib/data/repo";
 import type { Application, Client, Product } from "@/lib/data/types";
-import { getSessionClientId } from "@/lib/session";
+import { getReferral, getSessionClientId } from "@/lib/session";
 import { completedStep, nextScreen, type Screen } from "./screens";
 
 /**
@@ -46,7 +46,15 @@ export async function findOrCreateDraft(clientId: string, product?: Product): Pr
   const draft = apps
     .filter((app) => !app.submittedAt && (!product || app.product === product))
     .sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt))[0];
-  return draft ?? repo.createApplication({ clientId, product: product ?? "motor" });
+  if (draft) return draft;
+  // Came through an agent's link? Credit them (active agents only).
+  const code = await getReferral();
+  const agent = code ? await repo.findAgentByCode(code) : null;
+  return repo.createApplication({
+    clientId,
+    product: product ?? "motor",
+    agentId: agent?.status === "active" ? agent.id : undefined,
+  });
 }
 
 /**

@@ -1,17 +1,6 @@
 import * as React from "react";
 import { cva } from "class-variance-authority";
-import {
-  CircleAlert,
-  CircleCheck,
-  CircleX,
-  Clock,
-  FileCheck,
-  Hourglass,
-  Inbox,
-  type LucideIcon,
-  ShieldCheck,
-  Sparkles,
-} from "lucide-react";
+import { CircleAlert, CircleCheck, CircleX, Clock, FileCheck, Hourglass, Inbox, ShieldCheck, Sparkles, Wallet, type LucideIcon } from "lucide-react";
 import { statusLabels } from "@/lib/copy";
 import type { ApplicationStatus } from "@/lib/data/types";
 import { cn } from "@/lib/utils";
@@ -55,7 +44,8 @@ const statusStyle: Record<ApplicationStatus, { tone: BadgeTone; icon: LucideIcon
   preparing_quotes: { tone: "info", icon: Hourglass },
   needs_info: { tone: "warn", icon: CircleAlert },
   quotes_ready: { tone: "action", icon: CircleAlert },
-  cover_chosen: { tone: "info", icon: Hourglass },
+  cover_chosen: { tone: "action", icon: Wallet },
+  paid: { tone: "info", icon: Hourglass },
   covered: { tone: "success", icon: ShieldCheck },
 };
 

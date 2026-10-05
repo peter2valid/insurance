@@ -17,12 +17,22 @@ export type Bucket = "needs_me" | "waiting" | "quotes_out" | "done";
 
 /** Why an application needs the admin. Mapped to words in lib/copy/admin. */
 export type AttentionReason =
+  | "paid"
   | "new_submission"
   | "stalled"
   | "replied"
   | "documents_uploaded"
-  | "ready_to_quote"
-  | "cover_chosen";
+  | "ready_to_quote";
+
+/** Most urgent first: money received beats everything. */
+export const reasonPriority: Record<AttentionReason, number> = {
+  paid: 0,
+  replied: 1,
+  new_submission: 2,
+  documents_uploaded: 3,
+  ready_to_quote: 4,
+  stalled: 5,
+};
 
 export interface BoardEntry {
   application: Application;
@@ -40,29 +50,23 @@ export function classify(
   now: number = Date.now(),
 ): Omit<BoardEntry, "application"> {
   if (!app.submittedAt) {
-    return isStalled(app, now)
-      ? { bucket: "needs_me", reason: "stalled" }
-      : { bucket: "waiting" };
+    return isStalled(app, now) ? { bucket: "needs_me", reason: "stalled" } : { bucket: "waiting" };
   }
-  if (unreadReplies > 0 && app.status !== "covered") {
-    return { bucket: "needs_me", reason: "replied" };
-  }
+  if (app.status === "covered") return { bucket: "done" };
+  if (app.status === "paid") return { bucket: "needs_me", reason: "paid" };
+  if (unreadReplies > 0) return { bucket: "needs_me", reason: "replied" };
+  if (app.status === "received") return { bucket: "needs_me", reason: "new_submission" };
+  // Documents waiting to be checked, at any stage before cover.
+  if (app.documents.some((doc) => doc.status === "uploaded")) return { bucket: "needs_me", reason: "documents_uploaded" };
   switch (app.status) {
-    case "received":
-      return { bucket: "needs_me", reason: "new_submission" };
     case "documents_checked":
     case "preparing_quotes":
       return { bucket: "needs_me", reason: "ready_to_quote" };
     case "needs_info":
-      return app.documents.some((doc) => doc.status === "uploaded")
-        ? { bucket: "needs_me", reason: "documents_uploaded" }
-        : { bucket: "waiting" };
+      return { bucket: "waiting" };
     case "quotes_ready":
-      return { bucket: "quotes_out" };
     case "cover_chosen":
-      return { bucket: "needs_me", reason: "cover_chosen" };
-    case "covered":
-      return { bucket: "done" };
+      return { bucket: "quotes_out" };
   }
 }
 
@@ -85,10 +89,12 @@ export function buildBoard(
     board[bucket].push({ application, bucket, reason });
   }
 
-  // Needs me: longest-waiting first. Others: most recent first.
+  // Needs me: most urgent reason first, then longest-waiting. Others: most recent first.
   const byUpdated = (a: BoardEntry, b: BoardEntry) =>
     Date.parse(a.application.updatedAt) - Date.parse(b.application.updatedAt);
-  board.needs_me.sort(byUpdated);
+  board.needs_me.sort(
+    (a, b) => reasonPriority[a.reason ?? "stalled"] - reasonPriority[b.reason ?? "stalled"] || byUpdated(a, b),
+  );
   for (const bucket of ["waiting", "quotes_out", "done"] as const) {
     board[bucket].sort((a, b) => byUpdated(b, a));
   }

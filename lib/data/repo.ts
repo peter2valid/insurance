@@ -1,13 +1,18 @@
 import type {
+  Agent,
   Application,
   ApplicationStatus,
   Channel,
   Client,
+  Commission,
   DocumentItem,
   MessageDirection,
   Message,
+  Payment,
+  Policy,
   Product,
   Quote,
+  Settings,
 } from "./types";
 import { createMockRepo } from "./mock";
 import { createSupabaseRepo } from "./supabase";
@@ -32,11 +37,19 @@ export interface Repo {
   listApplications(): Promise<Application[]>;
   listApplicationsForClient(clientId: string): Promise<Application[]>;
   getApplication(ref: string): Promise<Application | null>;
-  createApplication(input: { clientId: string; product: Product }): Promise<Application>;
+  createApplication(input: {
+    clientId: string;
+    product: Product;
+    agentId?: string;
+    /** Pre-filled answers, e.g. when renewing last year's cover. */
+    details?: Record<string, string>;
+  }): Promise<Application>;
   /** Save flow progress: merges details, advances step (never backwards). */
   saveProgress(ref: string, input: { step: number; details?: Record<string, string> }): Promise<Application>;
   submitApplication(ref: string): Promise<Application>;
   setStatus(ref: string, status: ApplicationStatus): Promise<Application>;
+  setPolicy(ref: string, policy: Policy): Promise<Application>;
+  setAgent(ref: string, agentId: string): Promise<Application>;
   updateDocument(
     ref: string,
     documentId: string,
@@ -58,6 +71,33 @@ export interface Repo {
   }): Promise<Message>;
   markMessagesRead(ref: string): Promise<void>;
 
+  // Payments (M-Pesa — SIMULATED behind lib/payments)
+  listPayments(ref?: string): Promise<Payment[]>;
+  createPayment(input: Omit<Payment, "id" | "createdAt" | "status">): Promise<Payment>;
+  updatePayment(id: string, patch: Partial<Pick<Payment, "status" | "receipt" | "paidAt">>): Promise<Payment>;
+
+  // Agents and their commissions
+  listAgents(): Promise<Agent[]>;
+  getAgent(id: string): Promise<Agent | null>;
+  findAgentByPhone(phone: string): Promise<Agent | null>;
+  findAgentByCode(code: string): Promise<Agent | null>;
+  createAgent(input: Omit<Agent, "id" | "createdAt">): Promise<Agent>;
+  updateAgent(id: string, patch: Partial<Omit<Agent, "id" | "createdAt">>): Promise<Agent>;
+  listCommissions(agentId?: string): Promise<Commission[]>;
+  createCommission(input: Omit<Commission, "id" | "createdAt" | "status" | "paidAt">): Promise<Commission>;
+  updateCommission(id: string, patch: Partial<Pick<Commission, "status" | "paidAt">>): Promise<Commission>;
+
+  // Broker settings (automations on/off, default commission)
+  getSettings(): Promise<Settings>;
+  updateSettings(patch: Partial<Settings>): Promise<Settings>;
+
+  /**
+   * Automations run at most once per key (e.g. "renewal:BC-5003:30").
+   * Returns true the first time a key is claimed, false after that.
+   */
+  claimAutomation(key: string, input: { rule: string; applicationRef?: string }): Promise<boolean>;
+  listAutomationRuns(limit?: number): Promise<AutomationRun[]>;
+
   // Files (logbook, ID photos). Mock: in memory. Later: Supabase Storage.
   saveFile(input: { name: string; type: string; bytes: Uint8Array }): Promise<StoredFile>;
   getFile(id: string): Promise<(StoredFile & { bytes: Uint8Array }) | null>;
@@ -65,6 +105,8 @@ export interface Repo {
   /** Demo only (Stage 10): restore seed data. */
   reset(): Promise<void>;
 }
+
+export type AutomationRun = { key: string; rule: string; applicationRef?: string; createdAt: string };
 
 export type StoredFile = { id: string; name: string; type: string; size: number; url: string };
 

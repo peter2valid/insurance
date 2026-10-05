@@ -160,11 +160,16 @@ export const flow = {
   },
 
   name: {
-    title: "What's your full name?",
-    description: "As it appears on your national ID.",
+    title: "Your details",
+    description: "Your name as it appears on your national ID.",
     label: "Full name",
+    emailLabel: "Email address (optional)",
+    emailHint: "We'll email your quotes, receipt and policy documents too.",
     action: "Continue",
-    errors: { required: "Enter your full name as it appears on your ID." },
+    errors: {
+      required: "Enter your full name as it appears on your ID.",
+      email: "That email address doesn't look right. Check it, or leave it empty.",
+    },
   },
 
   id: {
@@ -200,6 +205,10 @@ export const flow = {
       chassisNumber: "Chassis number",
       coverType: "Type of cover",
       value: "Value",
+      email: "Email",
+      category: "Use",
+      seats: "Passenger seats",
+      period: "Cover period",
     },
     documentStatus: {
       uploaded: "Uploaded",
@@ -220,10 +229,13 @@ export const flow = {
     demoNote: "Demo: WhatsApp updates only reach numbers that have joined the demo. You can always follow your application here.",
     nextHeading: "What happens next",
     next: [
-      "We check your documents, usually within [X working hours].",
-      "We compare insurers and send you quotes.",
-      "You choose your cover, and we finalise it.",
+      "Compare quotes from our insurers and choose one.",
+      "Pay with M-Pesa from your phone.",
+      "We check your documents and issue your cover — on WhatsApp and email.",
     ],
+    quotesReady: (count: number) => `${count} quotes are ready`,
+    quotesFrom: (amount: string) => `From ${amount}. Compare the insurers and choose one — it takes a minute.`,
+    compare: "Compare quotes",
     stillNeeded: "You still need to upload:",
     action: "See your application",
     home: "Back to home",
@@ -257,6 +269,8 @@ export const flow = {
     logbook: "logbook photo",
     confirm: "checking car details",
     cover: "choosing cover",
+    category: "vehicle use",
+    kra: "KRA PIN upload",
     value: "car value",
     name: "my name",
     id: "ID upload",

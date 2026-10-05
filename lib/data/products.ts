@@ -10,11 +10,11 @@ import type { DocumentType, Product } from "./types";
 type DocumentRequirement = { type: DocumentType; required: boolean };
 
 export const productDocuments: Record<Product, readonly DocumentRequirement[]> = {
+  // What the broker asks for: logbook, national ID and KRA PIN — nothing else.
   motor: [
     { type: "logbook", required: true },
     { type: "national_id", required: true },
     { type: "kra_pin", required: true },
-    { type: "driving_licence", required: false },
   ],
   health: [
     { type: "national_id", required: true },

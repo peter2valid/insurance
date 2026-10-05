@@ -25,6 +25,8 @@ type AdminDetailProps = {
   nextStep?: React.ReactNode;
   documents: React.ReactNode;
   answers: React.ReactNode;
+  /** Full-width content under the two columns (quotes, payment, messages). */
+  below?: React.ReactNode;
 };
 
 export function AdminDetail({
@@ -36,6 +38,7 @@ export function AdminDetail({
   nextStep,
   documents,
   answers,
+  below,
 }: AdminDetailProps) {
   const panels = [
     { id: "documents", title: admin.detail.documents, content: documents },
@@ -87,6 +90,7 @@ export function AdminDetail({
           </TabsContent>
         ))}
       </Tabs>
+      {below}
     </>
   );
 }

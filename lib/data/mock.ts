@@ -2,9 +2,19 @@ import { brand } from "@/lib/brand";
 import { publish } from "@/lib/events";
 import { NotFoundError } from "./errors";
 import { productDocuments } from "./products";
-import type { Repo } from "./repo";
+import type { AutomationRun, Repo } from "./repo";
 import { createSeed } from "./seed";
-import type { Application, Client, Message, Quote } from "./types";
+import {
+  defaultSettings,
+  type Agent,
+  type Application,
+  type Client,
+  type Commission,
+  type Message,
+  type Payment,
+  type Quote,
+  type Settings,
+} from "./types";
 
 /**
  * SIMULATED repository: in-memory, seeded with realistic data.
@@ -23,6 +33,11 @@ type Store = {
   applications: Map<string, Application>;
   quotes: Quote[];
   messages: Message[];
+  agents: Map<string, Agent>;
+  payments: Payment[];
+  commissions: Commission[];
+  settings: Settings;
+  automationRuns: AutomationRun[];
   nextRef: number;
   nextId: number;
 };
@@ -36,16 +51,22 @@ function freshStore(): Store {
     applications: new Map(seed.applications.map((app) => [app.ref, app])),
     quotes: seed.quotes,
     messages: seed.messages,
+    agents: new Map(seed.agents.map((agent) => [agent.id, agent])),
+    payments: seed.payments,
+    commissions: seed.commissions,
+    settings: { ...defaultSettings },
+    automationRuns: [],
     nextRef: highest + 1,
     nextId: 1,
   };
 }
 
 // Kept on globalThis so dev hot-reload doesn't wipe the demo mid-walkthrough.
-const globalStore = globalThis as unknown as { __beaconStore?: Store };
+// (Versioned key: a store from an older build is replaced, not reused.)
+const globalStore = globalThis as unknown as { __beaconStore2?: Store };
 
 function store(): Store {
-  return (globalStore.__beaconStore ??= freshStore());
+  return (globalStore.__beaconStore2 ??= freshStore());
 }
 
 const clone = <T>(value: T): T => structuredClone(value);
@@ -105,7 +126,7 @@ export function createMockRepo(): Repo {
       return app ? clone(app) : null;
     },
 
-    async createApplication({ clientId, product }) {
+    async createApplication({ clientId, product, agentId, details }) {
       const s = store();
       const ref = `${brand.refPrefix}-${s.nextRef++}`;
       const at = now();
@@ -115,7 +136,8 @@ export function createMockRepo(): Repo {
         product,
         status: "received",
         step: 1, // phone verified
-        details: {},
+        details: { ...details },
+        ...(agentId && { agentId }),
         documents: productDocuments[product].map((doc) => ({
           id: `${ref}-${doc.type}`,
           type: doc.type,
@@ -153,6 +175,22 @@ export function createMockRepo(): Repo {
     async setStatus(ref, status) {
       const app = requireApp(ref);
       app.status = status;
+      touch(app);
+      publish({ type: "application.updated", ref });
+      return clone(app);
+    },
+
+    async setPolicy(ref, policy) {
+      const app = requireApp(ref);
+      app.policy = policy;
+      touch(app);
+      publish({ type: "application.updated", ref });
+      return clone(app);
+    },
+
+    async setAgent(ref, agentId) {
+      const app = requireApp(ref);
+      app.agentId = agentId;
       touch(app);
       publish({ type: "application.updated", ref });
       return clone(app);
@@ -231,6 +269,107 @@ export function createMockRepo(): Repo {
       if (changed) publish({ type: "application.updated", ref });
     },
 
+    // Payments
+    async listPayments(ref) {
+      const all = store().payments;
+      return clone(ref ? all.filter((payment) => payment.applicationRef === ref) : all);
+    },
+
+    async createPayment(input) {
+      requireApp(input.applicationRef);
+      const payment: Payment = { ...input, id: newId("pay"), status: "pending", createdAt: now() };
+      store().payments.push(payment);
+      publish({ type: "application.updated", ref: input.applicationRef });
+      return clone(payment);
+    },
+
+    async updatePayment(id, patch) {
+      const payment = store().payments.find((item) => item.id === id);
+      if (!payment) throw new NotFoundError(`Payment ${id}`);
+      Object.assign(payment, patch);
+      publish({ type: "application.updated", ref: payment.applicationRef });
+      return clone(payment);
+    },
+
+    // Agents
+    async listAgents() {
+      return clone([...store().agents.values()]);
+    },
+
+    async getAgent(id) {
+      const agent = store().agents.get(id);
+      return agent ? clone(agent) : null;
+    },
+
+    async findAgentByPhone(phone) {
+      const agent = [...store().agents.values()].find((item) => item.phone === phone);
+      return agent ? clone(agent) : null;
+    },
+
+    async findAgentByCode(code) {
+      const wanted = code.trim().toUpperCase();
+      const agent = [...store().agents.values()].find((item) => item.code === wanted);
+      return agent ? clone(agent) : null;
+    },
+
+    async createAgent(input) {
+      const agent: Agent = { ...input, id: newId("agent"), createdAt: now() };
+      store().agents.set(agent.id, agent);
+      publish({ type: "agent.updated" });
+      return clone(agent);
+    },
+
+    async updateAgent(id, patch) {
+      const agent = store().agents.get(id);
+      if (!agent) throw new NotFoundError(`Agent ${id}`);
+      Object.assign(agent, patch);
+      publish({ type: "agent.updated" });
+      return clone(agent);
+    },
+
+    async listCommissions(agentId) {
+      const all = store().commissions;
+      return clone(agentId ? all.filter((item) => item.agentId === agentId) : all);
+    },
+
+    async createCommission(input) {
+      const commission: Commission = { ...input, id: newId("com"), status: "pending", createdAt: now() };
+      store().commissions.push(commission);
+      publish({ type: "agent.updated" });
+      return clone(commission);
+    },
+
+    async updateCommission(id, patch) {
+      const commission = store().commissions.find((item) => item.id === id);
+      if (!commission) throw new NotFoundError(`Commission ${id}`);
+      Object.assign(commission, patch);
+      publish({ type: "agent.updated" });
+      return clone(commission);
+    },
+
+    // Settings and automations
+    async getSettings() {
+      return clone(store().settings);
+    },
+
+    async updateSettings(patch) {
+      const s = store();
+      s.settings = { ...s.settings, ...patch };
+      publish({ type: "agent.updated" });
+      return clone(s.settings);
+    },
+
+    async claimAutomation(key, { rule, applicationRef }) {
+      const runs = store().automationRuns;
+      if (runs.some((run) => run.key === key)) return false;
+      runs.unshift({ key, rule, applicationRef, createdAt: now() });
+      return true;
+    },
+
+    async listAutomationRuns(limit = 100) {
+      return clone(store().automationRuns.slice(0, limit));
+    },
+
     // Files — SIMULATED storage, served by app/files/[id]/route.ts.
     async saveFile({ name, type, bytes }) {
       const id = newId("file");
@@ -245,7 +384,7 @@ export function createMockRepo(): Repo {
     },
 
     async reset() {
-      globalStore.__beaconStore = freshStore();
+      globalStore.__beaconStore2 = freshStore();
       publish({ type: "demo.reset" });
     },
   };

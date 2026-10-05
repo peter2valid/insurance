@@ -12,9 +12,10 @@ import { getNotifier } from "@/lib/notify";
 import { missingTwilioVars, twilioConfigured } from "@/lib/notify/twilio";
 import { testWhatsAppAction } from "@/app/admin/actions";
 import { ActionButton } from "@/components/admin/action-button";
+import { PageHeader } from "@/components/admin/page-header";
 import { isSampleNumber, whatsappUrlTo } from "@/lib/whatsapp";
 
-export const metadata: Metadata = { title: admin.outbox.heading };
+export const metadata: Metadata = { title: admin.nav.outbox };
 
 const channelIcon: Record<Channel, LucideIcon> = {
   whatsapp: MessageCircle,
@@ -23,8 +24,8 @@ const channelIcon: Record<Channel, LucideIcon> = {
 };
 
 /**
- * Outbox (CLAUDE.md §8.3): every simulated notification, newest first,
- * so the demo can show "the client was notified". Nothing here was sent.
+ * Messages (CLAUDE.md §8.3): every notification, newest first, so the demo
+ * can show "the client was notified". Each says whether it really went out.
  */
 export default async function OutboxPage() {
   const items = await getNotifier().listOutbox();
@@ -33,10 +34,7 @@ export default async function OutboxPage() {
 
   return (
     <>
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl">{copy.heading}</h1>
-        <p className="max-w-prose text-base text-ink-quiet">{copy.intro}</p>
-      </div>
+      <PageHeader title={admin.nav.outbox} description={copy.intro} />
 
       <WhatsAppCheck />
 
@@ -46,7 +44,9 @@ export default async function OutboxPage() {
         <ul className="flex max-w-flow flex-col gap-3">
           {items.map((item) => {
             const Icon = channelIcon[item.channel];
-            const to = item.audience === "admin" ? copy.toAdmin : `${copy.toClient} · ${maskPhone(item.to)}`;
+            const masked = item.channel === "email" ? item.to.replace(/^(.).*(@.*)$/, "$1…$2") : maskPhone(item.to);
+            const to =
+              item.audience === "admin" ? copy.toAdmin : `${item.audience === "agent" ? copy.toAgent : copy.toClient} · ${masked}`;
             return (
               <li key={item.id}>
                 <Card className="gap-3 p-4 sm:p-4">

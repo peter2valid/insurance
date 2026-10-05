@@ -9,7 +9,7 @@ import { FlowStep } from "./flow-step";
 import { useFlowAction } from "./use-flow-action";
 
 /**
- * Document upload screen for passport (travel) and business registration.
+ * Document upload screen for KRA PIN (motor), passport (travel) and business registration.
  * Camera-first upload, with "I'll upload it later" as the quiet way out.
  */
 export function UploadScreen({
@@ -17,7 +17,7 @@ export function UploadScreen({
   refValue,
   backHref,
 }: {
-  screen: "passport" | "registration";
+  screen: "passport" | "registration" | "kra";
   refValue: string;
   backHref: string;
 }) {

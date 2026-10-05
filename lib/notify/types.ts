@@ -8,7 +8,7 @@ export type NotificationInput<T extends TemplateName = TemplateName> = {
   channel: Channel;
   /** Phone (E.164) or email. "admin" addresses the broker. */
   to: string;
-  audience: "client" | "admin";
+  audience: Audience;
   template: T;
   data: TemplateData<T>;
   applicationRef?: string;
@@ -18,7 +18,7 @@ export interface OutboxItem {
   id: string;
   channel: Channel;
   to: string;
-  audience: "client" | "admin";
+  audience: Audience;
   template: TemplateName;
   body: string;
   applicationRef?: string;
@@ -31,6 +31,8 @@ export interface OutboxItem {
    */
   delivery: Delivery;
 }
+
+export type Audience = "client" | "admin" | "agent";
 
 export type Delivery = "simulated" | "sent" | "failed";
 

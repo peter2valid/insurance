@@ -7,10 +7,12 @@ export { admin } from "./admin";
 export { common } from "./common";
 export { flow } from "./flow";
 export { kit } from "./kit";
-export { notifyLabels, notifyTemplates, statusMessages } from "./notify";
+export { notifyLabels, notifySubjects, notifyTemplates, statusMessages } from "./notify";
 export {
   coverLabels,
   nameDescriptions,
+  periodLabels,
+  vehicleCategoryLabels,
   productBlurbs,
   productCta,
   productNames,

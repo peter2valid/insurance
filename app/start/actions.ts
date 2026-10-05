@@ -1,7 +1,6 @@
 "use server";
 
-import { brand } from "@/lib/brand";
-import { flow, productNamesInline, statusMessages } from "@/lib/copy";
+import { flow } from "@/lib/copy";
 import { isProduct, type DocumentType } from "@/lib/data/types";
 import { getRepo } from "@/lib/data/repo";
 import type { ActionResult } from "@/lib/flow/action-result";
@@ -12,14 +11,15 @@ import {
   codeSchema,
   coverSchema,
   fieldErrors,
+  emailSchema,
   nameSchema,
   phoneSchema,
   plateSchema,
   valueSchema,
   vehicleSchema,
 } from "@/lib/flow/validation";
+import * as workflow from "@/lib/admin/workflow";
 import { getNotifier } from "@/lib/notify";
-import { summarize } from "@/lib/products/summary";
 import { checkCode, clearPendingCode, getPendingCode, setPendingCode, startSession } from "@/lib/session";
 
 /**
@@ -131,7 +131,8 @@ export async function confirmVehicle(_prev: ActionResult, formData: FormData): P
 export async function saveCover(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
   const parsed = coverSchema.safeParse(formData.get("coverType"));
   if (!parsed.success) return fail({ coverType: flow.cover.errors.required });
-  return saveDetails(formData, { coverType: parsed.data });
+  // Third party only needs no value: clear an old one so quotes stay right.
+  return saveDetails(formData, { coverType: parsed.data, ...(parsed.data === "third_party" ? { vehicleValueKes: "" } : {}) });
 }
 
 export async function saveValue(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
@@ -142,11 +143,18 @@ export async function saveValue(_prev: ActionResult, formData: FormData): Promis
 
 export async function saveName(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
   const parsed = nameSchema.safeParse(formData.get("name") ?? "");
-  if (!parsed.success) return fail({ name: parsed.error.issues[0].message });
+  const email = emailSchema.safeParse(formData.get("email") ?? "");
+  const errors: Record<string, string> = {};
+  if (!parsed.success) errors.name = parsed.error.issues[0].message;
+  if (!email.success) errors.email = email.error.issues[0].message;
+  if (!parsed.success || !email.success) return fail(errors);
 
   const { ctx, error } = await activeContext(formData);
   if (error) return error;
-  const client = await getRepo().updateClient(ctx.client.id, { name: parsed.data });
+  const client = await getRepo().updateClient(ctx.client.id, {
+    name: parsed.data,
+    ...(email.data ? { email: email.data } : {}),
+  });
   const { app, next } = await saveAndAdvance(ctx.app, client, {});
   return { ok: true, next: screenHref(next, app.ref) };
 }
@@ -194,35 +202,9 @@ export async function submitApplication(_prev: ActionResult, formData: FormData)
   if (error) return error;
   if (ctx.resume !== "review") return { ok: true, next: screenHref(ctx.resume, ctx.app.ref) };
 
-  const repo = getRepo();
-  const app = await repo.submitApplication(ctx.app.ref);
-  const notifier = getNotifier();
-  const link = `${brand.siteUrl}/my/${app.ref}`;
-
-  // Tell the broker instantly (CLAUDE.md §1 core value 3) — simulated.
-  await notifier.send({
-    channel: "whatsapp",
-    to: "admin",
-    audience: "admin",
-    template: "application_submitted",
-    data: { ref: app.ref, clientName: ctx.client.name, product: productNamesInline[app.product], summary: summarize(app) },
-    applicationRef: app.ref,
-  });
-  // Give the client their link to follow along — simulated.
-  await notifier.send({
-    channel: "whatsapp",
-    to: ctx.client.phone,
-    audience: "client",
-    template: "status_changed",
-    data: {
-      firstName: ctx.client.name.split(" ")[0],
-      ref: app.ref,
-      detail: statusMessages.received.detail,
-      linkLabel: statusMessages.received.linkLabel,
-      link,
-    },
-    applicationRef: app.ref,
-  });
+  const app = await getRepo().submitApplication(ctx.app.ref);
+  // Tell the broker instantly and, with auto-quote on, price every insurer now.
+  await workflow.applicationSubmitted(app.ref);
 
   return { ok: true, next: `/start/done?ref=${encodeURIComponent(app.ref)}`, toast: flow.review.toast };
 }

@@ -17,10 +17,10 @@ export function whatsappUrlTo(e164: string, message?: string): string {
 }
 
 /**
- * Seeded sample clients use the fake range +254 700 000 1xx. Those numbers
+ * Seeded sample clients and agents use the fake ranges +254 700 000 1xx / 2xx. Those numbers
  * might belong to real people, so we never open WhatsApp to them — their
  * messages stay simulated in the Outbox. Real applicants get a real link.
  */
 export function isSampleNumber(e164: string): boolean {
-  return /^\+2547000001\d{2}$/.test(e164);
+  return /^\+254700000[12]\d{2}$/.test(e164);
 }

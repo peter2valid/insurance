@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { TextLink } from "@/components/ui/text-link";
 import { EstimateCard } from "@/components/status/estimate-card";
 import { flow } from "@/lib/copy";
+import { formatKes } from "@/lib/format/money";
 import type { Estimate } from "@/lib/products/estimate";
 
 /**
@@ -16,10 +17,13 @@ export function DoneScreen({
   refValue,
   stillNeeded,
   estimate,
+  quotes,
 }: {
   refValue: string;
   stillNeeded: string[];
   estimate?: Estimate | null;
+  /** Set when quotes went out instantly (auto-quote). */
+  quotes?: { count: number; cheapestKes: number };
 }) {
   const copy = flow.done;
 
@@ -35,7 +39,14 @@ export function DoneScreen({
           <p className="max-w-prose text-sm text-ink-quiet">{copy.demoNote}</p>
         </div>
 
-        {estimate && <EstimateCard estimate={estimate} />}
+        {quotes ? (
+          <Card className="gap-2 border-2 border-brand">
+            <h2 className="font-sans text-lg font-semibold">{copy.quotesReady(quotes.count)}</h2>
+            <p className="text-base text-ink-quiet">{copy.quotesFrom(formatKes(quotes.cheapestKes))}</p>
+          </Card>
+        ) : (
+          estimate && <EstimateCard estimate={estimate} />
+        )}
 
         <Card className="gap-3">
           <h2 className="font-sans text-lg font-semibold">{copy.nextHeading}</h2>
@@ -62,8 +73,8 @@ export function DoneScreen({
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
           <Button asChild>
-            <Link href={`/my/${refValue}`}>
-              {copy.action}
+            <Link href={quotes ? `/my/${refValue}#quotes` : `/my/${refValue}`}>
+              {quotes ? copy.compare : copy.action}
               <ArrowRight aria-hidden />
             </Link>
           </Button>
