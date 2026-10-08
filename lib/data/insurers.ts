@@ -1,4 +1,4 @@
-import type { VehicleCategory } from "./motor";
+import type { MotorAddon, VehicleCategory } from "./motor";
 
 /**
  * The broker's insurer panel and their motor rate cards.
@@ -21,6 +21,9 @@ export type MotorRates = {
   thirdParty: { base: number; perSeat?: number };
 };
 
+/** An optional extra: percent of the vehicle's value with a minimum, or already in the cover. */
+export type AddonRate = { rate: number; minimum: number } | { included: true };
+
 export type Insurer = {
   id: string;
   name: string;
@@ -30,6 +33,10 @@ export type Insurer = {
   excess: { rate: number; minimum: number };
   /** What this insurer's motor cover includes, by cover type (sample wording). */
   benefits: { comprehensive: string[]; third_party_fire_theft: string[]; third_party: string[] };
+  /** Comprehensive add-ons (sample prices). */
+  addons: Record<MotorAddon, AddonRate>;
+  /** Oldest vehicle (years) this insurer covers comprehensively (sample). */
+  maxAgeComprehensive: number;
   /** Applied to health, travel and business fixture prices (sample). */
   otherFactor: number;
 };
@@ -74,6 +81,8 @@ export const insurers: readonly Insurer[] = [
       third_party_fire_theft: ["Theft and fire cover", "Third party injury and property"],
       third_party: ["Third party injury and property", "Passenger legal liability"],
     },
+    addons: { excess_protector: { rate: 0.25, minimum: 3_000 }, pvt: { rate: 0.25, minimum: 2_500 } },
+    maxAgeComprehensive: 15,
     otherFactor: 1,
   },
   {
@@ -86,6 +95,8 @@ export const insurers: readonly Insurer[] = [
       third_party_fire_theft: ["Theft and fire cover", "Third party injury and property"],
       third_party: ["Third party injury and property", "Passenger legal liability"],
     },
+    addons: { excess_protector: { rate: 0.25, minimum: 2_500 }, pvt: { included: true } },
+    maxAgeComprehensive: 12,
     otherFactor: 0.96,
   },
   {
@@ -98,6 +109,8 @@ export const insurers: readonly Insurer[] = [
       third_party_fire_theft: ["Theft and fire cover", "Third party injury and property", "Towing after theft recovery"],
       third_party: ["Third party injury and property", "Passenger legal liability"],
     },
+    addons: { excess_protector: { included: true }, pvt: { rate: 0.3, minimum: 3_000 } },
+    maxAgeComprehensive: 15,
     otherFactor: 1.05,
   },
   {
@@ -110,6 +123,8 @@ export const insurers: readonly Insurer[] = [
       third_party_fire_theft: ["Theft and fire cover", "Third party injury and property"],
       third_party: ["Third party injury and property", "Passenger legal liability"],
     },
+    addons: { excess_protector: { rate: 0.3, minimum: 3_000 }, pvt: { rate: 0.25, minimum: 2_000 } },
+    maxAgeComprehensive: 20,
     otherFactor: 0.93,
   },
 ];

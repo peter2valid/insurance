@@ -13,6 +13,14 @@ const productIcons: Record<Product, LucideIcon> = {
   business: Briefcase,
 };
 
+/** Motor starts with an instant quote (no sign-in); the others with the phone number. */
+const startHref: Record<Product, string> = {
+  motor: "/quote/motor",
+  health: "/start/phone?product=health",
+  travel: "/start/phone?product=travel",
+  business: "/start/phone?product=business",
+};
+
 /**
  * The hero IS step one of the application (CLAUDE.md §1, §8.1): picking a
  * product goes straight into its flow. This is the one place the design is
@@ -79,7 +87,7 @@ function ProductPicker() {
           return (
             <li key={product}>
               <Card asChild interactive className="group flex-row items-center gap-4 p-4 sm:p-4">
-                <Link href={`/start/phone?product=${product}`} aria-label={productCta[product]}>
+                <Link href={startHref[product]} aria-label={productCta[product]}>
                   <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-brand text-on-brand">
                     <Icon className="size-6" aria-hidden />
                   </span>

@@ -57,6 +57,32 @@ export async function clearPendingCode(): Promise<void> {
   (await cookies()).delete(OTP_COOKIE);
 }
 
+/**
+ * The quote a signed-out client chose (answers + insurer), carried through
+ * sign-in. Only answers: prices are always worked out again on the server.
+ */
+const QUOTE_COOKIE = "bc_quote";
+
+export async function setPendingQuote(details: Record<string, string>): Promise<void> {
+  (await cookies()).set(QUOTE_COOKIE, JSON.stringify(details), { ...cookieOptions, maxAge: 60 * 60 * 24 });
+}
+
+export async function getPendingQuote(): Promise<Record<string, string> | null> {
+  const raw = (await cookies()).get(QUOTE_COOKIE)?.value;
+  if (!raw) return null;
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return null;
+    return Object.fromEntries(Object.entries(parsed).filter(([, value]) => typeof value === "string")) as Record<string, string>;
+  } catch {
+    return null;
+  }
+}
+
+export async function clearPendingQuote(): Promise<void> {
+  (await cookies()).delete(QUOTE_COOKIE);
+}
+
 export type CodeCheck = "ok" | "wrong" | "expired";
 
 export function checkCode(code: string, pending: PendingCode, now: number = Date.now()): CodeCheck {

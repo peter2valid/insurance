@@ -4,7 +4,7 @@ import { flow } from "@/lib/copy";
 import { isProduct, type DocumentType } from "@/lib/data/types";
 import { getRepo } from "@/lib/data/repo";
 import type { ActionResult } from "@/lib/flow/action-result";
-import { getFlowContext, saveAndAdvance } from "@/lib/flow/context";
+import { applyPendingQuote, getFlowContext, saveAndAdvance } from "@/lib/flow/context";
 import { isQuestionScreen, questionScreens, validateScreen } from "@/lib/flow/questions";
 import { laterKeyFor, screenHref } from "@/lib/flow/screens";
 import {
@@ -96,7 +96,9 @@ export async function verifyCode(_prev: ActionResult, formData: FormData): Promi
   await startSession(client.id);
   await clearPendingCode();
 
-  const ctx = await getFlowContext(refFrom(formData), pending.product);
+  // Chose an insurer before signing in: carry on with that quote.
+  const quoted = pending.product && pending.product !== "motor" ? null : await applyPendingQuote(client.id);
+  const ctx = await getFlowContext(quoted?.ref ?? refFrom(formData), pending.product);
   if (ctx.kind === "not_yours") return formError(flow.errors.notYours);
   if (ctx.kind === "submitted") return { ok: true, next: `/my/${ctx.app.ref}`, toast: flow.code.toast };
   if (ctx.kind !== "active") return formError(flow.errors.generic);
@@ -206,6 +208,10 @@ export async function submitApplication(_prev: ActionResult, formData: FormData)
   // Tell the broker instantly and, with auto-quote on, price every insurer now.
   await workflow.applicationSubmitted(app.ref);
 
+  // Insurer already chosen: straight to payment.
+  if (app.details.insurer && (await getRepo().getApplication(app.ref))?.status === "cover_chosen") {
+    return { ok: true, next: `/my/${app.ref}#payment`, toast: flow.review.toast };
+  }
   return { ok: true, next: `/start/done?ref=${encodeURIComponent(app.ref)}`, toast: flow.review.toast };
 }
 

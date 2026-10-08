@@ -193,6 +193,8 @@ export interface Quote {
 
 export interface QuoteBreakdown {
   basicKes: number;
+  /** Optional extras the client added (motor), priced before levies. */
+  addons?: { id: string; kes: number; included?: boolean }[];
   trainingLevyKes: number;
   phcfKes: number;
   stampDutyKes: number;

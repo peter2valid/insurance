@@ -1,6 +1,8 @@
 import { getRepo } from "@/lib/data/repo";
 import type { Application, Client, Product } from "@/lib/data/types";
-import { getReferral, getSessionClientId } from "@/lib/session";
+import { insurerByName } from "@/lib/data/insurers";
+import { clearPendingQuote, getPendingQuote, getReferral, getSessionClientId } from "@/lib/session";
+import { parseMotorQuote } from "./motor-quote";
 import { completedStep, nextScreen, type Screen } from "./screens";
 
 /**
@@ -71,4 +73,24 @@ export async function saveAndAdvance(
   const next = nextScreen(merged, client);
   const saved = await repo.saveProgress(app.ref, { step: completedStep(next), details });
   return { app: saved, next };
+}
+
+/**
+ * Turn a chosen quote (answers + insurer) into the client's motor
+ * application, so the flow skips everything already answered. Returns null
+ * when the quote no longer checks out. Server Actions only (sets cookies).
+ */
+export async function applyQuote(clientId: string, raw: Record<string, string>): Promise<Application | null> {
+  const parsed = parseMotorQuote(raw, { staleStartIsToday: true });
+  if (!parsed.ok || !insurerByName(raw.insurer ?? "")) return null;
+  const draft = await findOrCreateDraft(clientId, "motor");
+  return getRepo().saveProgress(draft.ref, { step: draft.step, details: { ...parsed.details, insurer: raw.insurer } });
+}
+
+/** After sign-in: apply the quote chosen while signed out, if any. */
+export async function applyPendingQuote(clientId: string): Promise<Application | null> {
+  const pending = await getPendingQuote();
+  if (!pending) return null;
+  await clearPendingQuote();
+  return applyQuote(clientId, pending);
 }

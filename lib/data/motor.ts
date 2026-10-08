@@ -46,3 +46,38 @@ export function periodOf(details: Record<string, string>): CoverPeriod {
 export function needsSeats(category: string | undefined): boolean {
   return category === "psv_matatu";
 }
+
+/** Optional extras on comprehensive cover. Words in lib/copy/quote.ts. */
+export const motorAddons = ["excess_protector", "pvt"] as const;
+export type MotorAddon = (typeof motorAddons)[number];
+
+export function isMotorAddon(value: unknown): value is MotorAddon {
+  return typeof value === "string" && (motorAddons as readonly string[]).includes(value);
+}
+
+/** The add-ons saved on an application ("excess_protector,pvt"). */
+export function addonsOf(details: Record<string, string>): MotorAddon[] {
+  if (details.coverType !== "comprehensive") return [];
+  return (details.addons ?? "").split(",").filter(isMotorAddon);
+}
+
+/** Common makes on Kenyan roads, by kind of vehicle. "other" is always last. */
+const carMakes = [
+  "Toyota", "Nissan", "Mazda", "Subaru", "Mitsubishi", "Honda", "Isuzu", "Volkswagen", "Mercedes-Benz",
+  "BMW", "Suzuki", "Hyundai", "Ford", "Land Rover", "Audi", "Peugeot", "Kia", "Volvo", "Mitsubishi Fuso", "Hino",
+];
+const bikeMakes = ["Bajaj", "TVS", "Honda", "Haojue", "Yamaha", "Suzuki", "Kingbird", "Skygo"];
+const tuktukMakes = ["Bajaj", "TVS", "Piaggio"];
+
+export function makesFor(category: string | undefined): string[] {
+  const list = category === "motorcycle" ? bikeMakes : category === "tuktuk" ? tuktukMakes : carMakes;
+  return [...list].sort((a, b) => a.localeCompare(b));
+}
+
+export const OLDEST_YEAR = 1990;
+
+/** Age in years from the year of manufacture (0 for this year's model). */
+export function vehicleAge(year: string | undefined, now: Date = new Date()): number | undefined {
+  const n = Number(year);
+  return Number.isInteger(n) && n > 1900 ? Math.max(0, now.getFullYear() - n) : undefined;
+}

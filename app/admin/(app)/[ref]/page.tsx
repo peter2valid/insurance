@@ -15,15 +15,15 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { StatusBadge, type BadgeTone } from "@/components/ui/status-badge";
 import { TextLink } from "@/components/ui/text-link";
 import { nudgeText } from "@/lib/admin/workflow";
-import { admin, coverLabels, flow, kit, periodLabels, productNames, statusPage, vehicleCategoryLabels } from "@/lib/copy";
-import { needsSeats, offersMonthly } from "@/lib/data/motor";
+import { admin, coverLabels, flow, kit, periodLabels, productNames, quote, statusPage, vehicleCategoryLabels } from "@/lib/copy";
+import { addonsOf, needsSeats, offersMonthly } from "@/lib/data/motor";
 import { getQuoteProvider } from "@/lib/data/quote-provider";
 import { getRepo } from "@/lib/data/repo";
 import type { Agent, Application, Client, DocumentItem, Message, Payment, Quote } from "@/lib/data/types";
 import { answerRows, isQuestionScreen, type QuestionScreenId } from "@/lib/flow/questions";
 import { flows } from "@/lib/flow/screens";
 import { formatDate, formatDateTime, todayIso } from "@/lib/format/date";
-import { formatKes } from "@/lib/format/money";
+import { formatExtras, formatKes, shownExcess } from "@/lib/format/money";
 import { formatKenyanPhone } from "@/lib/format/phone";
 import { twilioConfigured } from "@/lib/notify/twilio";
 import { isSampleNumber, whatsappUrlTo } from "@/lib/whatsapp";
@@ -184,7 +184,8 @@ function NextStep({
       actions = toCheck ? verifyAll : nudgeButton;
     } else {
       copy = n.issue;
-      actions = <IssueCoverDialog refValue={app.ref} today={todayIso()} />;
+      // Start on the date the client asked for, unless that has passed.
+      actions = <IssueCoverDialog refValue={app.ref} today={[todayIso(), app.details.startDate ?? ""].sort().at(-1) ?? todayIso()} />;
     }
   } else if (app.status === "cover_chosen") {
     copy = n.awaitingPayment;
@@ -310,6 +311,11 @@ function answers(app: Application, client: Client | null, agent: Agent | null) {
           { label: l.coverType, value: d.coverType ? coverLabels[d.coverType] : undefined },
           ...(offersMonthly(d.category) ? [{ label: l.period, value: periodLabels[d.period] ?? periodLabels.annual }] : []),
           ...(d.vehicleValueKes ? [{ label: l.vehicleValueKes, value: formatKes(Number(d.vehicleValueKes)) }] : []),
+          ...(d.insurer ? [{ label: l.insurer, value: d.insurer }] : []),
+          ...(d.coverType === "comprehensive" && d.insurer
+            ? [{ label: l.addons, value: addonsOf(d).map((addon) => quote.addons[addon].label).join(", ") || quote.noAddons }]
+            : []),
+          ...(d.startDate ? [{ label: l.startDate, value: formatDate(d.startDate) }] : []),
         ]
       : answerRows(flows[app.product].filter(isQuestionScreen) as QuestionScreenId[], d);
   const rows = [
@@ -341,13 +347,14 @@ function QuotesTable({ quotes }: { quotes: Quote[] }) {
             <span className="text-sm text-ink-quiet">
               {coverLabels[quote.coverType] ?? quote.coverType}
               {quote.period === "monthly" ? ` · ${periodLabels.monthly}` : ""}
-              {quote.excessKes ? ` · ${statusPage.quotes.excess(formatKes(quote.excessKes))}` : ""}
+              {shownExcess(quote) ? ` · ${statusPage.quotes.excess(formatKes(shownExcess(quote) ?? 0))}` : ""}
             </span>
             {quote.breakdown && (
               <span className="text-xs text-ink-quiet tabular-nums">
                 {statusPage.quotes.breakdown(
                   formatKes(quote.breakdown.basicKes),
                   formatKes(quote.breakdown.trainingLevyKes + quote.breakdown.phcfKes + quote.breakdown.stampDutyKes),
+                  formatExtras(quote.breakdown),
                 )}
               </span>
             )}

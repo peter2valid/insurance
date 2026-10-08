@@ -61,10 +61,13 @@ export async function POST(request: Request) {
   if (kind === "logbook") {
     try {
       const { fields, confidence } = await extractLogbook(file);
-      const typedPlate = ctx.app.details.plate;
+      const typed = ctx.app.details;
       Object.assign(details, fields, {
-        // The client's own typed plate wins over what was read.
-        plate: typedPlate || fields.plate,
+        // What the client typed (plate; make and year from the quote) wins over what was read.
+        plate: typed.plate || fields.plate,
+        // A model read for a different make wouldn't fit: leave it for the client.
+        ...(typed.make && typed.make !== "Other" && { make: typed.make, ...(typed.make !== fields.make && { model: "" }) }),
+        ...(typed.year && { year: typed.year }),
         lowConfidence: Object.entries(confidence)
           .filter(([, level]) => level === "low")
           .map(([field]) => field)

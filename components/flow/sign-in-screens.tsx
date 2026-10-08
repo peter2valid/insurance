@@ -13,7 +13,18 @@ import { useFlowAction } from "./use-flow-action";
 
 /* Step 1: phone number, then the code. SIMULATED sign-in (code 123456). */
 
-export function PhoneScreen({ refValue, product }: { refValue?: string; product?: string }) {
+export function PhoneScreen({
+  refValue,
+  product,
+  savedQuote,
+  backHref = "/",
+}: {
+  refValue?: string;
+  product?: string;
+  /** Chose an insurer before signing in: "Your Britam quote of KES 34,560 is saved…" */
+  savedQuote?: string;
+  backHref?: string;
+}) {
   const { formAction, pending, errors, submitted } = useFlowAction(sendCode);
   const copy = flow.phone;
 
@@ -23,9 +34,9 @@ export function PhoneScreen({ refValue, product }: { refValue?: string; product?
       action={formAction}
       noValidate
       step={{ current: stepOf.phone, total: TOTAL_STEPS }}
-      backHref="/"
+      backHref={backHref}
       title={copy.title}
-      description={copy.description}
+      description={savedQuote ?? copy.description}
       reassurance={copy.reassurance}
       helpStep={flow.stepNames.phone}
       formError={errors._form}

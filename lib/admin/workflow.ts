@@ -108,6 +108,21 @@ export async function applicationSubmitted(ref: string): Promise<{ autoQuoted: b
     ref,
   );
 
+  // Chose an insurer on the instant quote page: price again, hold that choice, ask for payment.
+  if (app.details.insurer) {
+    const quotes = await createQuotes(app);
+    const pick = quotes.find((quote) => quote.insurer === app.details.insurer);
+    if (pick) {
+      const quote = await getRepo().chooseQuote(ref, pick.id);
+      await tellAdmin("cover_chosen", { ref, clientName: client.name, insurer: quote.insurer, premium: formatKes(quote.premiumKes) }, ref);
+      await setStatusAndTell(app, client, "cover_chosen");
+      return { autoQuoted: true };
+    }
+    // The insurer no longer covers it (e.g. the year changed): show all quotes instead.
+    await setStatusAndTell(app, client, "quotes_ready");
+    return { autoQuoted: true };
+  }
+
   const settings = await getRepo().getSettings();
   if (settings.autoQuote) {
     await createQuotes(app);

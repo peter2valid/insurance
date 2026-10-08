@@ -109,7 +109,8 @@ export const statusPage = {
     premium: "Total per year",
     premiumMonthly: "Total per month",
     cheapest: "Lowest price",
-    breakdown: (basic: string, levies: string) => `Premium ${basic} + levies ${levies}`,
+    breakdown: (basic: string, levies: string, extras?: string) =>
+      extras ? `Premium ${basic} + extras ${extras} + levies ${levies}` : `Premium ${basic} + levies ${levies}`,
     premiumForTrip: "Premium for this trip",
     excess: (amount: string) => `Excess ${amount}`,
     choose: "Choose this cover",

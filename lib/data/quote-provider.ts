@@ -1,6 +1,6 @@
 import { peopleCovered } from "@/lib/products/summary";
 import { insurers, LEVIES, MONTHLY_FACTOR, type Insurer } from "./insurers";
-import { isVehicleCategory, periodOf, type VehicleCategory } from "./motor";
+import { addonsOf, isVehicleCategory, periodOf, vehicleAge, type MotorAddon, type VehicleCategory } from "./motor";
 import type { Application, Quote, QuoteBreakdown } from "./types";
 
 /**
@@ -21,17 +21,41 @@ const num = (value: string | undefined, fallback = 0) => {
   return Number.isFinite(n) && n > 0 ? n : fallback;
 };
 
-/** Basic premium plus training levy, PHCF and stamp duty. */
-export function withLevies(basicKes: number): { totalKes: number; breakdown: QuoteBreakdown } {
+/** Basic premium (plus any extras) with training levy, PHCF and stamp duty. */
+export function withLevies(
+  basicKes: number,
+  addons: NonNullable<QuoteBreakdown["addons"]> = [],
+): { totalKes: number; breakdown: QuoteBreakdown } {
   const basic = Math.round(basicKes);
-  const trainingLevyKes = Math.round(basic * LEVIES.trainingLevy);
-  const phcfKes = Math.round(basic * LEVIES.phcf);
-  const breakdown = { basicKes: basic, trainingLevyKes, phcfKes, stampDutyKes: LEVIES.stampDuty };
-  return { totalKes: basic + trainingLevyKes + phcfKes + LEVIES.stampDuty, breakdown };
+  const extras = addons.reduce((sum, addon) => sum + addon.kes, 0);
+  const levied = basic + extras;
+  const trainingLevyKes = Math.round(levied * LEVIES.trainingLevy);
+  const phcfKes = Math.round(levied * LEVIES.phcf);
+  const breakdown: QuoteBreakdown = {
+    basicKes: basic,
+    ...(addons.length > 0 && { addons }),
+    trainingLevyKes,
+    phcfKes,
+    stampDutyKes: LEVIES.stampDuty,
+  };
+  return { totalKes: levied + trainingLevyKes + phcfKes + LEVIES.stampDuty, breakdown };
 }
 
-function motorQuote(insurer: Insurer, app: Application): QuoteDraft {
-  const d = app.details;
+/** Does this insurer cover this vehicle with this cover? (Comprehensive has an age limit.) */
+export function coversVehicle(insurer: Insurer, details: Record<string, string>): boolean {
+  if (details.coverType !== "comprehensive") return true;
+  const age = vehicleAge(details.year);
+  return age === undefined || age <= insurer.maxAgeComprehensive;
+}
+
+/** Price of one add-on with this insurer, for this vehicle value. */
+export function addonPrice(insurer: Insurer, addon: MotorAddon, valueKes: number): { kes: number; included: boolean } {
+  const rate = insurer.addons[addon];
+  if ("included" in rate) return { kes: 0, included: true };
+  return { kes: round100(Math.max((valueKes * rate.rate) / 100, rate.minimum)), included: false };
+}
+
+function motorQuote(insurer: Insurer, d: Record<string, string>): QuoteDraft {
   const category: VehicleCategory = isVehicleCategory(d.category) ? d.category : "private";
   const card = insurer.motor[category];
   const coverType = d.coverType ?? "comprehensive";
@@ -49,7 +73,12 @@ function motorQuote(insurer: Insurer, app: Application): QuoteDraft {
 
   const period = periodOf(d);
   if (period === "monthly") basic *= MONTHLY_FACTOR;
-  const { totalKes, breakdown } = withLevies(round100(basic));
+  // Extras are yearly covers; a month costs the same share as the premium.
+  const addons = addonsOf(d).map((id) => {
+    const price = addonPrice(insurer, id, value);
+    return { id, kes: round100(period === "monthly" ? price.kes * MONTHLY_FACTOR : price.kes), ...(price.included && { included: true }) };
+  });
+  const { totalKes, breakdown } = withLevies(round100(basic), addons);
   return {
     insurer: insurer.name,
     coverType,
@@ -111,11 +140,22 @@ function otherBase(app: Application): { coverType: string; premium: number; exce
   }
 }
 
+/**
+ * Motor quotes straight from answers (no application yet): the instant
+ * quote page uses this. Insurers that don't cover the vehicle are listed
+ * separately so the page can say why.
+ */
+export function quoteMotor(details: Record<string, string>): { quotes: QuoteDraft[]; declined: Insurer[] } {
+  const covering = insurers.filter((insurer) => coversVehicle(insurer, details));
+  return {
+    quotes: covering.map((insurer) => motorQuote(insurer, details)).sort((a, b) => a.premiumKes - b.premiumKes),
+    declined: insurers.filter((insurer) => !covering.includes(insurer)),
+  };
+}
+
 /** Price every insurer on the panel, cheapest first. Sync, so seed data can use it. */
 export function priceQuotes(application: Application): QuoteDraft[] {
-  if (application.product === "motor") {
-    return insurers.map((insurer) => motorQuote(insurer, application)).sort((a, b) => a.premiumKes - b.premiumKes);
-  }
+  if (application.product === "motor") return quoteMotor(application.details).quotes;
   const base = otherBase(application);
   return insurers
     .map((insurer) => {

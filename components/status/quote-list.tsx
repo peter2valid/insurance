@@ -9,7 +9,7 @@ import { FieldError } from "@/components/ui/field";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { coverLabels, statusPage } from "@/lib/copy";
 import type { Quote } from "@/lib/data/types";
-import { formatKes } from "@/lib/format/money";
+import { formatExtras, formatKes, shownExcess } from "@/lib/format/money";
 
 /**
  * The client's quotes, cheapest first, with the total they pay and how it
@@ -60,9 +60,9 @@ export function QuoteList({
                   <p className="text-2xl font-semibold text-ink">{formatKes(quote.premiumKes)}</p>
                   <p className="text-sm text-ink-quiet">
                     {periodLabel(quote)}
-                    {quote.excessKes ? ` · ${copy.excess(formatKes(quote.excessKes))}` : ""}
+                    {shownExcess(quote) ? ` · ${copy.excess(formatKes(shownExcess(quote) ?? 0))}` : ""}
                   </p>
-                  {b && <p className="text-xs text-ink-quiet">{copy.breakdown(formatKes(b.basicKes), formatKes(levies))}</p>}
+                  {b && <p className="text-xs text-ink-quiet">{copy.breakdown(formatKes(b.basicKes), formatKes(levies), formatExtras(b))}</p>}
                 </div>
                 {quote.benefits.length > 0 && (
                   <ul className="flex flex-col gap-1">

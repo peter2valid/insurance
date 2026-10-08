@@ -8,8 +8,9 @@ import { ReviewScreen, type ReviewDocument, type ReviewSection } from "@/compone
 import { CodeScreen, PhoneScreen } from "@/components/flow/sign-in-screens";
 import { UploadScreen } from "@/components/flow/upload-screen";
 import { ConfirmScreen, LogbookScreen, PlateScreen } from "@/components/flow/vehicle-screens";
-import { coverLabels, flow, nameDescriptions, periodLabels, questions, vehicleCategoryLabels } from "@/lib/copy";
-import { coversFor, needsSeats, offersMonthly } from "@/lib/data/motor";
+import { coverLabels, flow, nameDescriptions, periodLabels, questions, quote, vehicleCategoryLabels } from "@/lib/copy";
+import { addonsOf, coversFor, needsSeats, offersMonthly } from "@/lib/data/motor";
+import { formatDate } from "@/lib/format/date";
 import { isProduct, type Application, type Client } from "@/lib/data/types";
 import { getRepo } from "@/lib/data/repo";
 import { getFlowContext } from "@/lib/flow/context";
@@ -18,7 +19,9 @@ import { canOpen, flows, isScreen, laterKeyFor, needsValue, previousScreen, scre
 import { formatKes } from "@/lib/format/money";
 import { formatKenyanPhone } from "@/lib/format/phone";
 import { estimateFor } from "@/lib/products/estimate";
-import { getPendingCode } from "@/lib/session";
+import { getPendingCode, getPendingQuote } from "@/lib/session";
+import { parseMotorQuote, quoteResultsHref } from "@/lib/flow/motor-quote";
+import { quoteMotor } from "@/lib/data/quote-provider";
 
 const screenTitles: Record<string, string> = {
   phone: flow.phone.title,
@@ -61,7 +64,17 @@ export default async function StartStepPage(props: PageProps<"/start/[step]">) {
     const ctx = await getFlowContext(ref, product);
     if (ctx.kind === "active") redirect(screenHref(ctx.resume, ctx.app.ref));
     if (ctx.kind === "submitted") redirect(`/my/${ctx.app.ref}`);
-    return <PhoneScreen refValue={ref} product={product} />;
+    // Chose an insurer on the instant quote page: say it's saved, and Back returns to the prices.
+    const pendingQuote = ref || (product && product !== "motor") ? null : await getPendingQuote();
+    const saved = pendingQuote ? savedQuoteOf(pendingQuote) : null;
+    return (
+      <PhoneScreen
+        refValue={ref}
+        product={product}
+        savedQuote={saved?.message}
+        backHref={saved ? quoteResultsHref(pendingQuote ?? {}) : undefined}
+      />
+    );
   }
 
   if (step === "code") {
@@ -141,10 +154,45 @@ function renderScreen(step: Screen, app: Application, client: Client, props: { r
     case "kra":
       return <UploadScreen screen={step} {...props} />;
     case "review":
-      return <ReviewScreen {...props} {...reviewData(app, client)} />;
+      return (
+        <ReviewScreen
+          {...props}
+          {...reviewData(app, client)}
+          {...(d.insurer && { actionLabel: quote.review.action, note: quote.review.note })}
+        />
+      );
     default:
       notFound();
   }
+}
+
+/** "Your Britam quote of KES 34,560 is saved…", or null if the quote no longer prices. */
+function savedQuoteOf(raw: Record<string, string>): { message: string } | null {
+  const parsed = parseMotorQuote(raw, { staleStartIsToday: true });
+  if (!parsed.ok) return null;
+  const offer = quoteMotor(parsed.details).quotes.find((item) => item.insurer === raw.insurer);
+  return offer ? { message: quote.saved(offer.insurer, formatKes(offer.premiumKes)) } : null;
+}
+
+/** Motor with an insurer chosen on the instant quote page: what they're buying, priced now. */
+function chosenCoverSection(d: Record<string, string>): ReviewSection {
+  const labels = flow.review.labels;
+  const offer = quoteMotor(d).quotes.find((item) => item.insurer === d.insurer);
+  const addons = addonsOf(d).map((addon) => quote.addons[addon].label);
+  return {
+    id: "cover",
+    title: quote.review.section,
+    changeHref: quoteResultsHref(d),
+    rows: [
+      { label: quote.review.insurer, value: d.insurer },
+      { label: labels.coverType, value: coverLabels[d.coverType] ?? d.coverType },
+      ...(d.coverType === "comprehensive" ? [{ label: quote.addonsLabel, value: addons.join(", ") || quote.noAddons }] : []),
+      ...(offersMonthly(d.category) ? [{ label: labels.period, value: periodLabels[d.period] ?? periodLabels.annual }] : []),
+      ...(needsValue(d.coverType) && d.vehicleValueKes ? [{ label: labels.value, value: formatKes(Number(d.vehicleValueKes)) }] : []),
+      ...(d.startDate ? [{ label: quote.review.startDate, value: formatDate(d.startDate) }] : []),
+      ...(offer ? [{ label: quote.review.total, value: formatKes(offer.premiumKes) }] : []),
+    ],
+  };
 }
 
 function reviewData(app: Application, client: Client): { sections: ReviewSection[]; documents: ReviewDocument[] } {
@@ -181,7 +229,7 @@ function reviewData(app: Application, client: Client): { sections: ReviewSection
           { label: labels.chassisNumber, value: d.chassisNumber || none },
         ],
       },
-      {
+      d.insurer ? chosenCoverSection(d) : {
         id: "cover",
         title: flow.review.sections.cover,
         changeHref: screenHref("cover", app.ref),

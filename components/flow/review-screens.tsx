@@ -26,11 +26,17 @@ export function ReviewScreen({
   backHref,
   sections,
   documents,
+  actionLabel,
+  note,
 }: {
   refValue: string;
   backHref: string;
   sections: ReviewSection[];
   documents: ReviewDocument[];
+  /** Motor with an insurer chosen: "Send and go to payment". */
+  actionLabel?: string;
+  /** What happens after pressing the button. */
+  note?: string;
 }) {
   const { formAction, pending, errors } = useFlowAction(submitApplication);
   const copy = flow.review;
@@ -47,9 +53,10 @@ export function ReviewScreen({
       formError={errors._form}
       primaryAction={
         <Button type="submit" loading={pending}>
-          {copy.action}
+          {actionLabel ?? copy.action}
         </Button>
       }
+      reassurance={note}
     >
       <input type="hidden" name="ref" value={refValue} />
       {sections.map((section) => (

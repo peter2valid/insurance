@@ -22,6 +22,7 @@ export {
   questions,
   summaries,
 } from "./products";
+export { quote } from "./quote";
 export { site } from "./site";
 export { statusLabels, statusPage } from "./status";
 export { styles } from "./styles";
