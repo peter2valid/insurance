@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import { runAutomations } from "@/lib/automation";
 
 /**
- * Runs the automations (reminders, nudges, renewals). Called hourly by the
- * Netlify scheduled function (netlify/functions/automations.mjs) or Vercel
- * cron (vercel.json). Protected by CRON_SECRET: send it as
+ * Runs the automations (reminders, nudges, renewals). Called on a schedule by the
+ * Netlify scheduled function (netlify/functions/automations.mjs, hourly) or Vercel
+ * cron (vercel.json, daily: the Hobby plan limit). Protected by CRON_SECRET: send it as
  * "Authorization: Bearer <secret>". Without CRON_SECRET set, it refuses.
  */
 export async function GET(request: Request) {
