@@ -62,6 +62,7 @@ export const styles = {
     compact: "Compact",
     multiple: "Pick several",
     tiles: "Tiles with icons",
+    named: "Named steps",
     square: "Square, for organisations",
   },
 

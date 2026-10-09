@@ -6,6 +6,7 @@ import { PrefetchNext } from "@/components/flow/prefetch-next";
 import { QuestionScreen } from "@/components/flow/question-screen";
 import { ReviewScreen, type ReviewDocument, type ReviewSection } from "@/components/flow/review-screens";
 import { PhoneScreen } from "@/components/flow/sign-in-screens";
+import { StepNames } from "@/components/ui/step-track";
 import { UploadScreen } from "@/components/flow/upload-screen";
 import { ConfirmScreen, LogbookScreen, PlateScreen } from "@/components/flow/vehicle-screens";
 import { coverLabels, flow, nameDescriptions, periodLabels, questions, quote } from "@/lib/copy";
@@ -66,14 +67,17 @@ export default async function StartStepPage(props: PageProps<"/start/[step]">) {
     // Chose an insurer on the instant quote page: say it's saved, and Back returns to the prices.
     const pendingQuote = ref || (product && product !== "motor") ? null : await getPendingQuote();
     const saved = pendingQuote ? savedQuoteOf(pendingQuote, (await getRepo().getSettings()).panel) : null;
+    const journey = product ?? (saved ? "motor" : undefined);
     return (
-      <PhoneScreen
-        refValue={ref}
-        product={product}
-        savedQuote={saved?.message}
-        afterQuote={Boolean(saved)}
-        backHref={saved ? quoteResultsHref(pendingQuote ?? {}) : undefined}
-      />
+      <StepNames names={journey ? flow.journeySteps[journey] : undefined}>
+        <PhoneScreen
+          refValue={ref}
+          product={product}
+          savedQuote={saved?.message}
+          afterQuote={Boolean(saved)}
+          backHref={saved ? quoteResultsHref(pendingQuote ?? {}) : undefined}
+        />
+      </StepNames>
     );
   }
 
@@ -114,10 +118,10 @@ export default async function StartStepPage(props: PageProps<"/start/[step]">) {
   const productFlow = flows[app.product];
   const following = productFlow[productFlow.indexOf(step) + 1];
   return (
-    <>
+    <StepNames names={flow.journeySteps[app.product]}>
       {renderScreen(step, app, client, screenProps, step === "review" ? (await getRepo().getSettings()).panel : [])}
       <PrefetchNext href={following ? screenHref(following, app.ref) : undefined} />
-    </>
+    </StepNames>
   );
 }
 

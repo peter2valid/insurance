@@ -3,6 +3,7 @@ import { ChevronLeft } from "lucide-react";
 import { kit } from "@/lib/copy";
 import { Button } from "./button";
 import { ProgressBar } from "./progress-bar";
+import { StepProgress } from "./step-track";
 
 type StepHeaderProps = {
   current: number;
@@ -13,7 +14,7 @@ type StepHeaderProps = {
   backLabel?: string;
 };
 
-/** "Step 2 of 5" with a progress bar and a back control. */
+/** "Step 2 of 5" with a back control, and named steps (inside StepNames) or a progress bar. */
 function StepHeader({
   current,
   total,
@@ -43,7 +44,7 @@ function StepHeader({
           {stepText}
         </p>
       </div>
-      <ProgressBar value={(current / total) * 100} label={stepText} />
+      <StepProgress current={current} total={total} fallback={<ProgressBar value={(current / total) * 100} label={stepText} />} />
     </div>
   );
 }

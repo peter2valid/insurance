@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { FieldError } from "@/components/ui/field";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StepHeader } from "@/components/ui/step-header";
+import { FormMemory } from "./form-memory";
 import { StepArrival } from "./step-arrival";
 import { flow } from "@/lib/copy";
 
@@ -81,6 +82,7 @@ export function FlowStep({
           {description && <p className="max-w-prose text-lg text-ink-quiet">{description}</p>}
         </div>
 
+        {as === "form" && <FormMemory />}
         {formError && <FieldError>{formError}</FieldError>}
 
         <div className="flex flex-col gap-4">{children}</div>

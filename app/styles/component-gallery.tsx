@@ -24,6 +24,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { StatusTimeline } from "@/components/ui/status-timeline";
 import { StepHeader } from "@/components/ui/step-header";
+import { StepNames } from "@/components/ui/step-track";
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -410,6 +411,16 @@ function StepHeaderSection() {
         </State>
         <State label={s.withBack}>
           <StepHeader current={3} total={5} onBack={noop} />
+        </State>
+        <State label={`${s.named} · ${s.first}`}>
+          <StepNames names={flow.journeySteps.motor}>
+            <StepHeader current={1} total={5} />
+          </StepNames>
+        </State>
+        <State label={`${s.named} · ${s.withBack}`}>
+          <StepNames names={flow.journeySteps.motor}>
+            <StepHeader current={3} total={5} onBack={noop} />
+          </StepNames>
         </State>
       </StateGrid>
     </Section>

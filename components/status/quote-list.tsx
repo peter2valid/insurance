@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { Check, CircleCheck, TrendingDown } from "lucide-react";
 import { chooseCover } from "@/app/my/actions";
 import { useFlowAction } from "@/components/flow/use-flow-action";
@@ -29,6 +30,8 @@ export function QuoteList({
   perTrip?: boolean;
 }) {
   const { formAction, pending, errors } = useFlowAction(chooseCover);
+  // Only the tapped button shows it's working.
+  const [choosing, setChoosing] = React.useState<string>();
   const copy = statusPage.quotes;
   const sorted = [...quotes].sort((a, b) => a.premiumKes - b.premiumKes);
   const coverLabel = (value: string) => coverLabels[value] ?? value;
@@ -77,10 +80,16 @@ export function QuoteList({
                   </ul>
                 )}
                 {canChoose && (
-                  <form action={formAction}>
+                  <form action={formAction} onSubmit={() => setChoosing(quote.id)}>
                     <input type="hidden" name="ref" value={refValue} />
                     <input type="hidden" name="quoteId" value={quote.id} />
-                    <Button type="submit" variant={index === 0 ? "primary" : "secondary"} loading={pending} className="w-full sm:w-auto">
+                    <Button
+                      type="submit"
+                      variant={index === 0 ? "primary" : "secondary"}
+                      loading={pending && choosing === quote.id}
+                      disabled={pending && choosing !== quote.id}
+                      className="w-full sm:w-auto"
+                    >
                       {copy.choose}
                     </Button>
                   </form>

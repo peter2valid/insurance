@@ -8,6 +8,8 @@ export const kit = {
   close: "Close",
   back: "Back",
   step: (current: number, total: number) => `Step ${current} of ${total}`,
+  progress: "Progress",
+  stepDone: "done",
 
   otp: {
     hint: (length: number) => `${length} digits`,

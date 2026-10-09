@@ -55,6 +55,8 @@ export function QuoteCompare({
   const { formAction, pending, errors } = useFlowAction(chooseInsurer);
   const [addons, setAddons] = React.useState<string[]>((details.addons ?? "").split(",").filter(Boolean));
   const [showAll, setShowAll] = React.useState(false);
+  // Only the tapped "Choose …" button shows it's working; the rest just wait.
+  const [choosing, setChoosing] = React.useState<string>();
   const current: Record<string, string> = { ...details, addons: addonKey(addons) };
   const quotes = pricesByAddons[current.addons] ?? pricesByAddons[""] ?? [];
   const shown = showAll ? quotes : quotes.slice(0, FIRST_SHOWN);
@@ -142,10 +144,16 @@ export function QuoteCompare({
               primary={index === 0}
               monthly={monthly}
             >
-              <form action={formAction}>
+              <form action={formAction} onSubmit={() => setChoosing(offer.insurer)}>
                 {quoteKeys.map((key) => (current[key] ? <input key={key} type="hidden" name={key} value={current[key]} /> : null))}
                 <input type="hidden" name="insurer" value={offer.insurer} />
-                <Button type="submit" variant={index === 0 ? "primary" : "secondary"} loading={pending} className="w-full">
+                <Button
+                  type="submit"
+                  variant={index === 0 ? "primary" : "secondary"}
+                  loading={pending && choosing === offer.insurer}
+                  disabled={pending && choosing !== offer.insurer}
+                  className="w-full"
+                >
                   {copy.choose(offer.insurer)}
                 </Button>
               </form>

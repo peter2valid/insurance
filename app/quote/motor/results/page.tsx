@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { QuoteCompare, type InsurerExtras } from "@/components/quote/quote-compare";
-import { coverLabels, periodLabels, quote } from "@/lib/copy";
+import { StepNames } from "@/components/ui/step-track";
+import { coverLabels, flow, periodLabels, quote } from "@/lib/copy";
 import { insurerByName } from "@/lib/data/insurers";
 import { addonsFor, isPsv, offersMonthly, type MotorAddon } from "@/lib/data/motor";
 import { needsTracker, quoteMotor, type QuoteDraft } from "@/lib/data/quote-provider";
@@ -69,6 +70,7 @@ export default async function MotorQuoteResultsPage(props: PageProps<"/quote/mot
     .join(" · ");
 
   return (
+    <StepNames names={flow.journeySteps.motor}>
     <QuoteCompare
       details={d}
       summary={summary}
@@ -78,5 +80,6 @@ export default async function MotorQuoteResultsPage(props: PageProps<"/quote/mot
       notes={goodToKnow(d)}
       declined={declined}
     />
+    </StepNames>
   );
 }

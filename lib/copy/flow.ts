@@ -15,6 +15,13 @@ export const flow = {
     dismiss: "Dismiss",
   },
   continue: "Continue",
+  /** The five steps of each journey, as the step tracker names them. */
+  journeySteps: {
+    motor: ["Quote", "Your details", "Vehicle", "Documents", "Confirm & pay"],
+    health: ["Your details", "Who's covered", "Cover", "Health & ID", "Send"],
+    travel: ["Your details", "Trip", "Travellers", "Passport", "Send"],
+    business: ["Your details", "Business", "Cover", "Documents", "Send"],
+  },
   saving: "Saving",
 
   loadError: {
