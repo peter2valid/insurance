@@ -28,8 +28,8 @@ export const statusPage = {
   updatedToast: (label: string) => `Update: ${label}`,
 
   notFound: {
-    title: "We can't find that application",
-    body: "Check the link in your message, or message us on WhatsApp with your reference.",
+    title: "Open this from your link",
+    body: "Your application opens on the phone that started it, or from the link in our WhatsApp or email messages. Tap that link — or message us with your reference and we'll send it again.",
     action: "Go to the home page",
   },
 

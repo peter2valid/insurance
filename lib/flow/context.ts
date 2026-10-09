@@ -1,7 +1,7 @@
 import { getRepo } from "@/lib/data/repo";
 import type { Application, Client, Product } from "@/lib/data/types";
 import { insurerByName } from "@/lib/data/insurers";
-import { clearPendingQuote, getPendingQuote, getReferral, getSessionClientId } from "@/lib/session";
+import { canAccess, clearPendingQuote, getPendingQuote, getReferral, getSession, type ClientSession } from "@/lib/session";
 import { parseMotorQuote } from "./motor-quote";
 import { completedStep, nextScreen, type Screen } from "./screens";
 
@@ -19,19 +19,20 @@ export type FlowContext =
 
 export async function getFlowContext(ref?: string | null, product?: Product): Promise<FlowContext> {
   const repo = getRepo();
-  const clientId = await getSessionClientId();
-  if (!clientId) return { kind: "signed_out" };
+  const session = await getSession();
+  if (!session) return { kind: "signed_out" };
 
   // Look up the client and the application together (one wait, not two).
-  const [client, byRef] = await Promise.all([repo.getClient(clientId), ref ? repo.getApplication(ref) : null]);
+  const [client, byRef] = await Promise.all([repo.getClient(session.c), ref ? repo.getApplication(ref) : null]);
   if (!client) return { kind: "signed_out" };
 
   let app: Application | null = null;
   if (ref) {
     app = byRef;
-    if (!app || app.clientId !== client.id) return { kind: "not_yours" };
+    // Only on the device that started it, or opened from our signed link.
+    if (!app || !canAccess(session, app)) return { kind: "not_yours" };
   } else {
-    app = await findOrCreateDraft(client.id, product);
+    app = await findOrCreateDraft(session, product);
   }
 
   if (app.submittedAt) return { kind: "submitted", client, app };
@@ -42,11 +43,13 @@ export async function getFlowContext(ref?: string | null, product?: Product): Pr
  * A returning client carries on with their unfinished application — for the
  * product they picked, if they picked one; otherwise their latest draft.
  */
-export async function findOrCreateDraft(clientId: string, product?: Product): Promise<Application> {
+export async function findOrCreateDraft(session: ClientSession, product?: Product): Promise<Application> {
   const repo = getRepo();
+  const clientId = session.c;
   const apps = await repo.listApplicationsForClient(clientId);
+  // Only drafts this device may open: someone typing another person's number starts fresh.
   const draft = apps
-    .filter((app) => !app.submittedAt && (!product || app.product === product))
+    .filter((app) => !app.submittedAt && canAccess(session, app) && (!product || app.product === product))
     .sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt))[0];
   if (draft) return draft;
   // Came through an agent's link? Credit them (active agents only).
@@ -56,6 +59,7 @@ export async function findOrCreateDraft(clientId: string, product?: Product): Pr
     clientId,
     product: product ?? "motor",
     agentId: agent?.status === "active" ? agent.id : undefined,
+    details: { deviceId: session.d },
   });
 }
 
@@ -80,17 +84,17 @@ export async function saveAndAdvance(
  * application, so the flow skips everything already answered. Returns null
  * when the quote no longer checks out. Server Actions only (sets cookies).
  */
-export async function applyQuote(clientId: string, raw: Record<string, string>): Promise<Application | null> {
+export async function applyQuote(session: ClientSession, raw: Record<string, string>): Promise<Application | null> {
   const parsed = parseMotorQuote(raw, { staleStartIsToday: true });
   if (!parsed.ok || !insurerByName(raw.insurer ?? "")) return null;
-  const draft = await findOrCreateDraft(clientId, "motor");
+  const draft = await findOrCreateDraft(session, "motor");
   return getRepo().saveProgress(draft.ref, { step: draft.step, details: { ...parsed.details, insurer: raw.insurer } });
 }
 
 /** After sign-in: apply the quote chosen while signed out, if any. */
-export async function applyPendingQuote(clientId: string): Promise<Application | null> {
+export async function applyPendingQuote(session: ClientSession): Promise<Application | null> {
   const pending = await getPendingQuote();
   if (!pending) return null;
   await clearPendingQuote();
-  return applyQuote(clientId, pending);
+  return applyQuote(session, pending);
 }

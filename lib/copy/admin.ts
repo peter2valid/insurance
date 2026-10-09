@@ -94,6 +94,7 @@ export const admin = {
     phone: "Phone",
     coverType: "Type of cover",
     insurer: "Insurer chosen on the website",
+    nameGiven: "Name given on this application",
     addons: "Extras",
     startDate: "Wants cover from",
     vehicleValueKes: "Value",

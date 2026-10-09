@@ -38,8 +38,8 @@ export default async function MyApplicationPage(props: PageProps<"/my/[ref]">) {
   const openUpload = typeof uploadParam === "string" ? uploadParam : undefined;
   const ctx = await getFlowContext(ref);
 
-  if (ctx.kind === "signed_out") redirect(`/start/phone?ref=${encodeURIComponent(ref)}`);
-  if (ctx.kind === "not_yours") {
+  // Without access (signed out, another phone): our links are the way in — see lib/session.ts.
+  if (ctx.kind === "signed_out" || ctx.kind === "not_yours") {
     return (
       <StatusPageMessage helpMessage={statusPage.whatsappMessage(ref, statusPage.notFound.title)}>
         <EmptyState

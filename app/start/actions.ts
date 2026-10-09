@@ -8,7 +8,6 @@ import { applyPendingQuote, getFlowContext, saveAndAdvance } from "@/lib/flow/co
 import { isQuestionScreen, questionScreens, validateScreen } from "@/lib/flow/questions";
 import { laterKeyFor, screenHref } from "@/lib/flow/screens";
 import {
-  codeSchema,
   coverSchema,
   fieldErrors,
   emailSchema,
@@ -19,8 +18,7 @@ import {
   vehicleSchema,
 } from "@/lib/flow/validation";
 import * as workflow from "@/lib/admin/workflow";
-import { getNotifier } from "@/lib/notify";
-import { checkCode, clearPendingCode, getPendingCode, setPendingCode, startSession } from "@/lib/session";
+import { startSession } from "@/lib/session";
 
 /**
  * Server actions for the client flow. Each returns a result object (never
@@ -45,64 +43,44 @@ async function activeContext(formData: FormData) {
   return { ctx };
 }
 
-// Step 1 — phone and code (SIMULATED: code is always 123456)
+// Step 1 — who you are: name, phone, optional email. No code (see lib/session.ts).
 
-export async function sendCode(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
-  const parsed = phoneSchema.safeParse(formData.get("phone") ?? "");
-  if (!parsed.success) return fail({ phone: parsed.error.issues[0].message });
-
-  const product = formData.get("product");
-  await setPendingCode(parsed.data, isProduct(product) ? product : undefined);
-  await getNotifier().send({
-    channel: "sms",
-    to: parsed.data,
-    audience: "client",
-    template: "login_code",
-    data: { code: "123456" },
-  });
-
-  const ref = refFrom(formData);
-  return { ok: true, next: ref ? `/start/code?ref=${encodeURIComponent(ref)}` : "/start/code", toast: flow.phone.toast };
-}
-
-export async function resendCode(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
-  const pending = await getPendingCode();
-  if (!pending) return { ok: true, next: screenHref("phone") };
-  await setPendingCode(pending.phone, pending.product);
-  await getNotifier().send({
-    channel: "sms",
-    to: pending.phone,
-    audience: "client",
-    template: "login_code",
-    data: { code: "123456" },
-  });
-  const ref = refFrom(formData);
-  return { ok: true, next: ref ? `/start/code?ref=${encodeURIComponent(ref)}` : "/start/code", toast: flow.code.resentToast };
-}
-
-export async function verifyCode(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
-  const pending = await getPendingCode();
-  if (!pending) return formError(flow.code.errors.noPending);
-
-  const parsed = codeSchema.safeParse(formData.get("code") ?? "");
-  if (!parsed.success) return fail({ code: parsed.error.issues[0].message });
-
-  const check = checkCode(parsed.data, pending);
-  if (check === "expired") return fail({ code: flow.code.errors.expired });
-  if (check === "wrong") return fail({ code: flow.code.errors.wrong });
+export async function startApplication(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  const name = nameSchema.safeParse(formData.get("name") ?? "");
+  const phone = phoneSchema.safeParse(formData.get("phone") ?? "");
+  const email = emailSchema.safeParse(formData.get("email") ?? "");
+  const errors: Record<string, string> = {};
+  if (!name.success) errors.name = name.error.issues[0].message;
+  if (!phone.success) errors.phone = phone.error.issues[0].message;
+  if (!email.success) errors.email = email.error.issues[0].message;
+  if (!name.success || !phone.success || !email.success) return fail(errors);
 
   const repo = getRepo();
-  const client = (await repo.findClientByPhone(pending.phone)) ?? (await repo.createClient({ phone: pending.phone }));
-  await startSession(client.id);
-  await clearPendingCode();
+  const existing = await repo.findClientByPhone(phone.data);
+  const client = existing ?? (await repo.createClient({ phone: phone.data, name: name.data }));
+  // Fill gaps only: an unverified form never overwrites a client's saved name or email.
+  const gaps = {
+    ...(!client.name && { name: name.data }),
+    ...(!client.email && email.data && { email: email.data }),
+  };
+  if (Object.keys(gaps).length > 0) await repo.updateClient(client.id, gaps);
+  const session = await startSession(client.id);
 
-  // Chose an insurer before signing in: carry on with that quote.
-  const quoted = pending.product && pending.product !== "motor" ? null : await applyPendingQuote(client.id);
-  const ctx = await getFlowContext(quoted?.ref ?? refFrom(formData), pending.product);
+  // Chose an insurer before this step: carry on with that quote.
+  const product = formData.get("product");
+  const wanted = isProduct(product) ? product : undefined;
+  const quoted = wanted && wanted !== "motor" ? null : await applyPendingQuote(session);
+  const ctx = await getFlowContext(quoted?.ref ?? refFrom(formData), wanted);
   if (ctx.kind === "not_yours") return formError(flow.errors.notYours);
-  if (ctx.kind === "submitted") return { ok: true, next: `/my/${ctx.app.ref}`, toast: flow.code.toast };
+  if (ctx.kind === "submitted") return { ok: true, next: `/my/${ctx.app.ref}` };
   if (ctx.kind !== "active") return formError(flow.errors.generic);
-  return { ok: true, next: screenHref(ctx.resume, ctx.app.ref), toast: flow.code.toast };
+
+  // The name and email given for THIS application (what the review and the broker see).
+  const { app, next } = await saveAndAdvance(ctx.app, ctx.client, {
+    applicantName: name.data,
+    applicantEmail: email.data ?? "",
+  });
+  return { ok: true, next: screenHref(next, app.ref), toast: flow.phone.toast };
 }
 
 // Steps 2–4 — one answer per screen

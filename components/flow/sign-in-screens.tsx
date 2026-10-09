@@ -1,31 +1,36 @@
 "use client";
 
-import * as React from "react";
-import { resendCode, sendCode, verifyCode } from "@/app/start/actions";
+import { startApplication } from "@/app/start/actions";
 import { Button } from "@/components/ui/button";
-import { OtpInput } from "@/components/ui/otp-input";
+import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
-import { TextLink } from "@/components/ui/text-link";
 import { flow } from "@/lib/copy";
 import { stepOf, TOTAL_STEPS } from "@/lib/flow/screens";
 import { FlowStep } from "./flow-step";
 import { useFlowAction } from "./use-flow-action";
 
-/* Step 1: phone number, then the code. SIMULATED sign-in (code 123456). */
+/*
+ * Step 1 (step 2 after an instant quote): who the cover is for — name,
+ * WhatsApp number, optional email — on one screen. No code: this device
+ * starts the application, and our messages carry links back to it.
+ */
 
 export function PhoneScreen({
   refValue,
   product,
   savedQuote,
   backHref = "/",
+  afterQuote = false,
 }: {
   refValue?: string;
   product?: string;
-  /** Chose an insurer before signing in: "Your Britam quote of KES 34,560 is saved…" */
+  /** Chose an insurer before this step: "Your Britam quote of KES 34,560 is saved…" */
   savedQuote?: string;
   backHref?: string;
+  /** Came from the instant quote, which was step 1. */
+  afterQuote?: boolean;
 }) {
-  const { formAction, pending, errors, submitted } = useFlowAction(sendCode);
+  const { formAction, pending, errors, submitted } = useFlowAction(startApplication);
   const copy = flow.phone;
 
   return (
@@ -33,7 +38,7 @@ export function PhoneScreen({
       as="form"
       action={formAction}
       noValidate
-      step={{ current: stepOf.phone, total: TOTAL_STEPS }}
+      step={{ current: afterQuote ? stepOf.phone + 1 : stepOf.phone, total: TOTAL_STEPS }}
       backHref={backHref}
       title={copy.title}
       description={savedQuote ?? copy.description}
@@ -48,71 +53,33 @@ export function PhoneScreen({
     >
       {refValue && <input type="hidden" name="ref" value={refValue} />}
       {product && <input type="hidden" name="product" value={product} />}
+      <Input
+        name="name"
+        label={flow.name.label}
+        hint={copy.nameHint}
+        autoComplete="name"
+        autoCapitalize="words"
+        defaultValue={submitted.name}
+        error={errors.name}
+        autoFocus
+      />
       <PhoneInput
         name="phone"
         label={copy.label}
         hint={copy.hint}
         error={errors.phone}
         defaultValue={submitted.phone}
-        autoFocus
       />
-    </FlowStep>
-  );
-}
-
-export function CodeScreen({ phone, refValue }: { phone: string; refValue?: string }) {
-  const verify = useFlowAction(verifyCode);
-  const resend = useFlowAction(resendCode);
-  const [code, setCode] = React.useState("");
-  const formRef = React.useRef<HTMLFormElement>(null);
-  const copy = flow.code;
-
-  // Clear the boxes after a wrong or expired code so the next try is easy.
-  const codeError = verify.errors.code;
-  const [lastError, setLastError] = React.useState(codeError);
-  if (codeError !== lastError) {
-    setLastError(codeError);
-    if (codeError) setCode("");
-  }
-
-  return (
-    <FlowStep
-      as="form"
-      ref={formRef}
-      action={verify.formAction}
-      noValidate
-      step={{ current: stepOf.code, total: TOTAL_STEPS }}
-      backHref={refValue ? `/start/phone?ref=${encodeURIComponent(refValue)}` : "/start/phone"}
-      title={copy.title}
-      description={copy.description(phone)}
-      reassurance={copy.demoHint}
-      helpStep={flow.stepNames.code}
-      formError={verify.errors._form}
-      primaryAction={
-        <Button type="submit" loading={verify.pending}>
-          {copy.action}
-        </Button>
-      }
-      secondaryAction={
-        <Button type="submit" variant="ghost" formAction={resend.formAction} loading={resend.pending}>
-          {copy.resend}
-        </Button>
-      }
-    >
-      {refValue && <input type="hidden" name="ref" value={refValue} />}
-      <input type="hidden" name="code" value={code} />
-      <OtpInput
-        label={copy.label}
-        value={code}
-        onChange={setCode}
-        onComplete={() => requestAnimationFrame(() => formRef.current?.requestSubmit())}
-        error={codeError}
-        disabled={verify.pending}
-        autoFocus
+      <Input
+        name="email"
+        type="email"
+        label={flow.name.emailLabel}
+        hint={flow.name.emailHint}
+        autoComplete="email"
+        inputMode="email"
+        defaultValue={submitted.email}
+        error={errors.email}
       />
-      <TextLink href="/start/phone" standalone className="text-sm">
-        {copy.changeNumber}
-      </TextLink>
     </FlowStep>
   );
 }

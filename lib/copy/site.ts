@@ -108,7 +108,7 @@ export const site = {
       },
       {
         q: "Why do you need my phone number?",
-        a: "It's how you sign in — we text you a code, so there's no password to remember. We also use it to update you on WhatsApp.",
+        a: "We send your quotes, receipt and policy to it on WhatsApp, with a link that opens your application straight away. No password, no code.",
       },
       {
         q: "How do I pay?",

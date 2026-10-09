@@ -5,7 +5,7 @@ import { DoneScreen } from "@/components/flow/done-screen";
 import { PrefetchNext } from "@/components/flow/prefetch-next";
 import { QuestionScreen } from "@/components/flow/question-screen";
 import { ReviewScreen, type ReviewDocument, type ReviewSection } from "@/components/flow/review-screens";
-import { CodeScreen, PhoneScreen } from "@/components/flow/sign-in-screens";
+import { PhoneScreen } from "@/components/flow/sign-in-screens";
 import { UploadScreen } from "@/components/flow/upload-screen";
 import { ConfirmScreen, LogbookScreen, PlateScreen } from "@/components/flow/vehicle-screens";
 import { coverLabels, flow, nameDescriptions, periodLabels, questions, quote } from "@/lib/copy";
@@ -19,13 +19,12 @@ import { canOpen, flows, isScreen, laterKeyFor, needsValue, previousScreen, scre
 import { formatKes } from "@/lib/format/money";
 import { formatKenyanPhone } from "@/lib/format/phone";
 import { estimateFor } from "@/lib/products/estimate";
-import { getPendingCode, getPendingQuote } from "@/lib/session";
+import { getPendingQuote } from "@/lib/session";
 import { addonCopy, motorClassLabel, parseMotorQuote, quoteResultsHref } from "@/lib/flow/motor-quote";
 import { quoteMotor } from "@/lib/data/quote-provider";
 
 const screenTitles: Record<string, string> = {
   phone: flow.phone.title,
-  code: flow.code.title,
   vehicle: flow.vehicle.title,
   logbook: flow.logbook.title,
   confirm: flow.confirm.titleExtracted,
@@ -72,16 +71,14 @@ export default async function StartStepPage(props: PageProps<"/start/[step]">) {
         refValue={ref}
         product={product}
         savedQuote={saved?.message}
+        afterQuote={Boolean(saved)}
         backHref={saved ? quoteResultsHref(pendingQuote ?? {}) : undefined}
       />
     );
   }
 
-  if (step === "code") {
-    const pending = await getPendingCode();
-    if (!pending) redirect(withRef("/start/phone"));
-    return <CodeScreen phone={formatKenyanPhone(pending.phone)} refValue={ref} />;
-  }
+  // The code step is gone (Oct 2026): old links land on the details screen.
+  if (step === "code") redirect(withRef("/start/phone"));
 
   const ctx = await getFlowContext(ref, product);
   if (ctx.kind === "signed_out" || ctx.kind === "not_yours") redirect(withRef("/start/phone"));
@@ -110,7 +107,10 @@ export default async function StartStepPage(props: PageProps<"/start/[step]">) {
   if (ref !== ctx.app.ref) redirect(screenHref(step, ctx.app.ref));
 
   const { app, client } = ctx;
-  const screenProps = { refValue: app.ref, backHref: screenHref(previousScreen(step, app), app.ref) };
+  // Back past the first real question goes to the prices when they came from an instant quote.
+  const previous = previousScreen(step, app);
+  const backToQuote = app.details.insurer && (previous === "category" || previous === "cover" || previous === "value");
+  const screenProps = { refValue: app.ref, backHref: backToQuote ? quoteResultsHref(app.details) : screenHref(previous, app.ref) };
   const productFlow = flows[app.product];
   const following = productFlow[productFlow.indexOf(step) + 1];
   return (
@@ -211,9 +211,10 @@ function reviewData(app: Application, client: Client, panel: readonly string[]):
     title: flow.review.sections.you,
     changeHref: screenHref("name", app.ref),
     rows: [
-      { label: labels.name, value: client.name || none },
+      // The name given on this application (a saved client name is never overwritten).
+      { label: labels.name, value: app.details.applicantName || client.name || none },
       { label: labels.phone, value: formatKenyanPhone(client.phone) },
-      ...(client.email ? [{ label: labels.email, value: client.email }] : []),
+      ...((app.details.applicantEmail || client.email) ? [{ label: labels.email, value: app.details.applicantEmail || client.email || "" }] : []),
     ],
   };
 

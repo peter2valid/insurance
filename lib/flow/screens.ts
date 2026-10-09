@@ -20,7 +20,8 @@ export const TOTAL_STEPS = 5;
 
 /** The content screens (after sign-in) for each product, in order. */
 export const flows: Record<Product, readonly Screen[]> = {
-  motor: ["category", "vehicle", "logbook", "confirm", "cover", "value", "name", "id", "kra", "review"],
+  // Logbook first: one photo gives us the document AND fills the vehicle details.
+  motor: ["category", "logbook", "confirm", "cover", "value", "name", "id", "kra", "review"],
   health: ["who", "ages", "plan", "limit", "conditions", "name", "id", "review"],
   travel: ["destination", "dates", "travellers", "purpose", "name", "passport", "review"],
   business: ["business", "covers", "size", "name", "registration", "review"],
@@ -33,7 +34,7 @@ export const stepOf: Record<Screen, number> = {
   // motor
   category: 2,
   vehicle: 2,
-  logbook: 2,
+  logbook: 3,
   confirm: 3,
   cover: 3,
   value: 3,

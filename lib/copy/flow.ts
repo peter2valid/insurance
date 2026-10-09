@@ -26,39 +26,23 @@ export const flow = {
   errors: {
     generic: "Something went wrong on our side. Try again, or message us on WhatsApp.",
     network: "We couldn't reach our server. Check your internet connection and try again.",
-    notYours: "We couldn't open that application. Sign in with the phone number you used for it.",
+    notYours:
+      "This application opens on the phone that started it, or from the link we sent you on WhatsApp or email. Open that link, or start a new application.",
   },
 
   phone: {
-    title: "What's your phone number?",
-    description: "We'll text you a code. There's no password to remember.",
-    label: "Phone number",
-    hint: "For example 712 345 678",
-    reassurance: "We only use your number for this application and to update you about it.",
-    action: "Send code",
+    title: "Your details",
+    description: "So we can send your quotes, receipt and policy. No password, no code.",
+    nameHint: "As it appears on your national ID",
+    label: "WhatsApp number",
+    hint: "We send updates here. For example 712 345 678",
+    reassurance: "We only use your details for this application and to keep you updated. Only our team sees them.",
+    action: "Continue",
     errors: {
       required: "Enter your phone number to continue.",
       invalid: "That doesn't look like a Kenyan mobile number. Check it starts with 7 or 1 and has 9 digits.",
     },
-    toast: "Code sent (demo: no real text)",
-  },
-
-  code: {
-    title: "Enter your code",
-    description: (phone: string) => `Enter the 6-digit code for ${phone}.`,
-    label: "Code",
-    demoHint: "Demo: no text message is sent. The code is always 123456.",
-    action: "Confirm code",
-    resend: "Send a new code",
-    changeNumber: "Use a different number",
-    errors: {
-      required: "Enter the 6-digit code.",
-      wrong: "That code isn't right. Check it and try again.",
-      expired: "That code has expired. Send a new one.",
-      noPending: "Start by entering your phone number.",
-    },
-    toast: "Code confirmed",
-    resentToast: "New code sent (demo: no real text)",
+    toast: "Details saved",
   },
 
   vehicle: {
@@ -76,14 +60,14 @@ export const flow = {
 
   logbook: {
     title: "Snap your logbook",
-    description: "Take a photo of the page with your car's details. We'll read them for you.",
+    description: "One photo fills in your vehicle's details for you — no typing. Take it of the page with the registration details.",
     label: "Photo of your logbook",
     reassurance: "Only our team sees your documents. They're stored securely and used only for this application.",
     takePhoto: "Take a photo",
     chooseFile: "Choose a file",
     reading: "Reading your logbook",
     readingBody: "This takes a few seconds.",
-    later: "I don't have it with me",
+    later: "Type the details instead",
     errors: {
       unreadable: "We couldn't read that photo. Take it again in good light, with the whole page in view.",
       unsupported_file: "That file type won't work. Take a photo, or choose a JPG, PNG or PDF.",

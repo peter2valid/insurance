@@ -1,4 +1,5 @@
 import { brand } from "@/lib/brand";
+import { clientLink } from "@/lib/flow/links";
 import { admin, coverLabels, flow, productNamesInline, statusMessages } from "@/lib/copy";
 import { periodOf } from "@/lib/data/motor";
 import { getQuoteProvider } from "@/lib/data/quote-provider";
@@ -36,7 +37,8 @@ async function load(ref: string): Promise<{ app: Application; client: Client }> 
 }
 
 const firstName = (name: string) => name.split(" ")[0] || name || "there";
-const statusLink = (ref: string) => `${brand.siteUrl}/my/${ref}`;
+// Signed links: opening one signs the client in for that application (lib/flow/links.ts).
+const statusLink = (ref: string) => clientLink(ref);
 export const agentPortalLink = () => `${brand.siteUrl}/agent`;
 export const referralLink = (code: string) => `${brand.siteUrl}/r/${code}`;
 
@@ -303,7 +305,7 @@ export async function requestReupload(ref: string, documentId: string, reason: s
     ref,
     document: flow.documentsInline[doc.type],
     reason,
-    link: `${statusLink(ref)}?upload=${doc.type}`,
+    link: clientLink(ref, `/my/${ref}?upload=${doc.type}`),
   });
 }
 
@@ -410,7 +412,7 @@ export async function nudge(ref: string): Promise<Delivery> {
 }
 
 function nudgeLink(app: Application): string {
-  if (!app.submittedAt) return `${brand.siteUrl}/start/resume?ref=${encodeURIComponent(app.ref)}`;
+  if (!app.submittedAt) return clientLink(app.ref, `/start/resume?ref=${encodeURIComponent(app.ref)}`);
   if (app.status === "quotes_ready") return `${statusLink(app.ref)}#quotes`;
   if (app.status === "cover_chosen") return `${statusLink(app.ref)}#payment`;
   return statusLink(app.ref);
@@ -462,7 +464,7 @@ export async function remindRenewal(app: Application, client: Client, days: numb
     insurer: app.policy.insurer,
     plate: app.details.plate ?? "",
     endsOn: formatDate(app.policy.endsAt),
-    link: `${statusLink(app.ref)}?renew=1`,
+    link: clientLink(app.ref, `/my/${app.ref}?renew=1`),
   });
 }
 

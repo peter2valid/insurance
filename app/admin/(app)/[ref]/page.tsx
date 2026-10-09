@@ -323,6 +323,8 @@ function answers(app: Application, client: Client | null, agent: Agent | null) {
   const rows = [
     { label: l.product, value: productNames[app.product] },
     { label: l.name, value: client?.name },
+    // Someone else may have applied with this number: show what they typed too.
+    ...(d.applicantName && d.applicantName !== client?.name ? [{ label: l.nameGiven, value: d.applicantName }] : []),
     { label: l.phone, value: client?.phone ? formatKenyanPhone(client.phone) : undefined },
     { label: l.email, value: client?.email },
     ...productRows,

@@ -8,7 +8,7 @@ import type { ActionResult } from "@/lib/flow/action-result";
 import { applyQuote, getFlowContext } from "@/lib/flow/context";
 import { parseMotorQuote, quoteKeys, quoteResultsHref } from "@/lib/flow/motor-quote";
 import { screenHref } from "@/lib/flow/screens";
-import { getSessionClientId, setPendingQuote } from "@/lib/session";
+import { getSession, setPendingQuote } from "@/lib/session";
 
 /**
  * Instant motor quote. Nothing is stored until the client chooses an
@@ -47,10 +47,10 @@ export async function chooseInsurer(_prev: ActionResult, formData: FormData): Pr
   const chosen = { ...parsed.details, insurer: insurer.name };
   const toast = quote.compare.chosenToast(insurer.name);
 
-  const clientId = await getSessionClientId();
-  const client = clientId ? await getRepo().getClient(clientId) : null;
-  if (client) {
-    const app = await applyQuote(client.id, chosen);
+  const session = await getSession();
+  const client = session ? await getRepo().getClient(session.c) : null;
+  if (session && client) {
+    const app = await applyQuote(session, chosen);
     const ctx = app ? await getFlowContext(app.ref) : null;
     if (ctx?.kind === "active") return { ok: true, next: screenHref(ctx.resume, ctx.app.ref), toast };
     return { ok: false, errors: { _form: quote.compare.errors.expired } };

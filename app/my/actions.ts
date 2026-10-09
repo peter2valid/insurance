@@ -4,6 +4,7 @@ import * as workflow from "@/lib/admin/workflow";
 import { statusPage } from "@/lib/copy";
 import type { ActionResult } from "@/lib/flow/action-result";
 import { getFlowContext } from "@/lib/flow/context";
+import { startSession } from "@/lib/session";
 import { phoneSchema } from "@/lib/flow/validation";
 import { getPaymentProvider } from "@/lib/payments";
 
@@ -79,5 +80,7 @@ export async function renewCover(_prev: ActionResult, formData: FormData): Promi
     return { ok: false, errors: { _form: statusPage.pay.errors.notReady } };
   }
   const renewal = await workflow.startRenewal(ref);
+  // The renewal is a new application: let this phone open it.
+  await startSession(ctx.client.id, renewal);
   return { ok: true, next: `/my/${renewal}#quotes`, toast: statusPage.policy.renewed };
 }

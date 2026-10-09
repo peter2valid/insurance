@@ -65,7 +65,7 @@ export const quote = {
     },
     choose: (insurer: string) => `Choose ${insurer}`,
     chosenToast: (insurer: string) => `${insurer} chosen`,
-    nextNote: "Next: your phone number, logbook, ID and KRA PIN — about 3 minutes. You pay only after checking everything.",
+    nextNote: "Next: your name and number, then a photo of your logbook, ID and KRA PIN — about 3 minutes. You pay only after checking everything.",
     declinedHeading: "Not available for this vehicle",
     declined: (insurer: string, years: number) => `${insurer} covers vehicles up to ${years} years old comprehensively.`,
     showMore: (count: number) => (count === 1 ? "Show 1 more insurer" : `Show ${count} more insurers`),
@@ -127,7 +127,7 @@ export const quote = {
 
   /** Shown on the phone screen once an insurer is chosen. */
   saved: (insurer: string, amount: string) =>
-    `Your ${insurer} quote of ${amount} is saved. Enter your number to carry on — we'll text you a code.`,
+    `Your ${insurer} quote of ${amount} is saved. Tell us who it's for — then your logbook, ID and KRA PIN.`,
 
   review: {
     section: "Your cover",

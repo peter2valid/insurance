@@ -1,11 +1,18 @@
+import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { isProduct, type Product } from "@/lib/data/types";
 
 /**
- * SIMULATED phone sign-in (CLAUDE.md §8.1 step 2). The code is always
- * 123456. The session cookie holds the client id unsigned — fine for a
- * demo, NOT for production. Supabase phone auth replaces this file.
+ * Client sign-in without a code (Oct 2026, owner's decision).
  *
+ * - Typing a phone number signs this DEVICE in as that client and lets it
+ *   start applications. An application opens only on the device that
+ *   started it, or after a signed link from one of our messages (/go/…).
+ *   So typing someone else's number never shows their ID, logbook or policy.
+ * - The cookie is signed (HMAC) so it can't be edited by hand.
+ * - Agents still sign in with the SIMULATED code below (123456).
+ *
+ * Still a demo-grade session: Supabase auth replaces this file later.
  * Server-only: use from Server Components, Server Actions, Route Handlers.
  */
 
@@ -14,6 +21,9 @@ export const CODE_TTL_MS = 10 * 60 * 1000;
 
 const SESSION_COOKIE = "bc_session";
 const OTP_COOKIE = "bc_otp";
+const SESSION_DAYS = 90;
+/** Applications opened from links, remembered per device (newest kept). */
+const MAX_GRANTED = 20;
 
 const cookieOptions = {
   httpOnly: true,
@@ -22,16 +32,94 @@ const cookieOptions = {
   path: "/",
 };
 
-export async function getSessionClientId(): Promise<string | null> {
-  return (await cookies()).get(SESSION_COOKIE)?.value ?? null;
+/** Signing key: SESSION_SECRET, else derived from another server secret, else a dev-only value. */
+function secret(): string {
+  return (
+    process.env.SESSION_SECRET?.trim() ||
+    process.env.CRON_SECRET?.trim() ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() ||
+    "beacon-dev-only-secret"
+  );
 }
 
-export async function startSession(clientId: string): Promise<void> {
-  (await cookies()).set(SESSION_COOKIE, clientId, { ...cookieOptions, maxAge: 60 * 60 * 24 * 30 });
+function sign(value: string): string {
+  return createHmac("sha256", secret()).update(value).digest("base64url");
+}
+
+function verify(value: string, signature: string): boolean {
+  const expected = Buffer.from(sign(value));
+  const given = Buffer.from(signature);
+  return expected.length === given.length && timingSafeEqual(expected, given);
+}
+
+export type ClientSession = {
+  /** Client id. */
+  c: string;
+  /** This device's id: applications started here carry it (details.deviceId). */
+  d: string;
+  /** Refs this device may open because it followed a signed link. */
+  r: string[];
+};
+
+export async function getSession(): Promise<ClientSession | null> {
+  const raw = (await cookies()).get(SESSION_COOKIE)?.value;
+  if (!raw) return null;
+  const [payload, signature] = raw.split(".");
+  if (!payload || !signature || !verify(payload, signature)) return null;
+  try {
+    const parsed = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as ClientSession;
+    if (typeof parsed.c !== "string" || typeof parsed.d !== "string" || !Array.isArray(parsed.r)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+export async function getSessionClientId(): Promise<string | null> {
+  return (await getSession())?.c ?? null;
+}
+
+async function writeSession(session: ClientSession): Promise<void> {
+  const payload = Buffer.from(JSON.stringify(session)).toString("base64url");
+  (await cookies()).set(SESSION_COOKIE, `${payload}.${sign(payload)}`, { ...cookieOptions, maxAge: 60 * 60 * 24 * SESSION_DAYS });
+}
+
+/**
+ * Sign this device in as a client. Same client again: keep the device id and
+ * opened links. A different client: a fresh start (nothing carried over).
+ */
+export async function startSession(clientId: string, grantRef?: string): Promise<ClientSession> {
+  const current = await getSession();
+  const same = current?.c === clientId;
+  const session: ClientSession = {
+    c: clientId,
+    d: same && current ? current.d : randomUUID(),
+    r: same && current ? current.r : [],
+  };
+  if (grantRef && !session.r.includes(grantRef)) session.r = [grantRef, ...session.r].slice(0, MAX_GRANTED);
+  await writeSession(session);
+  return session;
 }
 
 export async function endSession(): Promise<void> {
   (await cookies()).delete(SESSION_COOKIE);
+}
+
+/** May this device open this application? (Started here, or opened from our link.) */
+export function canAccess(session: ClientSession, app: { ref: string; clientId: string; details: Record<string, string> }): boolean {
+  if (app.clientId !== session.c) return false;
+  return app.details.deviceId === session.d || session.r.includes(app.ref);
+}
+
+/** The signature in our message links: /go/<ref>?k=<token>. */
+export function linkToken(ref: string): string {
+  return sign(`link:${ref}`).slice(0, 24);
+}
+
+export function checkLinkToken(ref: string, token: string): boolean {
+  const expected = Buffer.from(linkToken(ref));
+  const given = Buffer.from(token);
+  return expected.length === given.length && timingSafeEqual(expected, given);
 }
 
 type PendingCode = { phone: string; sentAt: number; product?: Product };

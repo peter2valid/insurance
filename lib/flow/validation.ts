@@ -21,11 +21,6 @@ export const phoneSchema = z
     return e164;
   });
 
-export const codeSchema = z
-  .string()
-  .trim()
-  .min(1, flow.code.errors.required)
-  .regex(/^\d{6}$/, flow.code.errors.required);
 
 /**
  * Kenyan plates: cars KAA 123A (older KAA 123), motorcycles KMEX 123A.
