@@ -239,7 +239,7 @@ function QuoteCard({
   return (
     <Card className={primary ? "w-full gap-4 border-2 border-brand" : "w-full gap-4"}>
       <div className="flex items-start gap-3">
-        <Avatar name={offer.insurer} src={extras?.logo} shape="square" size="lg" />
+        <Avatar name={offer.insurer} src={extras?.logo} shape="logo" size="lg" />
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <h2 className="font-sans text-lg font-semibold">{offer.insurer}</h2>
           <p className="text-sm text-ink-quiet">{coverLabels[offer.coverType] ?? offer.coverType}</p>

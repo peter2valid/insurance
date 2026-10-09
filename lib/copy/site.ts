@@ -117,6 +117,8 @@ export const site = {
   footer: {
     licence: (regulator: string, number: string) => `Licensed by ${regulator}. Licence ${number}.`,
     contactHeading: "Talk to us",
+    whatsappLabel: (number: string) => `WhatsApp ${number}`,
+    callLabel: (number: string) => `Call ${number}`,
     linksHeading: "Learn more",
     phone: brand.contact.phoneDisplay,
     whatsapp: brand.contact.whatsappDisplay,

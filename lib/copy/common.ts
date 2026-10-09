@@ -4,7 +4,9 @@ import { brand } from "@/lib/brand";
 export const common = {
   meta: {
     title: brand.name,
-    description: `${brand.name} — insurance you can apply for from your phone.`,
+    description: `${brand.name} — compare insurers and get covered from your phone: motor, matatu, boda boda, health, travel and business. Pay with M-Pesa.`,
+    shareHeadline: "Insurance you can sort out from your phone",
+    shareLine: "Compare insurers · Pay with M-Pesa · Motor, health, travel, business",
   },
   skipToContent: "Skip to main content",
   help: "Need help?",

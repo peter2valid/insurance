@@ -50,7 +50,7 @@ async function deliver(item: OutboxItem): Promise<Delivery> {
     const to = item.audience === "admin" ? adminEmail() : item.to;
     if (!to || !to.includes("@") || isSampleEmail(to)) return "simulated";
     const subject = notifySubjects[item.template] ?? brand.name;
-    return (await sendEmail(to, subject, item.body)) ? "sent" : "failed";
+    return (await sendEmail(to, subject, item.body, { audience: item.audience })) ? "sent" : "failed";
   }
   return "simulated";
 }

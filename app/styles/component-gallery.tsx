@@ -678,7 +678,7 @@ function AvatarSection() {
       <State label={s.square}>
         <div className="flex items-center gap-3">
           {d.avatar.organisations.map((name) => (
-            <Avatar key={name} name={name} shape="square" size="lg" />
+            <Avatar key={name} name={name} shape="logo" size="lg" />
           ))}
         </div>
       </State>

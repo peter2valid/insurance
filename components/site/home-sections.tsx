@@ -93,22 +93,40 @@ export function About({ content }: { content: SiteContent }) {
   );
 }
 
-/** The insurers on the broker's panel (Admin → Insurers). */
+/**
+ * The insurers on the broker's panel (Admin → Insurers), as a slowly moving
+ * strip of logos. Repeated so the loop is seamless; screen readers hear the
+ * list once (the copies are hidden from them).
+ */
 export function Insurers({ panel }: { panel: readonly string[] }) {
   const copy = site.insurers;
+  const list = panelInsurers(panel);
+  // Enough tiles to fill a wide screen before the loop repeats.
+  const repeat = Math.max(1, Math.ceil(8 / Math.max(list.length, 1)));
+  const run = Array.from({ length: repeat }, () => list).flat();
+
+  const tiles = (copyIndex: number) =>
+    run.map((insurer, i) => (
+      <li
+        key={`${copyIndex}-${i}`}
+        className={i >= list.length || copyIndex > 0 ? "marquee-copy flex shrink-0" : "flex shrink-0"}
+        aria-hidden={i >= list.length || copyIndex > 0 ? true : undefined}
+      >
+        <div className="flex items-center gap-3 rounded-card border border-border bg-surface py-3 pr-5 pl-3">
+          <Avatar name={insurer.name} src={insurer.logo} shape="logo" size="lg" />
+          <span className="font-heading text-lg font-semibold whitespace-nowrap text-ink">{insurer.name}</span>
+        </div>
+      </li>
+    ));
+
   return (
     <SiteSection id="insurers" title={copy.heading} intro={copy.intro}>
-      <ul className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        {panelInsurers(panel).map((insurer) => (
-          <li
-            key={insurer.id}
-            className="flex min-h-touch items-center gap-3 rounded-control border border-border bg-surface px-4 py-3 font-heading text-lg font-semibold text-ink"
-          >
-            <Avatar name={insurer.name} src={insurer.logo} shape="square" />
-            {insurer.name}
-          </li>
-        ))}
-      </ul>
+      <div className="-mx-4 overflow-hidden px-4 sm:mx-0 sm:px-0">
+        <ul aria-label={copy.heading} className="marquee-track flex w-max gap-3">
+          {tiles(0)}
+          {tiles(1)}
+        </ul>
+      </div>
     </SiteSection>
   );
 }

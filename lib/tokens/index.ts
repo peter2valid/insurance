@@ -19,6 +19,7 @@ export const colorTokens = [
   { name: "danger", purpose: "Errors" },
   { name: "sidebar", purpose: "Admin sidebar background" },
   { name: "on-sidebar", purpose: "Text and icons on the admin sidebar" },
+  { name: "logo-tile", purpose: "Behind insurer logos (always light)" },
 ] as const;
 
 export type ColorToken = (typeof colorTokens)[number]["name"];

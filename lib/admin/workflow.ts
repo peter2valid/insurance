@@ -50,11 +50,11 @@ async function tellClient<T extends TemplateName>(
   data: TemplateData<T>,
 ): Promise<Delivery> {
   const notifier = getNotifier();
+  // The email given on THIS application first (a returning client may have a new one).
+  const email = app.details.applicantEmail || client.email;
   const [whatsapp] = await Promise.all([
     notifier.send({ channel: "whatsapp", to: client.phone, audience: "client", template, data, applicationRef: app.ref }),
-    client.email
-      ? notifier.send({ channel: "email", to: client.email, audience: "client", template, data, applicationRef: app.ref })
-      : null,
+    email ? notifier.send({ channel: "email", to: email, audience: "client", template, data, applicationRef: app.ref }) : null,
     getRepo().addMessage({ applicationRef: app.ref, direction: "out", channel: "whatsapp", body: renderTemplate(template, data) }),
   ]);
   return whatsapp.delivery;

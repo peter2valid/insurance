@@ -9,7 +9,7 @@ const copy = site.footer;
 /** Site footer. Contact details and licence come from Admin → Website; empty ones are hidden. */
 export async function SiteFooter() {
   const { site: content } = await getRepo().getSettings();
-  const details = [content.email, content.address, content.hours].filter(Boolean);
+  const details = [content.address, content.hours].filter(Boolean);
   return (
     <footer className="border-t border-border bg-surface">
       <div className="mx-auto grid w-full max-w-page gap-8 px-4 py-12 md:grid-cols-3">
@@ -25,10 +25,21 @@ export async function SiteFooter() {
           <ul className="flex flex-col text-sm text-ink-quiet">
             <li>
               <TextLink href={whatsappUrl()} external standalone quiet>
-                {copy.whatsapp}
+                {copy.whatsappLabel(copy.whatsapp)}
               </TextLink>
             </li>
-            <li className="py-2">{copy.phone}</li>
+            <li>
+              <TextLink href={`tel:${copy.phone.replace(/\s/g, "")}`} standalone quiet>
+                {copy.callLabel(copy.phone)}
+              </TextLink>
+            </li>
+            {content.email && (
+              <li>
+                <TextLink href={`mailto:${content.email}`} standalone quiet>
+                  {content.email}
+                </TextLink>
+              </li>
+            )}
             {details.map((detail) => (
               <li key={detail} className="py-2">
                 {detail}

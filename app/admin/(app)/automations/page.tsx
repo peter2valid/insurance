@@ -6,7 +6,8 @@ import { TextLink } from "@/components/ui/text-link";
 import { admin } from "@/lib/copy";
 import { getRepo } from "@/lib/data/repo";
 import { formatAgo, requestTime } from "@/lib/format/date";
-import { emailConfigured, missingEmailVars } from "@/lib/notify/email";
+import { adminEmail, emailConfigured, missingEmailVars } from "@/lib/notify/email";
+import { EmailRecipients } from "@/components/admin/email-recipients";
 import { missingTwilioVars, twilioConfigured } from "@/lib/notify/twilio";
 
 export const metadata = { title: admin.nav.automations };
@@ -41,6 +42,9 @@ export default async function AutomationsPage() {
           <AutomationSettings settings={settings} />
         </div>
         <div className="flex flex-col gap-6">
+          <Section title={admin.emails.heading}>
+            <EmailRecipients from={emailConfigured() ? process.env.EMAIL_FROM?.trim() : undefined} adminEmail={adminEmail()} />
+          </Section>
           <Section title={copy.channels}>
             <Card className="gap-0 p-0 sm:p-0">
               <ul className="flex flex-col divide-y divide-border">

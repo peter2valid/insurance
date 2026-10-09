@@ -21,8 +21,12 @@ const plexSerif = IBM_Plex_Serif({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(brand.siteUrl),
   title: { default: common.meta.title, template: `%s · ${brand.name}` },
   description: common.meta.description,
+  // A proper preview card when the link is shared on WhatsApp, Facebook or X.
+  openGraph: { siteName: brand.name, title: common.meta.title, description: common.meta.description, locale: "en_KE", type: "website" },
+  twitter: { card: "summary_large_image" },
 };
 
 export const viewport: Viewport = {

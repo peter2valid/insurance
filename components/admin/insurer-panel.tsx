@@ -33,7 +33,7 @@ export function InsurerPanel({ rows }: { rows: PanelRow[] }) {
         <ul className="flex flex-col divide-y divide-border">
           {rows.map((row) => (
             <li key={row.id} className="flex items-start gap-3 p-4 sm:px-6">
-              <Avatar name={row.name} src={row.logo} shape="square" />
+              <Avatar name={row.name} src={row.logo} shape="logo" />
               <div className="flex min-w-0 flex-1 flex-col gap-2">
                 <Switch
                   name={`panel_${row.id}`}

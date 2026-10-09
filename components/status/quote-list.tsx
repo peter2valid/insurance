@@ -4,11 +4,13 @@ import * as React from "react";
 import { Check, CircleCheck, TrendingDown } from "lucide-react";
 import { chooseCover } from "@/app/my/actions";
 import { useFlowAction } from "@/components/flow/use-flow-action";
+import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { FieldError } from "@/components/ui/field";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { coverLabels, statusPage } from "@/lib/copy";
+import { insurerByName } from "@/lib/data/insurers";
 import type { Quote } from "@/lib/data/types";
 import { formatExtras, formatKes, shownExcess } from "@/lib/format/money";
 
@@ -49,9 +51,12 @@ export function QuoteList({
             <li key={quote.id}>
               <Card className={quote.chosen ? "gap-3 border-2 border-brand" : "gap-3"}>
                 <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div className="flex flex-col gap-1">
-                    <h3 className="font-sans text-lg font-semibold">{quote.insurer}</h3>
-                    <p className="text-sm text-ink-quiet">{coverLabel(quote.coverType)}</p>
+                  <div className="flex items-start gap-3">
+                    <Avatar name={quote.insurer} src={insurerByName(quote.insurer)?.logo} shape="logo" />
+                    <div className="flex flex-col gap-1">
+                      <h3 className="font-sans text-lg font-semibold">{quote.insurer}</h3>
+                      <p className="text-sm text-ink-quiet">{coverLabel(quote.coverType)}</p>
+                    </div>
                   </div>
                   {quote.chosen ? (
                     <StatusBadge tone="success" label={copy.chosen} icon={CircleCheck} />

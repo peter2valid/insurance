@@ -12,6 +12,8 @@ const avatarVariants = cva(
       shape: {
         circle: "rounded-full",
         square: "rounded-control border border-border bg-surface",
+        /** Insurer logos: wide, on a light tile in both themes (logos are made for white). */
+        logo: "rounded-control border border-border bg-logo-tile text-sidebar",
       },
       size: {
         sm: "size-8 text-xs",
@@ -19,6 +21,11 @@ const avatarVariants = cva(
         lg: "size-12 text-base",
       },
     },
+    compoundVariants: [
+      { shape: "logo", size: "sm", className: "h-8 w-14" },
+      { shape: "logo", size: "default", className: "h-10 w-16" },
+      { shape: "logo", size: "lg", className: "h-12 w-20" },
+    ],
     defaultVariants: { size: "default", shape: "circle" },
   },
 );
@@ -48,7 +55,7 @@ function Avatar({ name, src, size, shape, className }: AvatarProps) {
           src={src}
           alt={name}
           // Logos sit inside the square with a little room; photos fill the circle.
-          className={shape === "square" ? "size-full object-contain p-1" : "size-full object-cover"}
+          className={shape === "square" || shape === "logo" ? "size-full object-contain p-1.5" : "size-full object-cover"}
         />
       )}
       <AvatarPrimitive.Fallback aria-label={name} role="img">

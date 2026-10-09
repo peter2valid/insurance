@@ -92,3 +92,38 @@
     scroll-behavior: auto !important;
   }
 }
+
+/*
+ * Insurer strip on the home page (owner's request, Oct 2026): the one
+ * decorative motion on the site. Slow, pauses on hover/touch/focus, and
+ * becomes a still, wrapped row for anyone who asks for less motion.
+ */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@layer components {
+  .marquee-track {
+    animation: marquee 40s linear infinite;
+  }
+  .marquee-track:hover,
+  .marquee-track:focus-within,
+  .marquee-track:active {
+    animation-play-state: paused;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .marquee-track {
+      animation: none;
+      flex-wrap: wrap;
+      width: auto;
+    }
+    .marquee-copy {
+      display: none;
+    }
+  }
+}

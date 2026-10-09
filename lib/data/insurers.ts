@@ -17,10 +17,10 @@ import type { MotorAddon, TonnageBand, VehicleCategory } from "./motor";
  * card (or an API) before quoting real clients. Everything that prices a
  * quote reads from here, so that's a data change, not a code change.
  *
- * Logos: drop the insurer's official logo at public/insurers/<id>.svg (or
- * .png) and set `logo`. Use logos only with the insurer's permission
- * (agencies usually get them in the insurer's marketing kit). Until then
- * the UI shows the insurer's initials.
+ * Logos: the panel's four come from each insurer's own website (Oct 2026).
+ * Swap in the sharper files from the insurer's marketing kit when the broker
+ * has them: public/insurers/<id>.svg or .png, then set `logo`. Insurers
+ * without one show their initials.
  */
 
 export type MotorRates = {
@@ -175,6 +175,7 @@ export const insurers: readonly Insurer[] = [
   // The broker's panel (Oct 2026) — with their own sample benefits.
   insurer({
     id: "britam",
+    logo: "/insurers/britam.png",
     name: "Britam",
     legalName: "Britam General Insurance Company (K) Limited",
     factor: 1,
@@ -187,6 +188,7 @@ export const insurers: readonly Insurer[] = [
   }),
   insurer({
     id: "pioneer",
+    logo: "/insurers/pioneer.png",
     name: "Pioneer",
     legalName: "Pioneer General Insurance Limited",
     factor: 0.96,
@@ -203,6 +205,7 @@ export const insurers: readonly Insurer[] = [
   }),
   insurer({
     id: "liberty",
+    logo: "/insurers/liberty.png",
     name: "Liberty",
     legalName: "The Heritage Insurance Company Limited (Liberty Kenya)",
     factor: 1.04,
@@ -217,6 +220,7 @@ export const insurers: readonly Insurer[] = [
   }),
   insurer({
     id: "cannon",
+    logo: "/insurers/cannon.svg",
     name: "Cannon",
     legalName: "Cannon General Insurance Company Limited",
     factor: 0.93,
