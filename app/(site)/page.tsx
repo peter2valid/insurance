@@ -12,13 +12,17 @@ export const metadata: Metadata = {
 export default async function HomePage(props: PageProps<"/">) {
   // Arrived through an agent's link (/r/CODE): say who referred them.
   const code = (await props.searchParams).agent;
-  const agent = typeof code === "string" ? await getRepo().findAgentByCode(code) : null;
+  const repo = getRepo();
+  const [agent, settings] = await Promise.all([
+    typeof code === "string" ? repo.findAgentByCode(code) : null,
+    repo.getSettings(),
+  ]);
   return (
     <>
-      <Hero referredBy={agent?.status === "active" ? agent.name : undefined} />
+      <Hero referredBy={agent?.status === "active" ? agent.name : undefined} imageId={settings.heroImageId || undefined} />
       <HowItWorks />
-      <About />
-      <Insurers panel={(await getRepo().getSettings()).panel} />
+      <About content={settings.site} />
+      <Insurers panel={settings.panel} />
       <Faq />
       <BecomeAgent />
     </>

@@ -37,6 +37,21 @@ export function useFlowAction(action: FlowAction, onSuccess?: () => void) {
     [formAction],
   );
 
+  // A mistake: bring the first field with an error into view and put the cursor there.
+  React.useEffect(() => {
+    if (state.ok || state === initialResult) return;
+    requestAnimationFrame(() => {
+      // A real field first (wrappers like the +254 prefix are marked too), else the message.
+      const field =
+        document.querySelector<HTMLElement>('main :is(input, select, textarea)[aria-invalid="true"]') ??
+        document.querySelector<HTMLElement>('main [role="alert"]');
+      if (!field) return;
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      field.scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" });
+      if (field.matches("input, select, textarea")) field.focus({ preventScroll: true });
+    });
+  }, [state]);
+
   React.useEffect(() => {
     if (!state.ok) return;
     if (state.toast) toast({ title: state.toast });

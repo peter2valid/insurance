@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Briefcase, Car, Check, HeartPulse, type LucideIcon, Plane, UserRound } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -26,9 +27,16 @@ const startHref: Record<Product, string> = {
  * product goes straight into its flow. This is the one place the design is
  * allowed to be bold (§4.2).
  */
-export function Hero({ referredBy }: { referredBy?: string }) {
+export function Hero({ referredBy, imageId }: { referredBy?: string; imageId?: string }) {
   return (
-    <section aria-labelledby="hero-heading" className="bg-brand text-on-brand">
+    <section aria-labelledby="hero-heading" className="relative isolate overflow-hidden bg-brand text-on-brand">
+      {imageId && (
+        <>
+          {/* The broker's photo (Admin → Website), darkened with the brand colour so text stays readable. */}
+          <Image src={`/hero-image/${imageId}`} alt="" fill preload loading="eager" fetchPriority="high" sizes="100vw" className="-z-20 object-cover" />
+          <div className="absolute inset-0 -z-10 bg-brand/85" aria-hidden />
+        </>
+      )}
       <div className="mx-auto grid w-full max-w-page gap-8 px-4 pt-8 pb-12 md:pt-16 md:pb-16 lg:grid-cols-2 lg:items-center lg:gap-12">
         <div className="flex flex-col gap-4">
           <h1 id="hero-heading" className="text-3xl text-on-brand">

@@ -7,6 +7,7 @@ import { WhatsAppButton } from "@/components/site/whatsapp-button";
 import { Avatar } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { site } from "@/lib/copy";
+import type { SiteContent } from "@/lib/data/types";
 import { SiteSection } from "./site-page";
 
 /* Home page sections below the hero. Quiet and consistent (CLAUDE.md §4.2). */
@@ -42,38 +43,51 @@ export function HowItWorks() {
   );
 }
 
-export function About() {
+/** Words and people from Admin → Website; anything left empty is simply not shown. */
+export function About({ content }: { content: SiteContent }) {
   const copy = site.about;
+  const paragraphs = [content.aboutIntro || copy.fallback, content.aboutMore].filter(Boolean);
+  const team = content.team
+    .map((entry) => {
+      const [name = "", role = ""] = entry.split("|");
+      return { name: name.trim(), role: role.trim() };
+    })
+    .filter((member) => member.name);
+  const licensed = content.regulator && content.licenceNumber;
   return (
     <SiteSection id="about" title={copy.heading} tone="alt">
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+      <div className={team.length > 0 ? "grid grid-cols-1 gap-8 lg:grid-cols-2" : "flex flex-col"}>
         <div className="flex flex-col gap-4">
-          {copy.body.map((paragraph) => (
+          {paragraphs.map((paragraph) => (
             <p key={paragraph} className="max-w-prose text-lg text-ink">
               {paragraph}
             </p>
           ))}
-          <p className="flex items-start gap-2 text-base text-ink-quiet">
-            <span className="flex h-6 shrink-0 items-center">
-              <ShieldCheck className="size-5 text-brand" aria-hidden />
-            </span>
-            {copy.licence}
-          </p>
+          {licensed && (
+            <p className="flex items-start gap-2 text-base text-ink-quiet">
+              <span className="flex h-6 shrink-0 items-center">
+                <ShieldCheck className="size-5 text-brand" aria-hidden />
+              </span>
+              {copy.licence(content.regulator, content.licenceNumber)}
+            </p>
+          )}
         </div>
-        <div className="flex flex-col gap-4">
-          <h3 className="text-lg">{copy.teamHeading}</h3>
-          <ul className="flex flex-col gap-3">
-            {copy.team.map((member, index) => (
-              <li key={index} className="flex items-center gap-3">
-                <Avatar name={member.name} className="bg-surface" />
-                <div className="flex flex-col">
-                  <span className="text-base font-medium text-ink">{member.name}</span>
-                  <span className="text-sm text-ink-quiet">{member.role}</span>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
+        {team.length > 0 && (
+          <div className="flex flex-col gap-4">
+            <h3 className="text-lg">{copy.teamHeading}</h3>
+            <ul className="flex flex-col gap-3">
+              {team.map((member) => (
+                <li key={member.name} className="flex items-center gap-3">
+                  <Avatar name={member.name} className="bg-surface" />
+                  <div className="flex flex-col">
+                    <span className="text-base font-medium text-ink">{member.name}</span>
+                    {member.role && <span className="text-sm text-ink-quiet">{member.role}</span>}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     </SiteSection>
   );
@@ -95,7 +109,6 @@ export function Insurers({ panel }: { panel: readonly string[] }) {
           </li>
         ))}
       </ul>
-      <p className="text-sm text-ink-quiet">{copy.note}</p>
     </SiteSection>
   );
 }
@@ -104,7 +117,7 @@ export function Insurers({ panel }: { panel: readonly string[] }) {
 export function BecomeAgent() {
   const copy = site.agents;
   return (
-    <SiteSection id="agents" title={copy.heading} tone="alt">
+    <SiteSection id="agents" title={copy.heading}>
       <Card className="gap-4 md:flex-row md:items-center md:justify-between">
         <p className="max-w-prose text-lg text-ink">{copy.body}</p>
         <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">

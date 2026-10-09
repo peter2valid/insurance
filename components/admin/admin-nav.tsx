@@ -9,6 +9,7 @@ import {
   CalendarClock,
   ExternalLink,
   House,
+  Image as ImageIcon,
   Inbox,
   LogOut,
   Menu,
@@ -52,6 +53,7 @@ function groups(counts: NavCounts): { label: string; items: Item[] }[] {
       items: [
         { href: "/admin/automations", label: n.automations, icon: Bell },
         { href: "/admin/insurers", label: n.insurers, icon: Building2 },
+        { href: "/admin/website", label: n.website, icon: ImageIcon },
         { href: "/admin/outbox", label: n.outbox, icon: MessagesSquare },
       ],
     },

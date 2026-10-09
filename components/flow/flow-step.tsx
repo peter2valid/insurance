@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { FieldError } from "@/components/ui/field";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StepHeader } from "@/components/ui/step-header";
+import { StepArrival } from "./step-arrival";
 import { flow } from "@/lib/copy";
 
 /*
@@ -69,10 +70,14 @@ export function FlowStep({
 
   return (
     <FlowShell helpStep={helpStep ?? title}>
+      <StepArrival step={title} />
       <StepHeader current={step.current} total={step.total} backHref={backHref} />
       <Comp className="flex flex-col gap-6" {...rest}>
         <div className="flex flex-col gap-2">
-          <h1 className="text-2xl md:text-3xl">{title}</h1>
+          {/* tabIndex -1: focusable by script on arrival, not in the tab order. */}
+          <h1 tabIndex={-1} className="text-2xl outline-none md:text-3xl">
+            {title}
+          </h1>
           {description && <p className="max-w-prose text-lg text-ink-quiet">{description}</p>}
         </div>
 

@@ -64,23 +64,16 @@ export const site = {
 
   about: {
     heading: "About us",
-    body: [
-      "[Who we are: two or three sentences about the agency — when it started, who it serves, and why clients trust it.]",
-      "[What makes the service different, in plain words.]",
-    ],
-    licence: `${brand.name} is licensed by ${brand.licence.regulator}. Licence ${brand.licence.number}.`,
+    // Shown until the broker writes their own in Admin → Website.
+    fallback:
+      "We help Kenyans insure their cars, matatus, boda bodas, health, travel and businesses — comparing insurers so you don't have to, and following up until you're covered.",
+    licence: (regulator: string, number: string) => `${brand.name} is licensed by ${regulator}. Licence ${number}.`,
     teamHeading: "The people you'll talk to",
-    team: [
-      { name: "[Name]", role: "[Role, e.g. Principal broker]" },
-      { name: "[Name]", role: "[Role, e.g. Client service]" },
-      { name: "[Name]", role: "[Role, e.g. Claims support]" },
-    ],
   },
 
   insurers: {
     heading: "Our insurers",
     intro: "We compare quotes from the insurers we work with, so you don't have to call each one.",
-    note: "[Confirm the final list of insurers the agency places business with before launch.]",
   },
 
   agents: {
@@ -100,11 +93,11 @@ export const site = {
       },
       {
         q: "How long does it take?",
-        a: "About five minutes to apply. We send quotes [within X working hours — confirm with the agency].",
+        a: "About five minutes to apply. Most quotes appear straight away; if we need to check anything, we message you on WhatsApp.",
       },
       {
         q: "Who sees my documents?",
-        a: "Only our team, to prepare your quotes. [Add data protection details and a link to the privacy policy.]",
+        a: "Only our team and the insurer you choose. Your documents are stored securely, used only for your cover, and never shared for marketing.",
       },
       {
         q: "Why do you need my phone number?",
@@ -122,14 +115,11 @@ export const site = {
   },
 
   footer: {
-    licence: `Licensed by ${brand.licence.regulator}. Licence ${brand.licence.number}.`,
+    licence: (regulator: string, number: string) => `Licensed by ${regulator}. Licence ${number}.`,
     contactHeading: "Talk to us",
     linksHeading: "Learn more",
     phone: brand.contact.phoneDisplay,
     whatsapp: brand.contact.whatsappDisplay,
-    email: brand.contact.email,
-    address: brand.contact.address,
-    hours: brand.contact.hours,
     copyright: (year: number) => `© ${year} ${brand.name}`,
   },
 } as const;

@@ -149,6 +149,30 @@ export interface Commission {
 }
 
 /** Broker-controlled switches for the automations (admin → Automations). */
+/** Website words the broker fills in from Admin → Website. Empty = hidden on the site. */
+export interface SiteContent {
+  aboutIntro: string;
+  aboutMore: string;
+  /** Up to three people: "name|role". */
+  team: string[];
+  regulator: string;
+  licenceNumber: string;
+  email: string;
+  address: string;
+  hours: string;
+}
+
+export const emptySiteContent: SiteContent = {
+  aboutIntro: "",
+  aboutMore: "",
+  team: [],
+  regulator: "",
+  licenceNumber: "",
+  email: "",
+  address: "",
+  hours: "",
+};
+
 export interface Settings {
   /** Send quotes from insurer rate cards the moment a motor application arrives. */
   autoQuote: boolean;
@@ -163,6 +187,9 @@ export interface Settings {
   defaultCommissionRate: number;
   /** Insurer ids quoted to clients (lib/data/insurers.ts). */
   panel: string[];
+  /** Home page hero background, uploaded in Admin → Website ("" = none). */
+  heroImageId: string;
+  site: SiteContent;
 }
 
 export const defaultSettings: Settings = {
@@ -174,6 +201,8 @@ export const defaultSettings: Settings = {
   defaultCommissionRate: 3,
   // The four insurers the broker named; more are switched on in Admin → Insurers.
   panel: ["britam", "pioneer", "liberty", "cannon"],
+  heroImageId: "",
+  site: emptySiteContent,
 };
 
 export interface Quote {

@@ -6,6 +6,7 @@ import type { AutomationRun, Repo } from "./repo";
 import { createSeed } from "./seed";
 import {
   defaultSettings,
+  emptySiteContent,
   type Agent,
   type Application,
   type Client,
@@ -349,7 +350,9 @@ export function createMockRepo(): Repo {
 
     // Settings and automations
     async getSettings() {
-      return clone(store().settings);
+      // Fill fields added after the store was made (e.g. website content), like the Supabase repo does.
+      const saved = store().settings;
+      return clone({ ...defaultSettings, ...saved, site: { ...emptySiteContent, ...(saved.site ?? {}) } });
     },
 
     async updateSettings(patch) {

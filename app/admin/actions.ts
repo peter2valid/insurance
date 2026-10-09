@@ -308,3 +308,27 @@ export async function adminSignOutAction(): Promise<ActionResult> {
   await signOutAdmin();
   return { ok: true, next: "/admin/login" };
 }
+
+/** Admin → Website: the agency's own words, people, licence and contact details. */
+export async function saveSiteContentAction(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  const field = (key: string) => text(formData, key).trim().slice(0, 600);
+  const team = [1, 2, 3]
+    .map((n) => [field(`name${n}`).slice(0, 80), field(`role${n}`).slice(0, 80)] as const)
+    .filter(([name]) => name)
+    .map(([name, role]) => `${name.replace(/\|/g, " ")}|${role.replace(/\|/g, " ")}`);
+  return run("/admin/website", async () => {
+    await getRepo().updateSettings({
+      site: {
+        aboutIntro: field("aboutIntro"),
+        aboutMore: field("aboutMore"),
+        team,
+        regulator: field("regulator").slice(0, 120),
+        licenceNumber: field("licenceNumber").slice(0, 60),
+        email: field("email").slice(0, 120),
+        address: field("address").slice(0, 200),
+        hours: field("hours").slice(0, 120),
+      },
+    });
+    return admin.website.content.saved;
+  });
+}

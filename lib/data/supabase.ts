@@ -7,6 +7,7 @@ import { createSeed } from "./seed";
 import { DOCUMENTS_BUCKET } from "./supabase-client";
 import {
   defaultSettings,
+  emptySiteContent,
   type Agent,
   type Application,
   type Client,
@@ -513,7 +514,9 @@ export function createSupabaseRepo(db: SupabaseClient): Repo {
 
     async getSettings() {
       const { data } = await db.from("settings").select("value").eq("id", "broker").maybeSingle();
-      return { ...defaultSettings, ...((data?.value as Partial<Settings>) ?? {}) };
+      const saved = (data?.value as Partial<Settings>) ?? {};
+      // Older rows may miss newer fields (site content): fill them from the defaults.
+      return { ...defaultSettings, ...saved, site: { ...emptySiteContent, ...(saved.site ?? {}) } };
     },
 
     async updateSettings(patch) {
