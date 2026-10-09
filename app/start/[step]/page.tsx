@@ -8,8 +8,8 @@ import { ReviewScreen, type ReviewDocument, type ReviewSection } from "@/compone
 import { CodeScreen, PhoneScreen } from "@/components/flow/sign-in-screens";
 import { UploadScreen } from "@/components/flow/upload-screen";
 import { ConfirmScreen, LogbookScreen, PlateScreen } from "@/components/flow/vehicle-screens";
-import { coverLabels, flow, nameDescriptions, periodLabels, questions, quote, vehicleCategoryLabels } from "@/lib/copy";
-import { addonsOf, coversFor, needsSeats, offersMonthly } from "@/lib/data/motor";
+import { coverLabels, flow, nameDescriptions, periodLabels, questions, quote } from "@/lib/copy";
+import { addonsFor, addonsOf, coversFor, offersMonthly } from "@/lib/data/motor";
 import { formatDate } from "@/lib/format/date";
 import { isProduct, type Application, type Client } from "@/lib/data/types";
 import { getRepo } from "@/lib/data/repo";
@@ -20,7 +20,7 @@ import { formatKes } from "@/lib/format/money";
 import { formatKenyanPhone } from "@/lib/format/phone";
 import { estimateFor } from "@/lib/products/estimate";
 import { getPendingCode, getPendingQuote } from "@/lib/session";
-import { parseMotorQuote, quoteResultsHref } from "@/lib/flow/motor-quote";
+import { addonCopy, motorClassLabel, parseMotorQuote, quoteResultsHref } from "@/lib/flow/motor-quote";
 import { quoteMotor } from "@/lib/data/quote-provider";
 
 const screenTitles: Record<string, string> = {
@@ -66,7 +66,7 @@ export default async function StartStepPage(props: PageProps<"/start/[step]">) {
     if (ctx.kind === "submitted") redirect(`/my/${ctx.app.ref}`);
     // Chose an insurer on the instant quote page: say it's saved, and Back returns to the prices.
     const pendingQuote = ref || (product && product !== "motor") ? null : await getPendingQuote();
-    const saved = pendingQuote ? savedQuoteOf(pendingQuote) : null;
+    const saved = pendingQuote ? savedQuoteOf(pendingQuote, (await getRepo().getSettings()).panel) : null;
     return (
       <PhoneScreen
         refValue={ref}
@@ -115,13 +115,19 @@ export default async function StartStepPage(props: PageProps<"/start/[step]">) {
   const following = productFlow[productFlow.indexOf(step) + 1];
   return (
     <>
-      {renderScreen(step, app, client, screenProps)}
+      {renderScreen(step, app, client, screenProps, step === "review" ? (await getRepo().getSettings()).panel : [])}
       <PrefetchNext href={following ? screenHref(following, app.ref) : undefined} />
     </>
   );
 }
 
-function renderScreen(step: Screen, app: Application, client: Client, props: { refValue: string; backHref: string }) {
+function renderScreen(
+  step: Screen,
+  app: Application,
+  client: Client,
+  props: { refValue: string; backHref: string },
+  panel: readonly string[],
+) {
   const d = app.details;
   if (isQuestionScreen(step)) return <QuestionScreen screenId={step} values={d} {...props} />;
 
@@ -157,7 +163,7 @@ function renderScreen(step: Screen, app: Application, client: Client, props: { r
       return (
         <ReviewScreen
           {...props}
-          {...reviewData(app, client)}
+          {...reviewData(app, client, panel)}
           {...(d.insurer && { actionLabel: quote.review.action, note: quote.review.note })}
         />
       );
@@ -167,18 +173,18 @@ function renderScreen(step: Screen, app: Application, client: Client, props: { r
 }
 
 /** "Your Britam quote of KES 34,560 is saved…", or null if the quote no longer prices. */
-function savedQuoteOf(raw: Record<string, string>): { message: string } | null {
+function savedQuoteOf(raw: Record<string, string>, panel: readonly string[]): { message: string } | null {
   const parsed = parseMotorQuote(raw, { staleStartIsToday: true });
   if (!parsed.ok) return null;
-  const offer = quoteMotor(parsed.details).quotes.find((item) => item.insurer === raw.insurer);
+  const offer = quoteMotor(parsed.details, panel).quotes.find((item) => item.insurer === raw.insurer);
   return offer ? { message: quote.saved(offer.insurer, formatKes(offer.premiumKes)) } : null;
 }
 
 /** Motor with an insurer chosen on the instant quote page: what they're buying, priced now. */
-function chosenCoverSection(d: Record<string, string>): ReviewSection {
+function chosenCoverSection(d: Record<string, string>, panel: readonly string[]): ReviewSection {
   const labels = flow.review.labels;
-  const offer = quoteMotor(d).quotes.find((item) => item.insurer === d.insurer);
-  const addons = addonsOf(d).map((addon) => quote.addons[addon].label);
+  const offer = quoteMotor(d, panel).quotes.find((item) => item.insurer === d.insurer);
+  const addons = addonsOf(d).map((addon) => addonCopy(addon, d.category).label);
   return {
     id: "cover",
     title: quote.review.section,
@@ -186,7 +192,7 @@ function chosenCoverSection(d: Record<string, string>): ReviewSection {
     rows: [
       { label: quote.review.insurer, value: d.insurer },
       { label: labels.coverType, value: coverLabels[d.coverType] ?? d.coverType },
-      ...(d.coverType === "comprehensive" ? [{ label: quote.addonsLabel, value: addons.join(", ") || quote.noAddons }] : []),
+      ...(addonsFor(d.category, d.coverType).length > 0 ? [{ label: quote.addonsLabel, value: addons.join(", ") || quote.noAddons }] : []),
       ...(offersMonthly(d.category) ? [{ label: labels.period, value: periodLabels[d.period] ?? periodLabels.annual }] : []),
       ...(needsValue(d.coverType) && d.vehicleValueKes ? [{ label: labels.value, value: formatKes(Number(d.vehicleValueKes)) }] : []),
       ...(d.startDate ? [{ label: quote.review.startDate, value: formatDate(d.startDate) }] : []),
@@ -195,7 +201,7 @@ function chosenCoverSection(d: Record<string, string>): ReviewSection {
   };
 }
 
-function reviewData(app: Application, client: Client): { sections: ReviewSection[]; documents: ReviewDocument[] } {
+function reviewData(app: Application, client: Client, panel: readonly string[]): { sections: ReviewSection[]; documents: ReviewDocument[] } {
   const d = app.details;
   const labels = flow.review.labels;
   const none = flow.review.notProvided;
@@ -221,15 +227,16 @@ function reviewData(app: Application, client: Client): { sections: ReviewSection
         title: flow.review.sections.car,
         changeHref: screenHref("confirm", app.ref),
         rows: [
-          { label: labels.category, value: vehicleCategoryLabels[d.category] ?? none },
-          ...(needsSeats(d.category) ? [{ label: labels.seats, value: d.seats || none }] : []),
+          { label: labels.category, value: d.category ? motorClassLabel(d) : none },
           { label: labels.plate, value: d.plate || none },
           { label: labels.car, value: [d.make, d.model].filter(Boolean).join(" ") || none },
           { label: labels.year, value: d.year || none },
           { label: labels.chassisNumber, value: d.chassisNumber || none },
+          ...(d.operator ? [{ label: flow.confirm.fields.operator, value: d.operator }] : []),
+          ...(d.financier ? [{ label: flow.confirm.fields.financier, value: d.financier }] : []),
         ],
       },
-      d.insurer ? chosenCoverSection(d) : {
+      d.insurer ? chosenCoverSection(d, panel) : {
         id: "cover",
         title: flow.review.sections.cover,
         changeHref: screenHref("cover", app.ref),

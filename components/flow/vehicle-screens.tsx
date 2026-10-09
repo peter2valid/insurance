@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TextLink } from "@/components/ui/text-link";
 import { flow } from "@/lib/copy";
+import { needsSeats } from "@/lib/data/motor";
 import type { LogbookField } from "@/lib/extract";
 import { screenHref, stepOf, TOTAL_STEPS } from "@/lib/flow/screens";
 import { DocumentUpload } from "./document-upload";
@@ -164,6 +165,24 @@ export function ConfirmScreen({
           />
         );
       })}
+      {needsSeats(values.category) && (
+        <Input
+          name="operator"
+          label={copy.fields.operator}
+          hint={copy.hints.operator}
+          optional
+          defaultValue={submitted.operator ?? values.operator ?? ""}
+          error={errors.operator}
+        />
+      )}
+      <Input
+        name="financier"
+        label={copy.fields.financier}
+        hint={copy.hints.financier}
+        optional
+        defaultValue={submitted.financier ?? values.financier ?? ""}
+        error={errors.financier}
+      />
     </FlowStep>
   );
 }

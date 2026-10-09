@@ -12,6 +12,7 @@ export const admin = {
     renewals: "Renewals",
     agents: "Agents",
     automations: "Automations",
+    insurers: "Insurers",
     outbox: "Messages",
   },
   navGroups: { work: "Work", money: "Money", system: "System" },
@@ -219,6 +220,7 @@ export const admin = {
     rateSaved: "Commission rate saved",
     agentPaid: (amount: string) => `${amount} paid — agent notified`,
     settingsSaved: "Automations saved",
+    panelSaved: (count: number) => (count === 1 ? "1 insurer on your panel" : `${count} insurers on your panel`),
     automationsRan: (count: number) =>
       count === 0 ? "Automations ran — nothing was due" : `Automations ran — ${count} ${count === 1 ? "message" : "messages"} sent`,
     renewalSent: "Renewal reminder sent",
@@ -436,6 +438,26 @@ export const admin = {
     },
   },
 
+  insurers: {
+    heading: "Insurers",
+    intro:
+      "Every insurer licensed by the IRA for 2026 that writes motor cover. Clients get instant quotes from the ones switched on here.",
+    warning:
+      "Switch an insurer on only once the agency is appointed by it — clients will see it as an insurer you place business with.",
+    sampleNote:
+      "Rates, accepted vehicles, age limits and extras are sample figures until each insurer's real rate card is added (lib/data/insurers.ts).",
+    on: "Quoting",
+    off: "Off",
+    onCount: (on: number, total: number) => `${on} of ${total} quoting`,
+    allClasses: "All vehicle classes",
+    noPsv: "No matatus, boda bodas or tuk-tuks",
+    ageLimit: (years: number) => `Comprehensive up to ${years} years old`,
+    caution: {
+      status: "Check its current status with the IRA before switching on: news reports in 2024 and 2026 conflict.",
+    },
+    save: "Save panel",
+    errors: { empty: "Keep at least one insurer switched on, or clients can't get quotes." },
+  },
   automations: {
     heading: "Automations",
     intro: "Follow-ups that happen by themselves, so no client slips through. Every message appears in Messages.",

@@ -63,6 +63,9 @@ export const vehicleSchema = z.object({
   chassisNumber: required(flow.confirm.fields.chassisNumber).transform((v) => v.toUpperCase()),
   bodyType: z.string().trim().optional().default(""),
   ownerName: z.string().trim().optional().default(""),
+  // Not on the logbook, but needed on the policy: the Sacco a bus runs with, and a lender's interest.
+  operator: z.string().trim().max(80).optional().default(""),
+  financier: z.string().trim().max(80).optional().default(""),
 });
 export type VehicleInput = z.input<typeof vehicleSchema>;
 

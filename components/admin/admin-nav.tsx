@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Bell,
+  Building2,
   CalendarClock,
   ExternalLink,
   House,
@@ -50,6 +51,7 @@ function groups(counts: NavCounts): { label: string; items: Item[] }[] {
       label: admin.navGroups.system,
       items: [
         { href: "/admin/automations", label: n.automations, icon: Bell },
+        { href: "/admin/insurers", label: n.insurers, icon: Building2 },
         { href: "/admin/outbox", label: n.outbox, icon: MessagesSquare },
       ],
     },

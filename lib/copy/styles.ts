@@ -61,6 +61,8 @@ export const styles = {
     quiet: "Quiet",
     compact: "Compact",
     multiple: "Pick several",
+    tiles: "Tiles with icons",
+    square: "Square, for organisations",
   },
 
   // Example content used to show components with realistic data.
@@ -209,6 +211,7 @@ export const styles = {
     },
     avatar: {
       names: ["Wanjiku Kamau", "Otieno Odhiambo", "Amina Hassan"],
+      organisations: ["Britam", "ICEA LION", "Sanlam Allianz"],
     },
     switch: {
       label: "Instant quotes",

@@ -1,7 +1,7 @@
-import { questionErrors, questions } from "@/lib/copy";
+import { questionErrors, questions, quote } from "@/lib/copy";
 import { formatDate } from "@/lib/format/date";
 import { formatKes } from "@/lib/format/money";
-import { needsSeats, offersMonthly } from "@/lib/data/motor";
+import { needsSeats, needsTonnage, offersMonthly } from "@/lib/data/motor";
 
 /**
  * Declarative question screens for health, travel and business (motor keeps
@@ -70,6 +70,7 @@ export const questionScreens: Record<QuestionScreenId, QuestionScreenConfig> = {
     fields: [
       { name: "category", kind: "choice", ...q.category.fields.category },
       { name: "seats", kind: "number", ...q.category.fields.seats, min: 7, max: 90, showIf: (d) => needsSeats(d.category) },
+      { name: "tonnage", kind: "choice", ...quote.form.fields.tonnage, showIf: (d) => needsTonnage(d.category) },
       { name: "period", kind: "choice", ...q.category.fields.period, showIf: (d) => offersMonthly(d.category) },
     ],
   },

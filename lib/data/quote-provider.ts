@@ -1,6 +1,6 @@
 import { peopleCovered } from "@/lib/products/summary";
-import { insurers, LEVIES, MONTHLY_FACTOR, type Insurer } from "./insurers";
-import { addonsOf, isVehicleCategory, periodOf, vehicleAge, type MotorAddon, type VehicleCategory } from "./motor";
+import { LEVIES, MONTHLY_FACTOR, panelInsurers, type Insurer } from "./insurers";
+import { addonsOf, earnsIncome, isTonnageBand, isVehicleCategory, periodOf, vehicleAge, type MotorAddon, type VehicleCategory } from "./motor";
 import type { Application, Quote, QuoteBreakdown } from "./types";
 
 /**
@@ -12,7 +12,8 @@ import type { Application, Quote, QuoteBreakdown } from "./types";
 export type QuoteDraft = Omit<Quote, "id" | "applicationRef" | "createdAt" | "chosen">;
 
 export interface QuoteProvider {
-  suggest(application: Application): Promise<QuoteDraft[]>;
+  /** `panel`: the insurer ids the broker has switched on (Settings.panel). */
+  suggest(application: Application, panel?: readonly string[]): Promise<QuoteDraft[]>;
 }
 
 const round100 = (n: number) => Math.round(n / 100) * 100;
@@ -41,17 +42,41 @@ export function withLevies(
   return { totalKes: levied + trainingLevyKes + phcfKes + LEVIES.stampDuty, breakdown };
 }
 
-/** Does this insurer cover this vehicle with this cover? (Comprehensive has an age limit.) */
-export function coversVehicle(insurer: Insurer, details: Record<string, string>): boolean {
+/** Does this insurer take this class of vehicle at all? (Sample: see Insurer.accepts.) */
+export function acceptsClass(insurer: Insurer, details: Record<string, string>): boolean {
+  return !isVehicleCategory(details.category) || insurer.accepts.includes(details.category);
+}
+
+/** Within the insurer's age limit for comprehensive cover? */
+export function withinAgeLimit(insurer: Insurer, details: Record<string, string>): boolean {
   if (details.coverType !== "comprehensive") return true;
   const age = vehicleAge(details.year);
   return age === undefined || age <= insurer.maxAgeComprehensive;
 }
 
-/** Price of one add-on with this insurer, for this vehicle value. */
-export function addonPrice(insurer: Insurer, addon: MotorAddon, valueKes: number): { kes: number; included: boolean } {
+/** Will this insurer quote this vehicle and cover? */
+export function coversVehicle(insurer: Insurer, details: Record<string, string>): boolean {
+  return acceptsClass(insurer, details) && withinAgeLimit(insurer, details);
+}
+
+/** Comprehensive above the insurer's limit needs an approved tracking device. */
+export function needsTracker(insurer: Insurer, details: Record<string, string>): boolean {
+  return details.coverType === "comprehensive" && num(details.vehicleValueKes) > insurer.trackerAbove;
+}
+
+/**
+ * Price of one add-on with this insurer, for this vehicle. Loss of use pays
+ * a daily amount for longer when the vehicle earns money, so it costs more.
+ */
+export function addonPrice(
+  insurer: Insurer,
+  addon: MotorAddon,
+  valueKes: number,
+  category?: string,
+): { kes: number; included: boolean } {
   const rate = insurer.addons[addon];
   if ("included" in rate) return { kes: 0, included: true };
+  if ("flat" in rate) return { kes: round100(addon === "loss_of_use" && earnsIncome(category) ? rate.flat * 2 : rate.flat), included: false };
   return { kes: round100(Math.max((valueKes * rate.rate) / 100, rate.minimum)), included: false };
 }
 
@@ -64,7 +89,9 @@ function motorQuote(insurer: Insurer, d: Record<string, string>): QuoteDraft {
   let basic: number;
   let excess: number | undefined;
   if (coverType === "third_party") {
-    basic = card.thirdParty.base + (card.thirdParty.perSeat ?? 0) * num(d.seats, category === "psv_matatu" ? 14 : 0);
+    const tp = card.thirdParty;
+    const byWeight = tp.byTonnage && isTonnageBand(d.tonnage) ? tp.byTonnage[d.tonnage] : undefined;
+    basic = (byWeight ?? tp.base) + (tp.perSeat ?? 0) * num(d.seats, category === "psv_matatu" ? 14 : 0);
   } else {
     const { rate, minimum } = coverType === "comprehensive" ? card.comprehensive : card.tpft;
     basic = Math.max((value * rate) / 100, minimum);
@@ -75,7 +102,7 @@ function motorQuote(insurer: Insurer, d: Record<string, string>): QuoteDraft {
   if (period === "monthly") basic *= MONTHLY_FACTOR;
   // Extras are yearly covers; a month costs the same share as the premium.
   const addons = addonsOf(d).map((id) => {
-    const price = addonPrice(insurer, id, value);
+    const price = addonPrice(insurer, id, value, category);
     return { id, kes: round100(period === "monthly" ? price.kes * MONTHLY_FACTOR : price.kes), ...(price.included && { included: true }) };
   });
   const { totalKes, breakdown } = withLevies(round100(basic), addons);
@@ -145,19 +172,24 @@ function otherBase(app: Application): { coverType: string; premium: number; exce
  * quote page uses this. Insurers that don't cover the vehicle are listed
  * separately so the page can say why.
  */
-export function quoteMotor(details: Record<string, string>): { quotes: QuoteDraft[]; declined: Insurer[] } {
-  const covering = insurers.filter((insurer) => coversVehicle(insurer, details));
+export function quoteMotor(
+  details: Record<string, string>,
+  panel?: readonly string[],
+): { quotes: QuoteDraft[]; declined: Insurer[] } {
+  // Insurers that don't take this class at all aren't mentioned; age limits are explained.
+  const taking = panelInsurers(panel).filter((insurer) => acceptsClass(insurer, details));
+  const covering = taking.filter((insurer) => withinAgeLimit(insurer, details));
   return {
     quotes: covering.map((insurer) => motorQuote(insurer, details)).sort((a, b) => a.premiumKes - b.premiumKes),
-    declined: insurers.filter((insurer) => !covering.includes(insurer)),
+    declined: taking.filter((insurer) => !covering.includes(insurer)),
   };
 }
 
 /** Price every insurer on the panel, cheapest first. Sync, so seed data can use it. */
-export function priceQuotes(application: Application): QuoteDraft[] {
-  if (application.product === "motor") return quoteMotor(application.details).quotes;
+export function priceQuotes(application: Application, panel?: readonly string[]): QuoteDraft[] {
+  if (application.product === "motor") return quoteMotor(application.details, panel).quotes;
   const base = otherBase(application);
-  return insurers
+  return panelInsurers(panel)
     .map((insurer) => {
       const { totalKes, breakdown } = withLevies(round100(base.premium * insurer.otherFactor));
       return {
@@ -174,8 +206,10 @@ export function priceQuotes(application: Application): QuoteDraft[] {
 }
 
 const panelProvider: QuoteProvider = {
-  async suggest(application) {
-    return priceQuotes(application);
+  async suggest(application, panel) {
+    // Lazy import: the repo's seed data imports this file.
+    const chosen = panel ?? (await (await import("./repo")).getRepo().getSettings()).panel;
+    return priceQuotes(application, chosen);
   },
 };
 

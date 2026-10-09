@@ -15,8 +15,9 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { StatusBadge, type BadgeTone } from "@/components/ui/status-badge";
 import { TextLink } from "@/components/ui/text-link";
 import { nudgeText } from "@/lib/admin/workflow";
-import { admin, coverLabels, flow, kit, periodLabels, productNames, quote, statusPage, vehicleCategoryLabels } from "@/lib/copy";
-import { addonsOf, needsSeats, offersMonthly } from "@/lib/data/motor";
+import { admin, coverLabels, flow, kit, periodLabels, productNames, quote, statusPage } from "@/lib/copy";
+import { addonsFor, addonsOf, offersMonthly } from "@/lib/data/motor";
+import { addonCopy, motorClassLabel } from "@/lib/flow/motor-quote";
 import { getQuoteProvider } from "@/lib/data/quote-provider";
 import { getRepo } from "@/lib/data/repo";
 import type { Agent, Application, Client, DocumentItem, Message, Payment, Quote } from "@/lib/data/types";
@@ -300,8 +301,9 @@ function answers(app: Application, client: Client | null, agent: Agent | null) {
   const productRows =
     app.product === "motor"
       ? [
-          { label: l.category, value: vehicleCategoryLabels[d.category] },
-          ...(needsSeats(d.category) ? [{ label: l.seats, value: d.seats }] : []),
+          { label: l.category, value: d.category ? motorClassLabel(d) : undefined },
+          ...(d.operator ? [{ label: f.operator, value: d.operator }] : []),
+          ...(d.financier ? [{ label: f.financier, value: d.financier }] : []),
           { label: f.plate, value: d.plate },
           { label: f.make, value: [d.make, d.model].filter(Boolean).join(" ") || undefined },
           { label: f.year, value: d.year },
@@ -312,8 +314,8 @@ function answers(app: Application, client: Client | null, agent: Agent | null) {
           ...(offersMonthly(d.category) ? [{ label: l.period, value: periodLabels[d.period] ?? periodLabels.annual }] : []),
           ...(d.vehicleValueKes ? [{ label: l.vehicleValueKes, value: formatKes(Number(d.vehicleValueKes)) }] : []),
           ...(d.insurer ? [{ label: l.insurer, value: d.insurer }] : []),
-          ...(d.coverType === "comprehensive" && d.insurer
-            ? [{ label: l.addons, value: addonsOf(d).map((addon) => quote.addons[addon].label).join(", ") || quote.noAddons }]
+          ...(d.insurer && addonsFor(d.category, d.coverType).length > 0
+            ? [{ label: l.addons, value: addonsOf(d).map((addon) => addonCopy(addon, d.category).label).join(", ") || quote.noAddons }]
             : []),
           ...(d.startDate ? [{ label: l.startDate, value: formatDate(d.startDate) }] : []),
         ]

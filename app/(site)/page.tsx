@@ -18,7 +18,7 @@ export default async function HomePage(props: PageProps<"/">) {
       <Hero referredBy={agent?.status === "active" ? agent.name : undefined} />
       <HowItWorks />
       <About />
-      <Insurers />
+      <Insurers panel={(await getRepo().getSettings()).panel} />
       <Faq />
       <BecomeAgent />
     </>

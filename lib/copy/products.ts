@@ -54,11 +54,23 @@ export const questionErrors = {
 /** How a vehicle is used (motor). */
 export const vehicleCategoryLabels: Record<string, string> = {
   private: "Private car",
-  commercial: "Commercial — goods",
-  psv_matatu: "PSV — matatu or bus",
   psv_taxi: "PSV — taxi or ride-hailing",
-  motorcycle: "Boda boda / motorcycle",
+  car_hire: "Car hire (self-drive)",
+  psv_matatu: "PSV — matatu or bus",
+  institutional: "School, church or staff bus",
+  commercial: "Commercial — own goods",
+  general_cartage: "Commercial — goods for hire",
+  motorcycle: "Boda boda",
+  motorcycle_private: "Private or delivery motorbike",
   tuktuk: "Tuk-tuk",
+};
+
+/** Goods vehicles' carrying capacity. */
+export const tonnageLabels: Record<string, string> = {
+  up_to_3: "Up to 3 tonnes",
+  "3_to_8": "3 to 8 tonnes",
+  "8_to_20": "8 to 20 tonnes",
+  over_20: "Over 20 tonnes",
 };
 
 export const periodLabels: Record<string, string> = {
@@ -77,11 +89,15 @@ export const questions = {
         label: "Vehicle use",
         options: [
           { value: "private", label: "Private car", description: "Personal and family use" },
-          { value: "commercial", label: "Commercial — goods", description: "Pick-up, van or lorry carrying goods" },
-          { value: "psv_matatu", label: "PSV — matatu or bus", description: "Carries fare-paying passengers" },
-          { value: "psv_taxi", label: "PSV — taxi or ride-hailing", description: "Uber, Bolt, Little or a taxi" },
-          { value: "motorcycle", label: "Boda boda / motorcycle" },
-          { value: "tuktuk", label: "Tuk-tuk" },
+          { value: "psv_taxi", label: "Taxi, Uber or Bolt", description: "Passengers on hire" },
+          { value: "car_hire", label: "Car hire", description: "Self-drive hire" },
+          { value: "psv_matatu", label: "Matatu or bus", description: "Fare-paying passengers" },
+          { value: "institutional", label: "School, church or staff bus", description: "People, not for fares" },
+          { value: "commercial", label: "Goods: own business", description: "Pick-up, van or lorry" },
+          { value: "general_cartage", label: "Goods: for hire", description: "Transporting for pay" },
+          { value: "motorcycle", label: "Boda boda", description: "Passengers or parcels for pay" },
+          { value: "motorcycle_private", label: "Private motorbike", description: "Own use or deliveries" },
+          { value: "tuktuk", label: "Tuk-tuk", description: "Three-wheeler" },
         ],
       },
       seats: { label: "Number of passenger seats", hint: "As on the logbook, for example 14" },

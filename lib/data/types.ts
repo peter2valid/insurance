@@ -161,6 +161,8 @@ export interface Settings {
   renewalReminders: boolean;
   /** Default commission for new agents, in percent. */
   defaultCommissionRate: number;
+  /** Insurer ids quoted to clients (lib/data/insurers.ts). */
+  panel: string[];
 }
 
 export const defaultSettings: Settings = {
@@ -170,6 +172,8 @@ export const defaultSettings: Settings = {
   remindPayment: true,
   renewalReminders: true,
   defaultCommissionRate: 3,
+  // The four insurers the broker named; more are switched on in Admin → Insurers.
+  panel: ["britam", "pioneer", "liberty", "cannon"],
 };
 
 export interface Quote {

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ArrowRight, CircleAlert, Inbox, Sparkles, X } from "lucide-react";
+import { ArrowRight, Bike, BusFront, Car, CarTaxiFront, CircleAlert, Inbox, Sparkles, Truck, X } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { ChoiceCards } from "@/components/ui/choice-cards";
 import { Button } from "@/components/ui/button";
@@ -29,7 +29,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TextLink } from "@/components/ui/text-link";
 import { ToastCard, toast } from "@/components/ui/toast";
-import { flow, statusLabels, styles as copy } from "@/lib/copy";
+import { flow, questions, statusLabels, styles as copy } from "@/lib/copy";
 import { applicationStatuses } from "@/lib/data/types";
 import { Section, State, StateGrid } from "./showcase";
 
@@ -217,6 +217,27 @@ function ChoiceSection() {
         </State>
         <State label={`${s.multiple} · ${s.error}`}>
           <ChoiceCards name="demo-multi-2" label={d.multi.label} options={d.multi.options} multiple error={d.multi.error} />
+        </State>
+        <State label={s.tiles}>
+          <ChoiceCards
+            name="demo-tiles"
+            label={questions.category.fields.category.label}
+            layout="tiles"
+            defaultValue="psv_matatu"
+            options={questions.category.fields.category.options.slice(0, 5).map((option, i) => ({
+              ...option,
+              icon: [Car, CarTaxiFront, Car, BusFront, Truck][i] ?? Bike,
+            }))}
+          />
+        </State>
+        <State label={`${s.tiles} · ${s.error}`}>
+          <ChoiceCards
+            name="demo-tiles-2"
+            label={questions.category.fields.category.label}
+            layout="tiles"
+            error={d.choice.error}
+            options={questions.category.fields.category.options.slice(5).map((option) => ({ ...option, icon: Bike }))}
+          />
         </State>
       </StateGrid>
     </Section>
@@ -641,6 +662,13 @@ function AvatarSection() {
           <Avatar name={first} size="sm" />
           <Avatar name={second} />
           <Avatar name={third} size="lg" />
+        </div>
+      </State>
+      <State label={s.square}>
+        <div className="flex items-center gap-3">
+          {d.avatar.organisations.map((name) => (
+            <Avatar key={name} name={name} shape="square" size="lg" />
+          ))}
         </div>
       </State>
     </Section>

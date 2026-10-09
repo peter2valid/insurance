@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { Building2, Camera, FileCheck, ShieldCheck } from "lucide-react";
+import { Camera, FileCheck, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TextLink } from "@/components/ui/text-link";
-import { insurers } from "@/lib/data/insurers";
+import { panelInsurers } from "@/lib/data/insurers";
 import { WhatsAppButton } from "@/components/site/whatsapp-button";
 import { Avatar } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
@@ -79,17 +79,18 @@ export function About() {
   );
 }
 
-export function Insurers() {
+/** The insurers on the broker's panel (Admin → Insurers). */
+export function Insurers({ panel }: { panel: readonly string[] }) {
   const copy = site.insurers;
   return (
     <SiteSection id="insurers" title={copy.heading} intro={copy.intro}>
       <ul className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        {insurers.map((insurer) => (
+        {panelInsurers(panel).map((insurer) => (
           <li
             key={insurer.id}
-            className="flex min-h-touch items-center gap-2 rounded-control border border-border bg-surface px-4 py-4 font-heading text-lg font-semibold text-ink"
+            className="flex min-h-touch items-center gap-3 rounded-control border border-border bg-surface px-4 py-3 font-heading text-lg font-semibold text-ink"
           >
-            <Building2 className="size-5 shrink-0 text-brand" aria-hidden />
+            <Avatar name={insurer.name} src={insurer.logo} shape="square" />
             {insurer.name}
           </li>
         ))}

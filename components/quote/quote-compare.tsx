@@ -2,48 +2,64 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Check, CircleSlash, Clock, ShieldOff, TrendingDown } from "lucide-react";
+import { Check, ChevronDown, CircleSlash, Clock, Info, ShieldAlert, ShieldOff, TrendingDown } from "lucide-react";
 import { chooseInsurer } from "@/app/quote/actions";
 import { FlowStep } from "@/components/flow/flow-step";
 import { useFlowAction } from "@/components/flow/use-flow-action";
+import { WhatsAppButton } from "@/components/site/whatsapp-button";
+import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ChoiceCards } from "@/components/ui/choice-cards";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { TextLink } from "@/components/ui/text-link";
 import { coverLabels, quote } from "@/lib/copy";
-import type { MotorAddon } from "@/lib/data/motor";
 import type { QuoteDraft } from "@/lib/data/quote-provider";
 import { addonKey, quoteFormHref, quoteKeys, quoteQuery, quoteResultsHref } from "@/lib/flow/motor-quote";
 import { stepOf, TOTAL_STEPS } from "@/lib/flow/screens";
 import { formatKes } from "@/lib/format/money";
 
 const copy = quote.compare;
+/** Enough to compare without a wall of cards; the rest are one tap away. */
+const FIRST_SHOWN = 6;
+
+export type InsurerExtras = { logo?: string; tracker: boolean };
+type AddonOption = { value: string; label: string; description: string };
 
 /**
- * Every insurer that covers the vehicle, cheapest first, with what the
- * total is made of. Ticking an extra re-prices every card at once (all
- * combinations are priced on the server, so nothing is calculated here).
+ * Every insurer on the panel that covers the vehicle, cheapest first, with
+ * what the total is made of. Ticking an extra re-prices every card at once
+ * (all combinations are priced on the server, so nothing is calculated here).
  */
 export function QuoteCompare({
   details,
   summary,
-  offeredAddons,
+  addons: offered,
   pricesByAddons,
+  extras,
+  notes,
   declined,
 }: {
   details: Record<string, string>;
-  /** "Toyota 2016 · Private car · Comprehensive · KES 1,200,000 · from 12 Oct 2026" */
+  /** "Toyota 2016 · Private car · Comprehensive · KES 1,200,000 · starts 12 Oct 2026" */
   summary: string;
-  offeredAddons: readonly MotorAddon[];
+  /** Extras that apply to this vehicle and cover, worded for it. */
+  addons: AddonOption[];
   pricesByAddons: Record<string, QuoteDraft[]>;
+  /** Per insurer name: logo, and whether a tracker is needed at this value. */
+  extras: Record<string, InsurerExtras>;
+  /** "Good to know" lines for this kind of cover. */
+  notes: string[];
   declined: { insurer: string; years: number }[];
 }) {
   const { formAction, pending, errors } = useFlowAction(chooseInsurer);
   const [addons, setAddons] = React.useState<string[]>((details.addons ?? "").split(",").filter(Boolean));
+  const [showAll, setShowAll] = React.useState(false);
   const current: Record<string, string> = { ...details, addons: addonKey(addons) };
   const quotes = pricesByAddons[current.addons] ?? pricesByAddons[""] ?? [];
+  const shown = showAll ? quotes : quotes.slice(0, FIRST_SHOWN);
   const monthly = details.period === "monthly";
+  const addonLabels = Object.fromEntries(offered.map((addon) => [addon.value, addon.label]));
 
   function handleAddons(event: React.FormEvent<HTMLDivElement>) {
     const boxes = event.currentTarget.querySelectorAll<HTMLInputElement>('input[name="addons"]:checked');
@@ -54,18 +70,26 @@ export function QuoteCompare({
   }
 
   if (quotes.length === 0) {
-    // Only comprehensive has an age limit, so third party is always there.
+    // Too old for comprehensive anywhere: third party is always there. No insurer
+    // takes this class at all: a person finds cover instead of a dead end.
+    const tooOld = declined.length > 0;
     return (
       <FlowStep
         step={{ current: stepOf.phone, total: TOTAL_STEPS }}
         backHref={quoteFormHref(current)}
-        title={copy.empty.title}
-        description={copy.empty.body}
+        title={tooOld ? copy.empty.title : copy.noClass.title}
+        description={tooOld ? copy.empty.body : copy.noClass.body}
         helpStep={quote.stepName}
         primaryAction={
-          <Button asChild>
-            <Link href={quoteResultsHref({ ...details, coverType: "third_party", vehicleValueKes: "", addons: "" })}>{copy.empty.action}</Link>
-          </Button>
+          tooOld ? (
+            <Button asChild>
+              <Link href={quoteResultsHref({ ...details, coverType: "third_party", vehicleValueKes: "", addons: "" })}>
+                {copy.empty.action}
+              </Link>
+            </Button>
+          ) : (
+            <WhatsAppButton variant="primary" label={copy.noClass.action} message={copy.noClass.message(summary)} />
+          )
         }
       >
         <ShieldOff className="size-12 text-ink-quiet" aria-hidden />
@@ -73,12 +97,15 @@ export function QuoteCompare({
     );
   }
 
+  const low = quotes[0].premiumKes;
+  const high = quotes[quotes.length - 1].premiumKes;
+
   return (
     <FlowStep
       step={{ current: stepOf.phone, total: TOTAL_STEPS }}
       backHref={quoteFormHref(current)}
       title={copy.title(quotes.length)}
-      description={copy.description}
+      description={quotes.length > 1 ? `${copy.range(formatKes(low), formatKes(high))} ${copy.description}` : copy.description}
       helpStep={quote.stepName}
       formError={errors._form}
     >
@@ -90,15 +117,9 @@ export function QuoteCompare({
         </TextLink>
       </Card>
 
-      {offeredAddons.length > 0 && (
+      {offered.length > 0 && (
         <div onChange={handleAddons} className="flex flex-col gap-1">
-          <ChoiceCards
-            name="addons"
-            label={copy.addonsHeading}
-            multiple
-            options={offeredAddons.map((addon) => ({ value: addon, ...quote.addons[addon] }))}
-            defaultValue={addons}
-          />
+          <ChoiceCards name="addons" label={copy.addonsHeading} multiple options={offered} defaultValue={addons} />
           <p className="text-sm text-ink-quiet">{copy.addonsHint}</p>
         </div>
       )}
@@ -111,10 +132,12 @@ export function QuoteCompare({
       </p>
 
       <ul className="grid gap-3 md:grid-cols-2" aria-live="polite">
-        {quotes.map((offer, index) => (
+        {shown.map((offer, index) => (
           <li key={offer.insurer} className="flex">
             <QuoteCard
               offer={offer}
+              extras={extras[offer.insurer]}
+              addonLabels={addonLabels}
               cheapest={index === 0 && quotes.length > 1}
               primary={index === 0}
               monthly={monthly}
@@ -130,6 +153,28 @@ export function QuoteCompare({
           </li>
         ))}
       </ul>
+      {!showAll && quotes.length > FIRST_SHOWN && (
+        <Button variant="ghost" className="self-start" onClick={() => setShowAll(true)}>
+          <ChevronDown aria-hidden />
+          {copy.showMore(quotes.length - FIRST_SHOWN)}
+        </Button>
+      )}
+
+      {notes.length > 0 && (
+        <Card className="gap-2">
+          <h2 className="font-sans text-base font-semibold">{copy.goodToKnow}</h2>
+          <ul className="flex flex-col gap-2">
+            {notes.map((note) => (
+              <li key={note} className="flex items-start gap-2 text-sm text-ink">
+                <span className="flex h-5 shrink-0 items-center">
+                  <Info className="size-4 text-brand" aria-hidden />
+                </span>
+                {note}
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
 
       {declined.length > 0 && (
         <Card className="gap-2">
@@ -154,12 +199,16 @@ export function QuoteCompare({
 
 function QuoteCard({
   offer,
+  extras,
+  addonLabels,
   cheapest,
   primary,
   monthly,
   children,
 }: {
   offer: QuoteDraft;
+  extras?: InsurerExtras;
+  addonLabels: Record<string, string>;
   cheapest: boolean;
   primary: boolean;
   monthly: boolean;
@@ -172,7 +221,7 @@ function QuoteCard({
     ? [
         { label: copy.breakdown.basic, value: formatKes(b.basicKes) },
         ...(b.addons ?? []).map((addon) => ({
-          label: quote.addons[addon.id as MotorAddon]?.label ?? addon.id,
+          label: addonLabels[addon.id] ?? addon.id,
           value: addon.included ? copy.breakdown.included : formatKes(addon.kes),
         })),
         { label: copy.breakdown.levies, value: formatKes(levies) },
@@ -181,8 +230,9 @@ function QuoteCard({
 
   return (
     <Card className={primary ? "w-full gap-4 border-2 border-brand" : "w-full gap-4"}>
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div className="flex flex-col gap-1">
+      <div className="flex items-start gap-3">
+        <Avatar name={offer.insurer} src={extras?.logo} shape="square" size="lg" />
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
           <h2 className="font-sans text-lg font-semibold">{offer.insurer}</h2>
           <p className="text-sm text-ink-quiet">{coverLabels[offer.coverType] ?? offer.coverType}</p>
         </div>
@@ -207,6 +257,15 @@ function QuoteCard({
 
       {/* With the excess protector added, the breakdown already says so. */}
       {offer.excessKes && !excessCovered ? <p className="text-sm text-ink-quiet">{copy.excess(formatKes(offer.excessKes))}</p> : null}
+
+      {extras?.tracker && (
+        <p className="flex items-start gap-2 text-sm text-ink">
+          <span className="flex h-5 shrink-0 items-center">
+            <ShieldAlert className="size-4 text-warn" aria-hidden />
+          </span>
+          {copy.trackerNeeded}
+        </p>
+      )}
 
       {offer.benefits.length > 0 && (
         <ul className="flex flex-1 flex-col gap-1">

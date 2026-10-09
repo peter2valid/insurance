@@ -246,6 +246,17 @@ export async function saveSettingsAction(_prev: ActionResult, formData: FormData
   });
 }
 
+/** Admin → Insurers: which insurers clients get quotes from. */
+export async function savePanelAction(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  const { insurers } = await import("@/lib/data/insurers");
+  const panel = insurers.filter((insurer) => formData.get(`panel_${insurer.id}`) === "on").map((insurer) => insurer.id);
+  if (panel.length === 0) return { ok: false, errors: { _form: admin.insurers.errors.empty } };
+  return run("/admin/insurers", async () => {
+    await getRepo().updateSettings({ panel });
+    return admin.toasts.panelSaved(panel.length);
+  });
+}
+
 export async function runAutomationsAction(): Promise<ActionResult> {
   return run("/admin/automations", async () => {
     const results = await runAutomations();

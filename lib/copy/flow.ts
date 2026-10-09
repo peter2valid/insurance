@@ -108,11 +108,15 @@ export const flow = {
       chassisNumber: "Chassis number",
       bodyType: "Body type",
       ownerName: "Owner's name (as on the logbook)",
+      operator: "Sacco or operator",
+      financier: "Bank or lender, if the vehicle is on a loan",
     },
     hints: {
       make: "For example Toyota",
       model: "For example Fielder",
       chassisNumber: "Printed on the logbook, usually 10–17 characters",
+      operator: "The Sacco or company the vehicle runs with",
+      financier: "The insurer notes them on the policy. Leave empty if the vehicle is fully yours.",
     },
     errors: {
       required: (label: string) => `Enter the ${label.toLowerCase()}.`,

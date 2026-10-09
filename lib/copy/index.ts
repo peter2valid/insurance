@@ -13,6 +13,7 @@ export {
   coverLabels,
   nameDescriptions,
   periodLabels,
+  tonnageLabels,
   vehicleCategoryLabels,
   productBlurbs,
   productCta,

@@ -1,14 +1,18 @@
 import { z } from "zod";
-import { quote } from "@/lib/copy";
+import { quote, tonnageLabels, vehicleCategoryLabels } from "@/lib/copy";
 import {
   coversFor,
-  isMotorAddon,
+  addonsFor,
+  earnsIncome,
+  isTonnageBand,
   motorAddons,
   motorCoverTypes,
   needsSeats,
+  needsTonnage,
   offersMonthly,
   OLDEST_YEAR,
   vehicleCategories,
+  type MotorAddon,
 } from "@/lib/data/motor";
 import { todayIso } from "@/lib/format/date";
 
@@ -21,6 +25,7 @@ import { todayIso } from "@/lib/format/date";
 export const quoteKeys = [
   "category",
   "seats",
+  "tonnage",
   "coverType",
   "make",
   "year",
@@ -43,6 +48,7 @@ const schema = z
     make: z.string().trim().min(1, errors.make).max(40, errors.make),
     year: z.string(),
     seats: z.string().optional(),
+    tonnage: z.string().optional(),
     vehicleValueKes: z.string().optional(),
     period: z.string().optional(),
     startDate: z.string().optional(),
@@ -57,11 +63,13 @@ const schema = z
       const seats = toNumber(d.seats);
       if (!Number.isInteger(seats) || seats < 7 || seats > 90) issue("seats", errors.seats);
     }
+    if (needsTonnage(d.category) && !isTonnageBand(d.tonnage)) issue("tonnage", errors.tonnage);
     if (d.coverType !== "third_party") {
       const value = toNumber(d.vehicleValueKes);
       if (!Number.isFinite(value) || value < 50_000 || value > 50_000_000) issue("vehicleValueKes", errors.value);
     }
-    if (offersMonthly(d.category) && d.period !== "annual" && d.period !== "monthly") issue("period", errors.period);
+    // No period given (e.g. a shared link): a year, the usual cover.
+    if (offersMonthly(d.category) && d.period && d.period !== "annual" && d.period !== "monthly") issue("period", errors.period);
   });
 
 export type QuoteResult = { ok: true; details: Record<string, string> } | { ok: false; errors: Record<string, string> };
@@ -93,19 +101,20 @@ export function parseMotorQuote(
   if (!parsed.success || Object.keys(found).length > 0) return { ok: false, errors: found };
 
   const d = parsed.data;
-  const comprehensive = d.coverType === "comprehensive";
+  const offered = addonsFor(d.category, d.coverType);
   return {
     ok: true,
     details: {
       category: d.category,
       seats: needsSeats(d.category) ? String(toNumber(d.seats)) : "",
+      tonnage: needsTonnage(d.category) ? (d.tonnage ?? "") : "",
       coverType: d.coverType,
       make: d.make,
       year: d.year,
       vehicleValueKes: d.coverType === "third_party" ? "" : String(Math.round(toNumber(d.vehicleValueKes))),
-      period: offersMonthly(d.category) ? (d.period ?? "annual") : "",
+      period: offersMonthly(d.category) ? d.period || "annual" : "",
       startDate,
-      addons: comprehensive ? addonKey((d.addons ?? "").split(",").filter(isMotorAddon)) : "",
+      addons: addonKey((d.addons ?? "").split(",").filter((addon) => offered.includes(addon as never))),
     },
   };
 }
@@ -141,4 +150,21 @@ export const quoteResultsHref = (details: Record<string, string | undefined>) =>
 /** Key for a set of add-ons, in a fixed order ("excess_protector,pvt"). */
 export function addonKey(addons: readonly string[]): string {
   return motorAddons.filter((addon) => addons.includes(addon)).join(",");
+}
+
+/** An extra's name and one-line description, worded for this vehicle. */
+export function addonCopy(addon: MotorAddon, category: string | undefined): { label: string; description: string } {
+  if (addon === "loss_of_use" && earnsIncome(category)) return quote.lossOfIncome;
+  return quote.addons[addon];
+}
+
+/** "Commercial — own goods · 3 to 8 tonnes", "PSV — matatu or bus · 14 seats". */
+export function motorClassLabel(details: Record<string, string>): string {
+  return [
+    vehicleCategoryLabels[details.category] ?? details.category,
+    needsTonnage(details.category) ? tonnageLabels[details.tonnage] : undefined,
+    needsSeats(details.category) && details.seats ? quote.seats(details.seats) : undefined,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 }

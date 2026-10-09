@@ -40,7 +40,8 @@ export async function chooseInsurer(_prev: ActionResult, formData: FormData): Pr
   const parsed = parseMotorQuote(raw, { staleStartIsToday: true });
   const insurerName = String(formData.get("insurer") ?? "");
   const insurer = insurerByName(insurerName);
-  if (!parsed.ok || !insurer || !coversVehicle(insurer, parsed.details)) {
+  const { panel } = await getRepo().getSettings();
+  if (!parsed.ok || !insurer || !panel.includes(insurer.id) || !coversVehicle(insurer, parsed.details)) {
     return { ok: false, errors: { _form: quote.compare.errors.expired } };
   }
   const chosen = { ...parsed.details, insurer: insurer.name };
